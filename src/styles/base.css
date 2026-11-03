@@ -1,0 +1,129 @@
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+}
+
+html {
+  -webkit-text-size-adjust: 100%;
+  text-size-adjust: 100%;
+  scroll-padding-block-start: var(--header-height);
+}
+
+body {
+  margin: 0;
+  min-block-size: 100dvh;
+  background: var(--color-bg);
+  color: var(--color-text);
+  font-family: var(--font-body);
+  font-size: var(--step-0);
+  font-weight: var(--weight-regular);
+  line-height: var(--leading-body);
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  text-rendering: optimizeLegibility;
+  overflow-x: clip;
+}
+
+h1,
+h2,
+h3,
+h4,
+p,
+ul,
+figure {
+  margin: 0;
+}
+
+ul[class],
+nav ul {
+  padding: 0;
+  list-style: none;
+}
+
+img,
+svg,
+canvas {
+  display: block;
+  max-inline-size: 100%;
+}
+
+a {
+  color: inherit;
+  text-decoration: none;
+}
+
+button {
+  font: inherit;
+  color: inherit;
+}
+
+code {
+  font-family: var(--font-mono);
+  font-size: 0.9em;
+}
+
+:focus-visible {
+  outline: 2px solid var(--color-focus);
+  outline-offset: 3px;
+  border-radius: var(--radius-s);
+}
+
+[tabindex='-1']:focus {
+  outline: none;
+}
+
+::selection {
+  background: color-mix(in oklab, var(--jcdc-secondary) 40%, transparent);
+}
+
+/* Directional icons point "forward"; flip them for RTL reading order. */
+[dir='rtl'] .icon--directional {
+  transform: scaleX(-1);
+}
+
+.icon {
+  inline-size: 1.25em;
+  block-size: 1.25em;
+  flex: none;
+}
+
+/* Back arrow = forward arrow turned around (mirrored again in RTL by the rule above). */
+.icon-flip-back {
+  display: inline-flex;
+  transform: scaleX(-1);
+}
+
+.visually-hidden {
+  position: absolute !important;
+  inline-size: 1px;
+  block-size: 1px;
+  overflow: hidden;
+  clip-path: inset(50%);
+  white-space: nowrap;
+}
+
+.skip-link {
+  position: fixed;
+  inset-block-start: var(--space-s);
+  inset-inline-start: var(--space-s);
+  z-index: var(--z-skip);
+  padding: var(--space-xs) var(--space-s);
+  background: var(--color-text);
+  color: var(--color-bg);
+  border-radius: var(--radius-m);
+  transform: translateY(-200%);
+  transition: transform var(--duration-fast) var(--ease-out);
+}
+
+.skip-link:focus-visible {
+  transform: none;
+}
+
+/* Copy can collapse to empty when placeholder markers are stripped (pitch build). */
+.lead:empty,
+.eyebrow:empty,
+.stub__note:empty,
+.site-footer__pif:empty {
+  display: none;
+}

@@ -1,0 +1,112 @@
+/*
+ * Design tokens. Everything visual derives from these; change a brand value here and the
+ * whole site restyles (semantic tokens are mixed from brand tokens via color-mix()).
+ */
+:root {
+  /* ── Brand ─────────────────────────────────────────────────────────── */
+  --jcdc-primary: #0d4a55; /* [TBC: replace with official JCDC hex] deep Red Sea teal */
+  --jcdc-secondary: #b98f5a; /* [TBC: replace with official JCDC hex] heritage brass */
+  --jcdc-accent: #d9784a; /* [TBC: replace with official JCDC hex] sunset coral */
+  --jcdc-sand: #efe6d6; /* [TBC: replace with official JCDC hex] coastal sand */
+  --jcdc-ink: #11181c; /* [TBC: replace with official JCDC hex] near-black ink */
+  --white: #fff;
+
+  /* ── Semantic colour ───────────────────────────────────────────────── */
+  --color-bg: color-mix(in oklab, var(--jcdc-sand) 40%, var(--white));
+  --color-surface: var(--white);
+  --color-surface-alt: var(--jcdc-sand);
+  --color-text: var(--jcdc-ink);
+  --color-text-muted: color-mix(in oklab, var(--jcdc-ink) 70%, var(--color-bg));
+  --color-line: color-mix(in oklab, var(--jcdc-ink) 14%, transparent);
+  --color-brand: var(--jcdc-primary);
+  --color-brand-hover: color-mix(in oklab, var(--jcdc-primary) 82%, var(--jcdc-ink));
+  --color-on-brand: var(--white);
+  /* Brass darkened for AA text contrast on light surfaces (raw brass is ~2.7:1). */
+  --color-highlight: color-mix(in oklab, var(--jcdc-secondary) 65%, var(--jcdc-ink));
+  --color-focus: var(--jcdc-primary);
+  --color-pattern: color-mix(in oklab, var(--jcdc-secondary) 30%, transparent);
+
+  --color-inverse-bg: var(--jcdc-ink);
+  --color-inverse-text: var(--jcdc-sand);
+  --color-inverse-muted: color-mix(in oklab, var(--jcdc-sand) 68%, var(--jcdc-ink));
+  --color-inverse-line: color-mix(in oklab, var(--jcdc-sand) 16%, transparent);
+  --color-inverse-focus: var(--jcdc-accent);
+
+  /* ── Typography ────────────────────────────────────────────────────── */
+  --font-latin: 'IBM Plex Sans', system-ui, -apple-system, 'Segoe UI', sans-serif;
+  --font-arabic: 'IBM Plex Sans Arabic', 'IBM Plex Sans', system-ui, sans-serif;
+  --font-body: var(--font-latin);
+  --font-mono: ui-monospace, 'SF Mono', Menlo, monospace;
+
+  --weight-light: 300;
+  --weight-regular: 400;
+  --weight-medium: 500;
+  --weight-semibold: 600;
+
+  /* Fluid scale: min at 360px viewport, max at 1920px. */
+  --step--1: clamp(0.8125rem, 0.79rem + 0.1vw, 0.9rem);
+  --step-0: clamp(1rem, 0.96rem + 0.18vw, 1.125rem);
+  --step-1: clamp(1.2rem, 1.13rem + 0.32vw, 1.45rem);
+  --step-2: clamp(1.44rem, 1.31rem + 0.55vw, 1.9rem);
+  --step-3: clamp(1.73rem, 1.5rem + 1vw, 2.6rem);
+  --step-4: clamp(2.07rem, 1.67rem + 1.75vw, 3.6rem);
+  --step-5: clamp(2.5rem, 1.8rem + 3vw, 5.2rem);
+  --step-6: clamp(3rem, 1.9rem + 4.8vw, 7.5rem);
+
+  --leading-tight: 1.05;
+  --leading-snug: 1.25;
+  --leading-body: 1.6;
+  --tracking-display: -0.02em;
+  --tracking-eyebrow: 0.18em;
+
+  /* ── Space & layout ────────────────────────────────────────────────── */
+  --space-3xs: 0.25rem;
+  --space-2xs: 0.5rem;
+  --space-xs: 0.75rem;
+  --space-s: 1rem;
+  --space-m: 1.5rem;
+  --space-l: 2rem;
+  --space-xl: clamp(2.5rem, 2rem + 2vw, 4rem);
+  --space-2xl: clamp(4rem, 3rem + 4vw, 7rem);
+  --space-3xl: clamp(6rem, 4rem + 8vw, 11rem);
+
+  --container-max: 90rem;
+  --container-gutter: clamp(1rem, 4vw, 4rem);
+  --header-height: clamp(4rem, 3.5rem + 1.5vw, 5.25rem);
+  --measure: 38rem;
+
+  --radius-s: 0.25rem;
+  --radius-m: 0.5rem;
+  --radius-pill: 999px;
+
+  /* ── Motion (mirrored in src/utils/motion.ts) ─────────────────────── */
+  --ease-out: cubic-bezier(0.22, 1, 0.36, 1);
+  --ease-in-out: cubic-bezier(0.65, 0, 0.35, 1);
+  --duration-fast: 200ms;
+  --duration-base: 400ms;
+  --duration-slow: 700ms;
+
+  /* ── Elevation & stacking ─────────────────────────────────────────── */
+  --shadow-soft: 0 1px 2px rgb(17 24 28 / 0.04), 0 8px 24px rgb(17 24 28 / 0.06);
+  --z-header: 100;
+  --z-overlay: 200;
+  --z-skip: 1000;
+}
+
+/* Arabic: swap the family; Arabic script needs no tracking and a taller line. */
+:root[lang='ar'] {
+  --font-body: var(--font-arabic);
+  --tracking-display: 0;
+  --tracking-eyebrow: 0;
+  --leading-tight: 1.25;
+  --leading-snug: 1.4;
+  --leading-body: 1.8;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  :root {
+    --duration-fast: 1ms;
+    --duration-base: 1ms;
+    --duration-slow: 1ms;
+  }
+}

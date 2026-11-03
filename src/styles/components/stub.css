@@ -1,0 +1,40 @@
+.stub {
+  position: relative;
+  display: grid;
+  align-items: center;
+  min-block-size: calc(88vh - var(--header-height));
+  padding-block: var(--space-2xl);
+  overflow: hidden;
+}
+
+.stub__pattern {
+  position: absolute;
+  inset-block: 0;
+  inset-inline-end: 0;
+  inline-size: min(45%, 40rem);
+  mask-image:
+    url('../../assets/patterns/roshan.svg'),
+    linear-gradient(to var(--fade-to, left), #000, transparent);
+  mask-composite: intersect;
+  mask-size:
+    48px 48px,
+    100% 100%;
+  mask-repeat: repeat, no-repeat;
+}
+
+[dir='rtl'] .stub__pattern {
+  --fade-to: right;
+}
+
+.stub__inner {
+  position: relative;
+  display: grid;
+  justify-items: start;
+  gap: var(--space-m);
+}
+
+.stub__note {
+  margin-block-start: var(--space-l);
+  font-size: var(--step--1);
+  color: var(--color-text-muted);
+}

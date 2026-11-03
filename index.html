@@ -1,0 +1,30 @@
+<!doctype html>
+<html lang="en" dir="ltr">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="color-scheme" content="light" />
+    <meta name="theme-color" content="#11181c" />
+    <link rel="icon" type="image/svg+xml" href="favicon.svg" />
+    <title>Jeddah Central</title>
+    <script>
+      // Apply the stored language before first paint to avoid an LTR→RTL flash.
+      // Must match STORAGE_KEY in src/i18n/i18n.ts.
+      try {
+        if (localStorage.getItem('jcdc.lang') === 'ar') {
+          document.documentElement.lang = 'ar';
+          document.documentElement.dir = 'rtl';
+        }
+      } catch {
+        /* storage unavailable: default to English */
+      }
+    </script>
+  </head>
+  <body>
+    <noscript>
+      <p>This site requires JavaScript. / يتطلب هذا الموقع تفعيل JavaScript.</p>
+    </noscript>
+    <div id="app"></div>
+    <script type="module" src="/src/main.ts"></script>
+  </body>
+</html>

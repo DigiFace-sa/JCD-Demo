@@ -1,0 +1,47 @@
+.experience {
+  position: relative;
+  display: grid;
+  place-items: center;
+  min-block-size: 100dvh;
+  padding: var(--space-xl) var(--container-gutter);
+  overflow: hidden;
+  color: var(--color-inverse-text);
+  --color-focus: var(--color-inverse-focus);
+  /* Stand-in sunset until the WebGL scene lands in Phase 3. */
+  background:
+    radial-gradient(
+      120% 70% at 50% 100%,
+      color-mix(in oklab, var(--jcdc-accent) 55%, transparent),
+      transparent 60%
+    ),
+    linear-gradient(
+      to bottom,
+      var(--jcdc-ink),
+      color-mix(in oklab, var(--jcdc-primary) 70%, var(--jcdc-ink))
+    );
+}
+
+.experience__toolbar {
+  position: absolute;
+  inset-block-start: var(--space-m);
+  inset-inline: var(--space-m);
+  display: flex;
+  justify-content: space-between;
+  gap: var(--space-s);
+}
+
+.experience__placeholder {
+  display: grid;
+  justify-items: center;
+  gap: var(--space-m);
+  text-align: center;
+}
+
+.experience__placeholder .lead {
+  color: var(--color-inverse-muted);
+}
+
+.experience__target {
+  font-size: var(--step--1);
+  color: var(--color-inverse-muted);
+}

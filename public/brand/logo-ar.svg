@@ -1,0 +1,9 @@
+<!-- [TBC: placeholder wordmark — replace with official JCDC Arabic logo] -->
+<svg xmlns="http://www.w3.org/2000/svg" width="150" height="40" viewBox="0 0 150 40" fill="#11181c">
+  <g fill="none" stroke="#11181c" stroke-width="1.5" transform="translate(110 0)">
+    <path d="M20 2 38 20 20 38 2 20Z"/>
+    <path d="M20 11 29 20 20 29 11 20Z"/>
+    <path d="M2 20h36M20 2v36" stroke-width="0.75"/>
+  </g>
+  <text x="98" y="27" text-anchor="end" font-family="Geeza Pro, Noto Sans Arabic, Tahoma, sans-serif" font-size="20" font-weight="600">وسط جدة</text>
+</svg>

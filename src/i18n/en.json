@@ -1,0 +1,108 @@
+{
+  "meta": {
+    "siteName": "Jeddah Central",
+    "titleSeparator": " — "
+  },
+  "a11y": {
+    "skipToContent": "Skip to content",
+    "homeLink": "Jeddah Central — home",
+    "mainNav": "Main",
+    "footerNav": "Footer",
+    "legalNav": "Legal",
+    "openMenu": "Open menu",
+    "closeMenu": "Close menu",
+    "switchLanguage": "Switch to Arabic"
+  },
+  "lang": {
+    "switchTo": "عربي",
+    "switchToCode": "ar"
+  },
+  "nav": {
+    "home": "Home",
+    "destination": "Destination",
+    "landmarks": "Landmarks",
+    "invest": "Invest",
+    "experience": "3D Experience",
+    "exploreIn3d": "Explore in 3D",
+    "backToSite": "Back to site"
+  },
+  "footer": {
+    "tagline": "A waterfront destination on the Red Sea in the heart of Jeddah.",
+    "pifCompany": "A PIF Company [TBC: official PIF lockup]",
+    "explore": "Explore",
+    "legal": "Legal",
+    "follow": "Follow",
+    "copyright": "© {year} Jeddah Central Development Company. All rights reserved."
+  },
+  "social": {
+    "x": "X",
+    "instagram": "Instagram",
+    "linkedin": "LinkedIn",
+    "youtube": "YouTube"
+  },
+  "legal": {
+    "privacy": "Privacy Policy",
+    "terms": "Terms of Use",
+    "cookies": "Cookie Policy"
+  },
+  "landmarks": {
+    "stadium": {
+      "name": "Stadium",
+      "summary": "A FIFA-standard sports, entertainment and cultural hub blending local architecture with cutting-edge technology."
+    },
+    "operaHouse": {
+      "name": "Opera House",
+      "summary": "Saudi Arabia's first opera house, with three theatres totalling 2,400 seats."
+    },
+    "oceanarium": {
+      "name": "Oceanarium & Coral Farm",
+      "summary": "Showcasing Red Sea marine life and biodiversity conservation."
+    },
+    "museum": {
+      "name": "Museum",
+      "summary": "An industrial heritage museum. [TBC: details]"
+    }
+  },
+  "pages": {
+    "home": {
+      "title": "Home",
+      "eyebrow": "On the Red Sea",
+      "heading": "Jeddah Central",
+      "lead": "A waterfront destination on the Red Sea in the heart of Jeddah."
+    },
+    "destination": {
+      "title": "Destination",
+      "heading": "The Destination",
+      "lead": "9.5 km of shoreline, a 2.1 km public beach and a marina, on the Red Sea in the heart of Jeddah."
+    },
+    "landmarks": {
+      "title": "Landmarks",
+      "heading": "Four Landmarks",
+      "lead": "A stadium, an opera house, an oceanarium and a museum at the heart of the destination."
+    },
+    "invest": {
+      "title": "Invest",
+      "heading": "Invest in Jeddah Central",
+      "lead": "Opportunities across residential, hospitality, retail, wellness and commercial sectors."
+    },
+    "experience": {
+      "title": "3D Experience",
+      "heading": "3D Experience",
+      "lead": "Explore the masterplan of Jeddah Central in three dimensions.",
+      "target": "Deep link"
+    },
+    "legal": {
+      "lead": "[TBC: legal copy to be supplied by JCDC]"
+    },
+    "notFound": {
+      "title": "Page not found",
+      "heading": "Page not found",
+      "lead": "The page you are looking for does not exist or has moved.",
+      "cta": "Back to home"
+    }
+  },
+  "status": {
+    "inProgress": "[DRAFT — this page is built in a later phase]",
+    "arDraftBadge": "Arabic draft"
+  }
+}

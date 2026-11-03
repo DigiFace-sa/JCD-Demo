@@ -1,0 +1,10 @@
+<!-- [TBC: placeholder wordmark — replace with official JCDC English logo] -->
+<svg xmlns="http://www.w3.org/2000/svg" width="184" height="40" viewBox="0 0 184 40" fill="#11181c">
+  <g fill="none" stroke="#11181c" stroke-width="1.5">
+    <path d="M20 2 38 20 20 38 2 20Z"/>
+    <path d="M20 11 29 20 20 29 11 20Z"/>
+    <path d="M2 20h36M20 2v36" stroke-width="0.75"/>
+  </g>
+  <text x="50" y="19" font-family="Helvetica Neue, Helvetica, Arial, sans-serif" font-size="13" font-weight="600" letter-spacing="3.2">JEDDAH</text>
+  <text x="50" y="34" font-family="Helvetica Neue, Helvetica, Arial, sans-serif" font-size="13" font-weight="300" letter-spacing="3.2">CENTRAL</text>
+</svg>

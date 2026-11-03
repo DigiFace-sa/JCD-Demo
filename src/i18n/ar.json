@@ -1,0 +1,111 @@
+{
+  "_meta": {
+    "status": "[AR DRAFT — native review required] Every string in this file is a draft. See README › Arabic review list."
+  },
+  "meta": {
+    "siteName": "وسط جدة",
+    "titleSeparator": " — "
+  },
+  "a11y": {
+    "skipToContent": "انتقل إلى المحتوى",
+    "homeLink": "وسط جدة — الصفحة الرئيسية",
+    "mainNav": "القائمة الرئيسية",
+    "footerNav": "تذييل الصفحة",
+    "legalNav": "الشؤون القانونية",
+    "openMenu": "فتح القائمة",
+    "closeMenu": "إغلاق القائمة",
+    "switchLanguage": "التبديل إلى الإنجليزية"
+  },
+  "lang": {
+    "switchTo": "English",
+    "switchToCode": "en"
+  },
+  "nav": {
+    "home": "الرئيسية",
+    "destination": "الوجهة",
+    "landmarks": "المعالم",
+    "invest": "الاستثمار",
+    "experience": "التجربة ثلاثية الأبعاد",
+    "exploreIn3d": "استكشف بتقنية ثلاثية الأبعاد",
+    "backToSite": "العودة إلى الموقع"
+  },
+  "footer": {
+    "tagline": "وجهة على الواجهة البحرية للبحر الأحمر في قلب جدة.",
+    "pifCompany": "إحدى شركات صندوق الاستثمارات العامة [TBC: official PIF lockup]",
+    "explore": "استكشف",
+    "legal": "الشؤون القانونية",
+    "follow": "تابعونا",
+    "copyright": "© {year} شركة تطوير وسط جدة. جميع الحقوق محفوظة."
+  },
+  "social": {
+    "x": "إكس",
+    "instagram": "إنستغرام",
+    "linkedin": "لينكدإن",
+    "youtube": "يوتيوب"
+  },
+  "legal": {
+    "privacy": "سياسة الخصوصية",
+    "terms": "شروط الاستخدام",
+    "cookies": "سياسة ملفات تعريف الارتباط"
+  },
+  "landmarks": {
+    "stadium": {
+      "name": "الملعب",
+      "summary": "مركز رياضي وترفيهي وثقافي وفق معايير الفيفا، يمزج بين العمارة المحلية وأحدث التقنيات."
+    },
+    "operaHouse": {
+      "name": "دار الأوبرا",
+      "summary": "أول دار أوبرا في المملكة العربية السعودية، تضم ثلاثة مسارح تتسع مجتمعةً لـ 2,400 مقعد."
+    },
+    "oceanarium": {
+      "name": "الأحياء المائية ومزرعة المرجان",
+      "summary": "تستعرض الحياة البحرية في البحر الأحمر وجهود الحفاظ على التنوع الأحيائي."
+    },
+    "museum": {
+      "name": "المتحف",
+      "summary": "متحف للتراث الصناعي. [TBC: details]"
+    }
+  },
+  "pages": {
+    "home": {
+      "title": "الرئيسية",
+      "eyebrow": "على ساحل البحر الأحمر",
+      "heading": "وسط جدة",
+      "lead": "وجهة على الواجهة البحرية للبحر الأحمر في قلب جدة."
+    },
+    "destination": {
+      "title": "الوجهة",
+      "heading": "الوجهة",
+      "lead": "واجهة بحرية بطول 9.5 كم، وشاطئ عام بطول 2.1 كم، ومرسى، على البحر الأحمر في قلب جدة."
+    },
+    "landmarks": {
+      "title": "المعالم",
+      "heading": "أربعة معالم",
+      "lead": "ملعب ودار أوبرا ومركز للأحياء المائية ومتحف في قلب الوجهة."
+    },
+    "invest": {
+      "title": "الاستثمار",
+      "heading": "استثمر في وسط جدة",
+      "lead": "فرص استثمارية في قطاعات السكن والضيافة والتجزئة والعافية والأعمال التجارية."
+    },
+    "experience": {
+      "title": "التجربة ثلاثية الأبعاد",
+      "heading": "التجربة ثلاثية الأبعاد",
+      "lead": "استكشف المخطط العام لوسط جدة بالأبعاد الثلاثية.",
+      "target": "الرابط المباشر"
+    },
+    "legal": {
+      "lead": "[TBC: legal copy to be supplied by JCDC]"
+    },
+    "notFound": {
+      "title": "الصفحة غير موجودة",
+      "heading": "الصفحة غير موجودة",
+      "lead": "الصفحة التي تبحث عنها غير موجودة أو تم نقلها.",
+      "cta": "العودة إلى الرئيسية"
+    }
+  },
+  "status": {
+    "inProgress": "[DRAFT — this page is built in a later phase]",
+    "arDraftBadge": "[AR DRAFT — native review required]"
+  }
+}

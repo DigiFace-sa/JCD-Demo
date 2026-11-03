@@ -1,0 +1,19 @@
+/* Review builds only (see AppShell): marks Arabic copy as unreviewed. Hidden in English. */
+.ar-draft-badge {
+  position: fixed;
+  inset-block-end: var(--space-s);
+  inset-inline-start: var(--space-s);
+  z-index: var(--z-overlay);
+  padding: var(--space-3xs) var(--space-xs);
+  border-radius: var(--radius-pill);
+  background: var(--jcdc-accent);
+  color: var(--jcdc-ink);
+  font-family: var(--font-latin);
+  font-size: 0.75rem;
+  font-weight: var(--weight-semibold);
+  pointer-events: none;
+}
+
+:root:not([lang='ar']) .ar-draft-badge {
+  display: none;
+}
