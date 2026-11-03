@@ -474,6 +474,19 @@
       "privacyBody": "This local demonstration does not transmit or store information entered in the investment form. Approved wording for any future data collection will be supplied by JCDC. [TBC: official privacy notice]",
       "termsBody": "Project information, imagery and interactive models are presented for demonstration. Approved terms for the production website will be supplied by JCDC. [TBC: official terms]",
       "cookiesBody": "This demonstration stores the selected language in your browser. It does not load analytics or marketing cookies. [TBC: production cookies policy]"
+    },
+    "scroll": {
+      "navigation": "Explore the Home chapters",
+      "chapters": {
+        "intro": "The beginning",
+        "destination": "The destination",
+        "landmarks": "Signature landmarks",
+        "districts": "Connected districts",
+        "experience": "A new perspective",
+        "sustainability": "A living coastline",
+        "invest": "Shared opportunity",
+        "news": "The latest stories"
+      }
     }
   }
 }

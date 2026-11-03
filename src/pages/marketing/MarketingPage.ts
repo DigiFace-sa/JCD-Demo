@@ -10,6 +10,7 @@ import { contentTemplate } from './Content';
 import { bindDistrictMap } from './DistrictMap';
 import { homeTemplate } from './Home';
 import { bindInterestForm } from './InterestForm';
+import { bindHomeJourney } from './scroll/HomeJourney';
 
 gsap.registerPlugin(ScrollTrigger);
 /** Calm editorial motion, deliberately outside the 3D camera's motion system. */
@@ -182,7 +183,10 @@ const createMarketingPage: PageFactory = (initialContext) => {
         }),
       );
     if (context.path === '/invest') cleanups.push(bindInterestForm(mounted));
-    if (home) cleanups.push(bindLiveScene(mounted));
+    if (home) {
+      cleanups.push(bindHomeJourney(mounted));
+      cleanups.push(bindLiveScene(mounted));
+    }
     cleanups.push(
       onLangChange(() => {
         enhanceCopy(mounted);
@@ -204,7 +208,7 @@ const createMarketingPage: PageFactory = (initialContext) => {
     cleanups.push(() => {
       mounted.removeEventListener('click', scroll);
     });
-    if (!prefersReducedMotion())
+    if (!home && !prefersReducedMotion())
       animations = gsap.context(() => {
         const hero = mounted.querySelector('.home-hero__copy,.page-hero__content');
         if (hero)

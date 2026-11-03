@@ -1,5 +1,10 @@
 # Jeddah Central Interactive Demo: Handoff Prompt for Codex
 
+> **Home scroll work in progress:** Implementation and functional QA are in place. Final intro
+> visual review, screenshot archiving, the review report and local commit remain. Read
+> [CLAUDE_HANDOFF.md](CLAUDE_HANDOFF.md) for the exact takeover state and next actions.
+> This refines Phase 2; the Guided Tour remains pending.
+>
 > **Current update:** Phase 5 (stadium) and Phase 2 (marketing pages) are implemented.
 > The user requested the website/Home work next, moving Phase 2 ahead of Phase 6.
 > Read [PHASE_2_REVIEW.md](PHASE_2_REVIEW.md), [PHASE_5_REVIEW.md](PHASE_5_REVIEW.md) and

@@ -224,7 +224,8 @@ The marketing pages use Masar’s panoramic imagery, oversized typography and sp
 rhythm as a layout reference, with original implementation and Jeddah Central’s blue/gold identity.
 The user authorised official JCDC imagery and content for this phase. No Masar assets or code
 were copied. Home uses an official masterplan render for its opening hero; a separate live 3D
-section introduces the original interactive destination without loading WebGL at the top of Home.
+section introduces the original interactive destination. Home now also loads lightweight decorative
+3D sculptures after its opening intro; the full masterplan remains deferred to its own section.
 
 - `#/` — Home, destination counters, landmark cards, district links, live 3D, sustainability,
   recognition, investment and news.
@@ -266,6 +267,37 @@ Opera House total (2,400, with the supplied theatre breakdown) is retained; the 
 page’s headline and breakdown conflict, so obtain client confirmation before changing it.
 News is a dated local snapshot rather than a live feed. See [PHASE_2_REVIEW.md](docs/PHASE_2_REVIEW.md)
 for verification results, limitations and every review screenshot path.
+
+### Home scroll experience
+
+Home follows one continuous Red Sea atmosphere rather than alternating section backgrounds.
+A short brand aperture introduces the aerial, the desktop opening holds while the camera-like
+image move responds to native scroll, and the landmark sequence travels horizontally through
+its cards. Light and warm accents blend into subsequent chapters, with feathered photo edges.
+The page never replaces the browser’s scrolling or wheel behaviour. Chapter buttons jump to
+sections; keyboard focus brings each landmark card into view.
+
+`src/data/homeJourney.ts` defines chapter labels, sculpture selection, opacity, viewport placement
+and blue/gold light strength. Copy lives under `marketing.scroll.*` in both dictionaries.
+`src/pages/marketing/scroll/HomeJourney.ts` owns GSAP timelines, native-scroll progress, responsive
+pins and teardown. `HomeSculptures.ts` owns the original coastal ribbons, stadium study, district
+plates and coral sculpture. These are artistic objects rather than official project models.
+`src/styles/components/home-journey.css` holds the shared atmosphere, transitions and responsive
+presentation. Supporting marketing pages share the paper surface and softened hero endings.
+
+The sculpture canvas renders only when the scroll state changes. It yields while the existing
+masterplan preview occupies the screen, has no shadows or post-processing, and renders at a
+capped resolution. All four objects together have 13,988 triangles and 11 material batches;
+only 2–3 batches are visible in a settled chapter, at most 6 in an adjacent crossfade. The
+renderer and pending startup timer are disposed on navigation. Its shader warm-up starts after
+the intro rather than interrupting it.
+
+Reduced motion removes the intro, pins, parallax and reveals; all content remains available in
+normal flow with static sculpture poses. Mobile keeps a vertical landmark grid. Without WebGL,
+a quiet CSS contour composition and the existing official-image fallback remain. Language changes
+refresh layout and chapter labels without resetting scroll. The Arabic chapter labels still
+need native review. See [HOME_SCROLL_REVIEW.md](docs/HOME_SCROLL_REVIEW.md) for current screenshots,
+measurements and limits; the original Phase 2 review records the earlier static presentation.
 
 ## Brand tokens
 
@@ -310,12 +342,13 @@ sure of:
 
 Additional marketing copy requiring Arabic review:
 
-| Key                                           | Review needed                                                                               |
-| --------------------------------------------- | ------------------------------------------------------------------------------------------- |
-| `marketing.home.*`, `marketing.destination.*` | Headlines, tone and natural line breaks; all creative copy remains draft.                   |
-| `marketing.landmarks.*`                       | Official landmark/district names, theatre terminology and industrial heritage wording.      |
-| `marketing.invest.*`, `marketing.form.*`      | Sector and investor classifications; validation, consent, privacy and demo success wording. |
-| `marketing.news.*`                            | All paraphrased story titles, body text, categories and Gregorian date presentation.        |
-| `marketing.sustainability.*`                  | Coral restoration, public realm, cooling and mobility terminology.                          |
-| `marketing.common.imageAlt.*`                 | Accurate Arabic descriptions of concept renders, including aquarium interiors.              |
-| `marketing.legal.*`                           | All placeholder policy language must be replaced with client-approved Arabic legal text.    |
+| Key                                                          | Review needed                                                                               |
+| ------------------------------------------------------------ | ------------------------------------------------------------------------------------------- |
+| `marketing.home.*`, `marketing.destination.*`                | Headlines, tone and natural line breaks; all creative copy remains draft.                   |
+| `marketing.landmarks.*`                                      | Official landmark/district names, theatre terminology and industrial heritage wording.      |
+| `marketing.invest.*`, `marketing.form.*`                     | Sector and investor classifications; validation, consent, privacy and demo success wording. |
+| `marketing.news.*`                                           | All paraphrased story titles, body text, categories and Gregorian date presentation.        |
+| `marketing.sustainability.*`                                 | Coral restoration, public realm, cooling and mobility terminology.                          |
+| `marketing.common.imageAlt.*`                                | Accurate Arabic descriptions of concept renders, including aquarium interiors.              |
+| `marketing.legal.*`                                          | All placeholder policy language must be replaced with client-approved Arabic legal text.    |
+| `marketing.scroll.navigation`, `marketing.scroll.chapters.*` | Native review of chapter navigation labels and their vertical desktop presentation.         |
