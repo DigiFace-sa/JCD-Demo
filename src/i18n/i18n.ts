@@ -82,6 +82,21 @@ function translateRaw(key: string, vars?: Readonly<Record<string, string | numbe
   return value;
 }
 
+/**
+ * Separate a translated string's display text from its review markers (`[DRAFT …]`, `[TBC …]`),
+ * so components can style the markers apart from the copy. Pitch builds have no markers left.
+ */
+export function splitMarkers(value: string): { text: string; markers: string[] } {
+  const markers: string[] = [];
+  const text = value
+    .replace(DISPLAY_MARKER, (_match, marker: string) => {
+      markers.push(marker);
+      return '';
+    })
+    .trim();
+  return { text, markers };
+}
+
 /** Fill every `data-i18n` / `data-i18n-attr` element under `root` (including root itself). */
 export function translateDom(root: ParentNode = document): void {
   const elements: Element[] = [...root.querySelectorAll('[data-i18n], [data-i18n-attr]')];

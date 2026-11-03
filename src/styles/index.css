@@ -6,8 +6,8 @@
 @import './components/header.css';
 @import './components/footer.css';
 @import './components/marketing.css';
-@import './components/home-journey.css';
 @import './components/motion.css';
+@import './components/home.css';
 @import './components/experience.css';
 @import './components/map.css';
 @import './components/ar-draft-badge.css';

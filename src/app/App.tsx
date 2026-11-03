@@ -47,7 +47,7 @@ function Shell(): ReactNode {
       <main className="site-main" id="main" ref={main}>
         <RouteView main={main} onShown={onShown} />
       </main>
-      <Footer />
+      <Footer animate={current?.route.pageId === 'home'} />
       {SHOW_PLACEHOLDER_MARKERS && (
         <p className="ar-draft-badge">{translate('status.arDraftBadge')}</p>
       )}

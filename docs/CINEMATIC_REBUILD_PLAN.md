@@ -1,6 +1,14 @@
 # Cinematic rebuild: plan
 
-Status: **proposed. Awaiting approval before any code changes.**
+Status: **R0, R1 and R2 complete. R2 awaits the user's visual review; the local phase commit records this completion.**
+
+Claude completed R0 in `e057133` and R1 in `764fa6d`, then stopped while refining the React Home.
+Codex completed the implementation refinements and validation. The canonical
+[R2_HOME_REVIEW.md](R2_HOME_REVIEW.md) supplies verified checks, performance measurements,
+screenshots and remaining issues. Visual sign-off belongs to the user; R3 starts only after
+their go-ahead. Performance numbers belong in that evidence report rather than this plan.
+`HOME_SCROLL_REVIEW.md` is a completed historical report for the superseded vanilla Home with
+sculptures; it is not the current Home report.
 
 ## Direction
 
@@ -19,9 +27,10 @@ scrolls.
 
 ## Principles
 
-1. **Only real architecture.** Every building on screen is an official JCDC render. The
-   procedural sculptures and decorative ornaments are removed. No invented imagery, no fake 3D
-   replicas.
+1. **Official architecture on the marketing site.** Use JCDC's official architectural concept
+   renders, self-hosted for offline use. These are not photographs of completed buildings.
+   Floating decorative sculptures are removed. The existing illustrative 3D Experience is
+   retained separately until official model files arrive.
 2. **One motion language.** A small set of primitives, used consistently. There are no one-off
    effects and nothing "floating here and there."
 3. **Intro, hold, outro for everything.** Text, images and UI enter as they arrive, hold while
@@ -35,29 +44,35 @@ scrolls.
 
 ## Stack
 
-| Layer | Choice | Why |
-|---|---|---|
-| UI | React 19 + TypeScript strict, Vite | Requested; component model for scenes |
-| Animation | GSAP 3.15 + `@gsap/react` (`useGSAP`), ScrollTrigger, SplitText | Already in use; `useGSAP` handles cleanup |
-| Smooth scroll | Lenis, driven from GSAP's ticker | Approved; inertial scroll synced with ScrollTrigger |
-| Routing | `react-router` HashRouter | Standard; keeps hash URLs (offline and pitch-safe) and deep links |
-| i18n | Existing `en.json`/`ar.json` + typed `t()`, exposed through a `useI18n()` context | No rewrite of copy; language switch re-renders |
-| 3D | Existing Three.js `Experience` mounted by an `<ExperienceRoute>` wrapper | Reused, not rewritten |
-| Styling | Existing tokens and CSS (scoped per component) | Brand tokens stay the single source |
+| Layer         | Choice                                                                            | Why                                                               |
+| ------------- | --------------------------------------------------------------------------------- | ----------------------------------------------------------------- |
+| UI            | React 19 + TypeScript strict, Vite                                                | Requested; component model for scenes                             |
+| Animation     | GSAP 3.15 + `@gsap/react` (`useGSAP`), ScrollTrigger, SplitText                   | Already in use; `useGSAP` handles cleanup                         |
+| Smooth scroll | Lenis, driven from GSAP's ticker                                                  | Approved; inertial scroll synced with ScrollTrigger               |
+| Routing       | `react-router` HashRouter                                                         | Standard; keeps hash URLs (offline and pitch-safe) and deep links |
+| i18n          | Existing `en.json`/`ar.json` + typed `t()`, exposed through a `useI18n()` context | No rewrite of copy; language switch re-renders                    |
+| 3D            | Existing Three.js `Experience` hosted by `LegacyPage` in `src/app/RouteView.tsx`  | Reused, not rewritten                                             |
+| Styling       | Existing tokens and CSS (scoped per component)                                    | Brand tokens stay the single source                               |
 
-**New dependencies:** `react`, `react-dom`, `@vitejs/plugin-react`, `@gsap/react`, `lenis` and
-`react-router`. Each one is justified above.
+**Approved dependency migration:** `react`, `react-dom`, `@vitejs/plugin-react`, `@gsap/react`,
+`lenis` and `react-router` are installed under R0. R1 adds the development image processor
+`sharp`. This user approval supersedes the old native-only/no-new-dependency guidance; it does
+not authorise unrelated additions.
 
 ## Motion system (the primitives)
 
-| Primitive | Intro | Outro |
-|---|---|---|
-| `<Scene>` | Pinned full-screen stage that owns a scroll timeline (0–1) | Hands over to the next scene via a transition |
-| `<SplitHeading>` | Letters (EN) or words (AR) rise from line masks | Lift out upward through the mask |
-| `<RevealLines>` | Body copy unveils line by line | Fades and drifts up |
-| `<CinemaImage>` | Official render opens from a clipped frame, settling from 1.15× | Continues drifting (parallax), then scales and dims as the scene exits |
-| `<Parallax>` | Depth layers move at different rates within a scene | — |
-| `<Counter>` | Approved figures count up | Hold |
+| Current primitive          | Intro                                                      | Outro                                         |
+| -------------------------- | ---------------------------------------------------------- | --------------------------------------------- |
+| `<SceneStack>` / `<Scene>` | Pinned full-screen stage and shared scrubbed timeline      | Hands over to the next scene via a transition |
+| `data-motion="heading"`    | Letters (EN) or words (AR) rise from line masks            | Lift out and fade                             |
+| `data-motion="lines"`      | Body copy unveils line by line                             | Fades and drifts up                           |
+| `data-motion="image"`      | Official render opens from a clipped frame and slight zoom | Drifts and fades as it leaves                 |
+| `data-depth`               | Optional layers move at different rates within a scene     | —                                             |
+| `data-motion="counter"`    | Approved quantities count up; dates rise without counting  | Leaves with its scene                         |
+| `<Reveal>`                 | Shared motion for normal-flow sections                     | Scrubbed exit near the viewport top           |
+
+These tags and their timings are defined in `src/motion/choreography.ts`; there are no separate
+`SplitHeading`, `RevealLines`, `CinemaImage`, `Parallax` or `Counter` React components.
 
 **Scene transitions,** a small consistent set:
 
@@ -70,42 +85,69 @@ scrolls.
 - **Wipe with scan line:** a thin gold scan line sweeps across and reveals the next scene behind
   it, a futuristic accent. Used sparingly, at chapter boundaries.
 
-Reduced motion means no pinning or scrubbing, with simple fades; content stays readable in
-normal flow. Every primitive implements both modes.
+Reduced motion removes pinning, scrubbing and the opening animation. Narrow screens also use
+normal flow, retaining every description and figure. Live preference changes explicitly clear
+manual reveal transforms and inactive `inert` states. Verified behavior belongs in the R2 review.
 
-## Home storyboard (all imagery official)
+## Home storyboard (14 scenes across 16 timeline units)
 
-| # | Scene | Render(s) | Motion |
-|---|---|---|---|
-| 0 | Intro | Official logo | The logo resolves on a horizon line, which opens into scene 1 |
-| 1 | The destination | Masterplan aerial | Slow camera push; the title splits in; on scroll the title lifts out and the camera keeps pushing |
-| 2 | A waterfront city | Waterfront | Dissolve-through; approved stats count up over the render |
-| 3–6 | Four landmarks | Stadium, Opera House, Oceanarium, Museum | Zoom-through from the masterplan, then one full-screen scene per landmark (render, name, one-line story, links); dissolve between them |
-| 7 | Six districts | Official district renders | Horizontal filmstrip within a pinned scene; each district enters and exits |
-| 8 | Sustainability | Ribbon park, coral, sustainability hero | Layered parallax; the 40% public realm figure |
-| 9 | Invest | Marina at sunset | Wipe with scan line; CTA |
-| 10 | News and footer | News imagery | Calm editorial reveals; the footer settles in |
+| #    | Scene                           | Render(s)                                        | Motion                                                                                            |
+| ---- | ------------------------------- | ------------------------------------------------ | ------------------------------------------------------------------------------------------------- |
+| —    | Session opening                 | Official logo                                    | The logo resolves on a horizon line; any input skips it                                           |
+| 1    | The destination                 | Masterplan aerial                                | Slow camera push; the title splits in; on scroll the title lifts out and the camera keeps pushing |
+| 2    | A waterfront city               | Waterfront                                       | Zoom-through; approved stats count up over the render                                             |
+| 3–4  | Stadium exterior and detail     | Stadium aerial, seating bowl                     | Scan-line wipe, then zoom-through                                                                 |
+| 5–6  | Opera House exterior and detail | Opera House, rehearsal theatre                   | Horizon openings                                                                                  |
+| 7–8  | Oceanarium exterior and detail  | Night exterior, vortex exhibit                   | Scan-line wipe, then horizon opening                                                              |
+| 9–10 | Museum exterior and detail      | Museum, Makers' Souk public forum                | Horizon openings                                                                                  |
+| 11   | Six districts                   | Hub background and six official district renders | Scan-line wipe; linked horizontal filmstrip across three timeline units                           |
+| 12   | Sustainability                  | Sustainability, Ribbon Park and coral exhibits   | Horizon opening; two depth layers, public realm figure and pillars                                |
+| 13   | 3D Experience invitation        | Stadium night exterior                           | Horizon opening; link to the retained Experience                                                  |
+| 14   | Invest and recognition          | Marina at sunset                                 | Scan-line wipe; CTA and recognition list                                                          |
+| —    | News and footer                 | Local official imagery                           | Normal-flow editorial reveals after the pinned stage                                              |
+
+The district chapter has six linked official-image cards; keyboard focus positions the filmstrip
+to reveal the selected card. Its three-unit duration makes the 14 scenes span 16 units in total.
+Sustainability adds Ribbon Park and coral exhibit images at separate parallax depths.
+
+Previous/Next scene controls stay in the tab order with a spoken scene status. Active/inert
+state follows the rendered master timeline, including scrub smoothing. Mobile normal flow and
+live reduced-motion teardown retain every description, figure and district link. Final checks,
+performance numbers and limitations are supplied by the R2 review rather than inferred here.
+
+Mobile uses a solid header, and mobile/reduced-motion normal-flow scenes deepen image shading
+behind their complete copy. Desktop cinema header styling ends with the pinned stage, keeping
+the later News/footer and other routes on their normal header treatment.
 
 ## Phases (stop and report after each, with EN/AR stills)
 
-- **R0 Foundations.**
+- **R0 Foundations — complete, `e057133`.**
   - React and Vite migration, Lenis + ScrollTrigger integration, router, i18n context,
     header/footer shell, and the 3D Experience wrapper (working exactly as now).
-  - Build the motion primitives on a hidden `#/lab` route to prove each one at 60 fps.
+  - Motion primitives on a hidden `#/lab` route; historical review stills in `review/phase-R0/`.
   - Remove the sculptures.
-- **R1 Official assets.**
-  - Collect more official renders from the jeddahcentral.com landmark and district pages, with
+- **R1 Official assets — complete, `764fa6d`.**
+  - Collected 39 official renders from the jeddahcentral.com landmark and district pages, with
     provenance in `docs/SOURCE_ASSETS.md`.
-  - Generate responsive AVIF/WebP sizes (1280 / 1920 / 2560) and preload the next scene.
-- **R2 Home.** The full cinematic storyboard above.
-- **R3 Other pages.** Destination (with the district map), the four landmark pages, Invest
+  - Responsive AVIF sizes (1280 / 1920 / 2560 where the source supports them), native-width
+    variants and a WebP fallback; `npm run images` regenerates the library without upscaling.
+- **R2 Home — complete; awaiting user visual review.** Implementation and validation cover
+  EN/AR scenes, keyboard navigation, language changes, live reduced motion, mobile content,
+  routing/lifecycle, pitch/offline behavior and fallback. `R2_HOME_REVIEW.md` is the canonical
+  evidence record; the local phase commit records this completion. R3 requires the user's go-ahead.
+- **R3 Other pages — pending.** Destination (with the district map), the four landmark pages, Invest
   (with the form), News, and Legal, on the same system.
-- **R4 Hardening.**
+- **R4 Hardening — pending.**
   - Performance (fps traces of every transition), accessibility, keyboard and focus inside
     pinned scenes, reduced motion, RTL, mobile and the pitch build.
   - Delete the legacy vanilla marketing code.
 
 The Guided Tour (Phase 6) follows after R4.
+
+Keep the existing phase rules: local commit only when a phase is complete, never push or
+publish, save relevant 1920×1080 UI stills in both English and Arabic under the phase review
+folder, report actual checks and limitations, then wait for the user's visual review. Retain
+the offline pitch, Apple M1/1080p budget, typed bilingual copy and Arabic review list.
 
 ## Risks and how they're handled
 

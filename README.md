@@ -1,9 +1,17 @@
 # Jeddah Central — Interactive Demo
 
 Bilingual (EN/AR) pitch demo for Jeddah Central Development Company: a marketing mini-site plus a
-cinematic 3D Experience of the masterplan. Vite + TypeScript (strict), Three.js, GSAP, plain CSS.
+cinematic 3D Experience of the masterplan. React 19, Vite, TypeScript (strict), Three.js, GSAP,
+Lenis and plain CSS.
 
-> Work in progress. This README grows each phase; the complete version lands in Phase 7 (Polish).
+> **Cinematic rebuild R2 Home is complete and awaiting the user's visual review.** Claude completed R0
+> (`e057133`, React/Lenis foundation) and R1 (`764fa6d`, 39 official renders and responsive image
+> pipeline), then stopped during Home refinement. The approved direction uses official JCDC
+> architectural concept renders and removes floating decorative sculptures. The latest
+> [handoff](docs/CLAUDE_HANDOFF.md) and [rebuild plan](docs/CINEMATIC_REBUILD_PLAN.md) supersede
+> earlier Home instructions. The [R2 Home review](docs/R2_HOME_REVIEW.md) is the evidence record
+> for verified checks, measurements, screenshot paths and remaining issues. The local phase
+> commit records this completion; visual sign-off remains with the user. R3 waits for their go-ahead.
 
 ## Setup
 
@@ -23,6 +31,7 @@ npm run dev            # local dev server
 | `npm run preview:pitch` | Serve `dist-pitch/` locally                                                |
 | `npm run lint`          | ESLint (type-aware)                                                        |
 | `npm run format`        | Prettier                                                                   |
+| `npm run images`        | Rebuild the self-hosted official AVIF/WebP library and typed size table    |
 
 Both builds are fully self-contained and run offline. Routing uses the URL hash (`#/experience`),
 so any static server works with no rewrite rules. Opening `index.html` straight from disk
@@ -34,7 +43,8 @@ so any static server works with no rewrite rules. Opening `index.html` straight 
 One-time preparation on the pitch machine: install [Node.js](https://nodejs.org) (LTS), copy this
 folder over, then run `npm install` and `npm run build:pitch` once.
 
-**Display:** the pitch runs on an Apple M1, which holds 60 fps at 1080p. When the Mac is connected
+**Display:** the pitch targets 60 fps at 1080p on an Apple M1. Historical 3D measurements below
+do not establish performance of R2 Home; use its current review report. When the Mac is connected
 to the TV, set System Settings › Displays › (the TV) › Resolution to **1920 × 1080**. The launcher
 also forces Chrome to render at 1× pixel density, so even a HiDPI "looks like 1080p" mode renders
 at 1080p (pass `--hidpi` to opt out on a stronger machine). TVs upscale 1080p cleanly; smooth
@@ -93,7 +103,7 @@ The app is React 19, migrating page by page under the cinematic rebuild
 ### Motion system (`src/motion/`)
 
 - `choreography.ts`: the one motion language. Every animated element is tagged
-  `data-motion="heading | lines | rise | fade | image"`. Headings rise letter by letter (EN) or
+  `data-motion="heading | lines | rise | fade | image | counter"`. Headings rise letter by letter (EN) or
   word by word (AR) from line masks. Every element gets an intro and an outro.
 - `SceneStack.tsx` / `<Scene>`: a pinned film strip of full-screen official renders, driven by
   one scrubbed timeline.
@@ -101,20 +111,31 @@ The app is React 19, migrating page by page under the cinematic rebuild
   - Scenes arrive via `dissolve` (horizon-line opening), `zoom` (fly into the previous render's
     `focus` point) or `wipe` (gold scan line, in reading direction).
   - Scenes that aren't active are `inert`.
-  - Reduced motion stacks the scenes in normal flow.
+  - Narrow screens and reduced motion stack every scene in normal flow with all copy retained.
 - `Reveal.tsx`: the same intro/outro language for normal-flow sections.
 - `#/lab`: a hidden route proving the primitives (absent from pitch builds).
+
+R2 includes Previous/Next scene controls in the keyboard tab order and a spoken scene status.
+Active/inert state follows the rendered timeline, including scrub smoothing. Keyboard focus on
+a district card positions the filmstrip to reveal that card. Live reduced-motion changes clear
+the pin, manual reveal transforms and inactive `inert` states. Verification and limitations
+belong in the R2 review, not the historical Home scroll report.
+
+Cinema header styling ends when the pinned stage leaves the viewport. Mobile uses a solid
+header, and normal-flow mobile/reduced-motion scenes use stronger image shading for readable copy.
 
 ## Project structure
 
 ```
 src/
-  main.ts              bootstrap: fonts, styles, i18n, shell, router
+  main.tsx             bootstrap: fonts, styles, i18n, React app
+  app/                 React shell, routing adapter, Lenis, i18n hooks, Copy, OfficialPicture
   config.ts            build switches (.env / .env.pitch) and URL flags
   router/              hash router, route table, Page interface
   i18n/                en.json, ar.json, i18n.ts (t(), setLang(), DOM binding)
-  components/          AppShell, Header, Footer, LangToggle, icons
-  pages/marketing/     Home, Destination, landmark pages, Invest, News and legal pages
+  components/          retained imperative UI components used by the legacy pages
+  pages/home/          React cinematic Home and session opening (R2)
+  pages/marketing/     legacy Destination, landmark pages, Invest, News and legal pages (R3)
   pages/experience/    immersive map and stadium UI
   data/                content structure: ids, i18n keys, links, map layout (no copy lives here)
     landmarks.ts       positions, footprints, camera shots, fact keys
@@ -122,7 +143,8 @@ src/
     attractions.ts     positions (only the three named in the brief)
   styles/              tokens.css, base.css, layout.css, components/*.css
   assets/patterns/     original roshan-inspired lattice tile
-  experience/          the 3D Experience (lazy-loaded on its route or near Home’s live preview)
+  motion/              SceneStack, Reveal, shared intro/hold/outro choreography
+  experience/          the 3D Experience (lazy-loaded on its immersive route)
     Experience.ts      renderer, scene, camera, frame loop, resize, dispose
     config/scene.ts    ART DIRECTION: sun, sky, light, haze, sea, post, coast (all look values)
     config/views.ts    camera limits, spawn map and reference views
@@ -139,6 +161,8 @@ src/
   pages/experience/ui/ SidePanel (overview, detail, lists)
 public/brand/          official light SVG and blue/gold PNG; original placeholders retained
 public/images/jcdc/   optimised, self-hosted official concept renders
+assets/official-images.json  source URLs and provenance for the image pipeline
+scripts/images.mjs    responsive AVIF/WebP generation and src/data/officialImages.ts output
 scripts/pitch.mjs      zero-dependency pitch launcher (see Pitch day)
 ```
 
@@ -159,7 +183,8 @@ visible oscillation would be worse than a slightly softer image. `?quality=` or 
 locks a tier.
 
 Output is always the full display resolution; a 4K TV gets a 1440p render upscaled. Measured on
-the pitch M1 at 1080p, High holds 60 fps on the spawn map and during camera flights.
+the pitch M1 at 1080p, the earlier 3D phase recorded 60 fps on the spawn map and during camera
+flights. These are historical Experience results, not new R2 Home measurements.
 
 Budget notes:
 
@@ -181,7 +206,9 @@ in `config/views.ts` and selectable from the `?debug` panel.
 All visible text lives in `src/i18n/en.json` and `src/i18n/ar.json`. Keys are type-checked
 against `en.json`, and a key missing from `ar.json` fails the build.
 
-In markup, text is bound declaratively and updates live on language switch:
+React pages use `useI18n()` and `<Copy k="…" />`. `Copy` separates review markers from display
+copy without changing their translation keys. Legacy pages retain declarative DOM bindings,
+which update live on language switch:
 
 ```html
 <h1 data-i18n="pages.home.heading"></h1>
@@ -252,17 +279,19 @@ baked while loading and reused on entry/exit. Changing shadow resolution invalid
 
 See [the Phase 5 review](docs/PHASE_5_REVIEW.md) for measurements, checks, open items and every review screenshot path.
 
-## Marketing pages (Phase 2)
+## Marketing pages (Phase 2 and the cinematic rebuild)
 
 The marketing pages use Masar’s panoramic imagery, oversized typography and spacious editorial
 rhythm as a layout reference, with original implementation and Jeddah Central’s blue/gold identity.
 The user authorised official JCDC imagery and content for this phase. No Masar assets or code
-were copied. Home uses an official masterplan render for its opening hero; a separate live 3D
-section introduces the original interactive destination. Home now also loads lightweight decorative
-3D sculptures after its opening intro; the full masterplan remains deferred to its own section.
+were copied. The later approved rebuild moves the app to React and Lenis, removes the decorative
+sculptures, and presents official JCDC architectural renders throughout Home. These are concepts
+of the proposed architecture, not photographs of completed buildings. The original interactive
+3D destination remains available on its own route through the `LegacyPage` adapter.
 
-- `#/` — Home, destination counters, landmark cards, district links, live 3D, sustainability,
-  recognition, investment and news.
+- `#/` — React cinematic Home: 14 scenes covering the destination, landmark exteriors and
+  interiors, district links, sustainability, a 3D Experience CTA, recognition and investment;
+  News follows in normal flow. R2 is complete and awaiting user visual review.
 - `#/destination` — keyboard-accessible district explorer, attractions and sustainability.
   `#/destination?district=marina` preselects a district. The SVG projects the same illustrative
   polygons as the 3D scene; its raised plates and abstract blocks are not surveyed geometry.
@@ -273,8 +302,10 @@ section introduces the original interactive destination. Home now also loads lig
 - `#/legal/{privacy,terms,cookies}` — placeholder legal text requiring client approval.
 
 Edit marketing text in `marketing.*` in both dictionaries. `src/data/marketing.ts` defines image
-sizes, sector/type IDs and dated news metadata. `src/pages/marketing/` holds the templates and
-small interaction modules; `src/styles/components/marketing.css` holds their responsive styling.
+IDs, sector/type IDs and dated news metadata; `src/data/officialImages.ts` is the generated size
+table. `src/pages/home/` holds the new React Home; `src/pages/marketing/` retains the other
+imperative templates until R3. Their responsive styling is in `marketing.css`; Home uses
+`home.css` and the shared `motion.css`.
 `data-copy` bindings render review markers in a separate small line while keeping them in the
 same translation string; the pitch build strips them as usual. Language changes preserve map
 selection and form values. New reveals and counters respect reduced motion.
@@ -285,16 +316,13 @@ was sent or stored; entered values are cleared immediately. Sector buttons prese
 sector. A production form service, approved consent/legal text and delivery/error handling remain
 outside this demo.
 
-All images, logos and fonts are local. The 13 WebP concept renders total 5,361,834 bytes; lazy
-loading keeps supporting imagery out of the initial hero request. Exact origins, sizes, verified
-social profiles and news dates are recorded in [SOURCE_ASSETS.md](docs/SOURCE_ASSETS.md).
-External social and news-source links load only when followed. To replace imagery, keep the
-filenames and update dimensions in `MARKETING_IMAGES` if the aspect ratio changes.
-
-Home’s non-interactive scene loads when its section approaches the viewport, pauses offscreen,
-and disposes on route changes. It uses `Experience` with `variant: 'hero'`; `?debug&quality=high`
-can measure it in review builds. A missing WebGL capability leaves the official marina image
-visible. Tab visibility resumes only a scene that was previously running.
+All images, logos and fonts are local. R1 expanded the library to **39 official renders** with
+responsive AVIF sources and WebP fallbacks. Edit `assets/official-images.json`, run
+`npm run images`, and use `OfficialPicture` for React imagery. The pipeline preserves composition
+without upscaling; generated dimensions live in `src/data/officialImages.ts`. Exact origins,
+sizes, verified social profiles and news dates are recorded in
+[SOURCE_ASSETS.md](docs/SOURCE_ASSETS.md). External social and news-source links load only when
+followed. Home does not mount a WebGL canvas; its 3D calls to action open the retained Experience.
 
 The approved 5.7 million m² area and omission of stadium capacity remain in effect. The approved
 Opera House total (2,400, with the supplied theatre breakdown) is retained; the current official
@@ -302,7 +330,7 @@ page’s headline and breakdown conflict, so obtain client confirmation before c
 News is a dated local snapshot rather than a live feed. See [PHASE_2_REVIEW.md](docs/PHASE_2_REVIEW.md)
 for verification results, limitations and every review screenshot path.
 
-### Editorial reveals (all marketing pages)
+### Editorial reveals (remaining legacy marketing pages)
 
 `src/pages/marketing/motion/TextReveal.ts` adds masked reveals using GSAP's bundled SplitText (no new
 dependency). Studied from the Masar reference's motion style and implemented independently:
@@ -316,36 +344,35 @@ Splits run after web fonts load and revert to plain text once revealed. A langua
 any not-yet-revealed split from the new copy. Reduced motion skips all of it. Tune timings in the
 `REVEAL` constants.
 
-### Home scroll experience
+### Cinematic Home (R2 complete; awaiting visual review)
 
-Home follows one continuous Red Sea atmosphere rather than alternating section backgrounds.
-A short brand aperture introduces the aerial, the desktop opening holds while the camera-like
-image move responds to native scroll, and the landmark sequence travels horizontally through
-its cards. Light and warm accents blend into subsequent chapters, with feathered photo edges.
-The page never replaces the browser’s scrolling or wheel behaviour. Chapter buttons jump to
-sections; keyboard focus brings each landmark card into view.
+`src/pages/home/Home.tsx` declares 14 scenes across 16 timeline units: the district chapter spans
+three units while the other scenes use one each. `Opening.tsx` provides the first-visit brand
+opening, which any input skips. `src/motion/SceneStack.tsx` controls the full-screen stage,
+slow image pushes, zoom-throughs, horizon openings, scan-line wipes, copy and counter timelines.
+`Reveal.tsx` animates normal-flow News and the Home footer. Lenis and ScrollTrigger share GSAP's ticker.
+The 3D Experience disables Lenis and retains its own camera controls.
 
-`src/data/homeJourney.ts` defines chapter labels, sculpture selection, opacity, viewport placement
-and blue/gold light strength. Copy lives under `marketing.scroll.*` in both dictionaries.
-`src/pages/marketing/scroll/HomeJourney.ts` owns GSAP timelines, native-scroll progress, responsive
-pins and teardown. `HomeSculptures.ts` owns the original coastal ribbons, stadium study, district
-plates and coral sculpture. These are artistic objects rather than official project models.
-`src/styles/components/home-journey.css` holds the shared atmosphere, transitions and responsive
-presentation. Supporting marketing pages share the paper surface and softened hero endings.
+The district filmstrip contains six linked cards with official architectural renders, selected
+in `src/data/home.ts`. Tab focus brings each card into view; Previous/Next controls move between
+chapters and support normal keyboard button activation. Sustainability combines its official
+background with two depth layers showing Ribbon Park and coral exhibits. Both layouts become
+normal-flow content on narrow screens and under reduced motion.
 
-The sculpture canvas renders only when the scroll state changes. It yields while the existing
-masterplan preview occupies the screen, has no shadows or post-processing, and renders at a
-capped resolution. All four objects together have 13,988 triangles and 11 material batches;
-only 2–3 batches are visible in a settled chapter, at most 6 in an adjacent crossfade. The
-renderer and pending startup timer are disposed on navigation. Its shader warm-up starts after
-the intro rather than interrupting it.
+Copy remains in both dictionaries, including `marketing.scroll.*`. Language changes rebuild
+split text; Arabic animates by word to preserve joined letters. The implementation restores
+scroll after rebuilding the pin, tracks the rendered scene for interaction state, and clears
+manual transforms and inert sections when motion changes live. Full descriptions and approved
+figures remain in the mobile layout. See the R2 evidence report for verified behavior and limits.
+The mobile header has a solid background; mobile and reduced-motion scenes use deeper shading
+behind their full copy. Desktop cinema header styling stops at the end of the pinned stage.
 
-Reduced motion removes the intro, pins, parallax and reveals; all content remains available in
-normal flow with static sculpture poses. Mobile keeps a vertical landmark grid. Without WebGL,
-a quiet CSS contour composition and the existing official-image fallback remain. Language changes
-refresh layout and chapter labels without resetting scroll. The Arabic chapter labels still
-need native review. See [HOME_SCROLL_REVIEW.md](docs/HOME_SCROLL_REVIEW.md) for current screenshots,
-measurements and limits; the original Phase 2 review records the earlier static presentation.
+The earlier `HomeJourney`, `homeJourney` data, native-scroll sculpture presentation and embedded
+Home WebGL preview are superseded. Their completed historical report is
+[HOME_SCROLL_REVIEW.md](docs/HOME_SCROLL_REVIEW.md); its screenshots and performance results
+describe that earlier implementation. [R2_HOME_REVIEW.md](docs/R2_HOME_REVIEW.md) is the canonical
+review record for this completed phase. Preserve the historical reports without
+treating them as R2 QA evidence.
 
 ## Brand tokens
 
@@ -399,4 +426,5 @@ Additional marketing copy requiring Arabic review:
 | `marketing.sustainability.*`                                 | Coral restoration, public realm, cooling and mobility terminology.                          |
 | `marketing.common.imageAlt.*`                                | Accurate Arabic descriptions of concept renders, including aquarium interiors.              |
 | `marketing.legal.*`                                          | All placeholder policy language must be replaced with client-approved Arabic legal text.    |
-| `marketing.scroll.navigation`, `marketing.scroll.chapters.*` | Native review of chapter navigation labels and their vertical desktop presentation.         |
+| `marketing.scroll.navigation`, `marketing.scroll.chapters.*` | Native review of cinematic chapter labels and keyboard navigation wording.                  |
+| `marketing.cinema.*`                                         | Previous/Next scene controls, navigation label, spoken scene status and position wording.   |

@@ -1,17 +1,13 @@
 import { gsap } from 'gsap';
 import { ScrollTrigger } from 'gsap/ScrollTrigger';
-import type { Experience } from '../../experience/Experience';
-import { readRuntimeFlags } from '../../config';
 import { onLangChange, t, translateDom, type TranslationKey } from '../../i18n/i18n';
 import type { PageContext, PageFactory } from '../../router/Page';
 import { fragmentFromHtml, requireElement } from '../../utils/dom';
 import { EASE_OUT, prefersReducedMotion } from '../../utils/motion';
 import { contentTemplate } from './Content';
 import { bindDistrictMap } from './DistrictMap';
-import { homeTemplate } from './Home';
 import { bindInterestForm } from './InterestForm';
 import { bindTextReveal } from './motion/TextReveal';
-import { bindHomeJourney } from './scroll/HomeJourney';
 
 gsap.registerPlugin(ScrollTrigger);
 /** Calm editorial motion, deliberately outside the 3D camera's motion system. */
@@ -22,57 +18,6 @@ function enhanceCopy(root: HTMLElement): void {
     ordinal.textContent = t('marketing.common.number', {
       number: (ordinal.dataset.ordinal ?? '').padStart(2, '0'),
     });
-}
-
-function bindLiveScene(root: HTMLElement): () => void {
-  const feature = root.querySelector<HTMLElement>('[data-live-scene]');
-  if (!feature) return () => undefined;
-  const host = requireElement(feature, '.experience-feature__canvas', HTMLDivElement);
-  let scene: Experience | null = null;
-  let disposed = false;
-  let loading = false;
-  let visible = false;
-  const isDisposed = (): boolean => disposed;
-  const boot = async (): Promise<void> => {
-    if (loading || scene || isDisposed()) return;
-    loading = true;
-    try {
-      const module = await import('../../experience/Experience');
-      if (isDisposed() || !module.isWebGL2Available()) return;
-      const flags = readRuntimeFlags();
-      const instance = new module.Experience(host, {
-        variant: 'hero',
-        debug: flags.debug,
-        quality: flags.quality,
-      });
-      scene = instance;
-      await instance.ready();
-      if (isDisposed()) return;
-      feature.dataset.ready = 'true';
-      if (visible && !prefersReducedMotion()) instance.start();
-    } catch (error) {
-      scene?.dispose();
-      scene = null;
-      console.error('[marketing] 3D preview unavailable', error);
-    }
-  };
-  const observer = new IntersectionObserver(
-    (entries) => {
-      visible = entries.some((entry) => entry.isIntersecting);
-      if (visible) {
-        void boot();
-        if (feature.dataset.ready === 'true' && !prefersReducedMotion()) scene?.start();
-      } else scene?.stop();
-    },
-    { rootMargin: '120px', threshold: 0 },
-  );
-  observer.observe(feature);
-  return () => {
-    disposed = true;
-    observer.disconnect();
-    scene?.dispose();
-    scene = null;
-  };
 }
 
 function bindCounters(root: HTMLElement): { refresh: () => void; dispose: () => void } {
@@ -165,9 +110,8 @@ const createMarketingPage: PageFactory = (initialContext) => {
   };
   const render = (): void => {
     if (!outlet) return;
-    const home = context.path === '/';
     const fragment = fragmentFromHtml(
-      `<div class="marketing-page ${home ? 'marketing-page--home' : ''}">${home ? homeTemplate() : contentTemplate(context)}</div>`,
+      `<div class="marketing-page">${contentTemplate(context)}</div>`,
     );
     root = requireElement(fragment, '.marketing-page', HTMLDivElement);
     document.body.dataset.hero = String(!context.path.startsWith('/legal/'));
@@ -185,10 +129,6 @@ const createMarketingPage: PageFactory = (initialContext) => {
         }),
       );
     if (context.path === '/invest') cleanups.push(bindInterestForm(mounted));
-    if (home) {
-      cleanups.push(bindHomeJourney(mounted));
-      cleanups.push(bindLiveScene(mounted));
-    }
     cleanups.push(
       onLangChange(() => {
         enhanceCopy(mounted);
@@ -210,7 +150,7 @@ const createMarketingPage: PageFactory = (initialContext) => {
     cleanups.push(() => {
       mounted.removeEventListener('click', scroll);
     });
-    if (!home && !prefersReducedMotion())
+    if (!prefersReducedMotion())
       animations = gsap.context(() => {
         const hero = mounted.querySelector('.home-hero__copy,.page-hero__content');
         if (hero)

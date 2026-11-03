@@ -516,6 +516,13 @@
         "invest": "فرص مشتركة",
         "news": "آخر الأخبار"
       }
+    },
+    "cinema": {
+      "navigation": "التنقل بين المشاهد",
+      "previous": "المشهد السابق",
+      "next": "المشهد التالي",
+      "position": "{current} / {total}",
+      "status": "{position}: {title}"
     }
   }
 }

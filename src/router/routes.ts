@@ -51,7 +51,7 @@ export const routes: readonly RouteDef[] = [
     pageId: 'home',
     layout: 'site',
     title: () => null,
-    load: marketing,
+    view: () => import('../pages/home/Home'),
   },
   {
     pattern: '/destination',

@@ -1,19 +1,42 @@
 # Jeddah Central Interactive Demo: Handoff Prompt for Codex
 
-> **Home scroll work in progress:** Implementation and functional QA are in place. Final intro
-> visual review, screenshot archiving, the review report and local commit remain. Read
-> [CLAUDE_HANDOFF.md](CLAUDE_HANDOFF.md) for the exact takeover state and next actions.
-> This refines Phase 2; the Guided Tour remains pending.
+> **Current state, 4 November 2026: R2 Home complete; awaiting the user's visual review.**
+> Claude completed R0 (`e057133`, React/Lenis foundation) and R1 (`764fa6d`, 39 official renders
+> and responsive AVIF/WebP pipeline), then stopped during React Home refinement. Codex completed
+> R2; the former vanilla Home journey files were intentionally deleted and must not be restored. Read
+> [CLAUDE_HANDOFF.md](CLAUDE_HANDOFF.md) for takeover details and
+> [CINEMATIC_REBUILD_PLAN.md](CINEMATIC_REBUILD_PLAN.md) for the approved direction.
 >
-> **Current update:** Phase 5 (stadium) and Phase 2 (marketing pages) are implemented.
-> The user requested the website/Home work next, moving Phase 2 ahead of Phase 6.
-> Read [PHASE_2_REVIEW.md](PHASE_2_REVIEW.md), [PHASE_5_REVIEW.md](PHASE_5_REVIEW.md) and
-> [SOURCE_ASSETS.md](SOURCE_ASSETS.md) for current results, limitations and source provenance.
-> The user explicitly authorised official JCDC pictures, identity and content; those assets
-> are now self-hosted. This supersedes the original no-client-imagery restriction below.
-> Masar remains a layout reference only. All Arabic remains draft. The approved area and
-> stadium-capacity restrictions are retained. Phases 6 and 7 await the user’s next go-ahead.
-> The rest of this document preserves the historical Phase 4 handoff and original briefs.
+> The user rejected floating decorative sculptures and approved React, Lenis, GSAP and official
+> JCDC architectural concept renders, self-hosted for the offline pitch. This supersedes the
+> old no-client-imagery, native-only and no-new-dependency instructions. The separate original
+> 3D Experience is retained through `LegacyPage`; other marketing pages remain imperative until
+> R3. Masar remains a design/motion reference only; copy none of its assets or code.
+>
+> Current Home has **14 scenes across 16 timeline units**, plus a session opening and normal-flow
+> News/footer reveals. Previous/Next controls provide keyboard chapter navigation and spoken
+> status; keyboard focus reveals each of the six official-image district cards. That filmstrip
+> spans three timeline units. Sustainability adds two layered official images of Ribbon Park
+> and coral exhibits. Active/inert state follows the rendered timeline; live reduced-motion
+> cleanup clears manual transforms and inert states. Mobile normal flow retains all content.
+> Mobile has a solid header and stronger shading behind normal-flow copy; reduced-motion scenes
+> also use deeper shading. Desktop cinema header styling stops at the end of the pinned stage.
+> New `marketing.cinema.*` controls and status wording require native Arabic review.
+>
+> The [R2 Home review](R2_HOME_REVIEW.md) is the canonical record for verified checks,
+> measurements, screenshot paths and remaining issues. Implementation and checks are complete;
+> visual sign-off is pending and the local phase commit records this completion.
+> [HOME_SCROLL_REVIEW.md](HOME_SCROLL_REVIEW.md) exists as a historical report of the
+> superseded native-scroll Home; its measurements are not R2 verification.
+>
+> Phase 5 and the original Phase 2 marketing pages are implemented. Their historical evidence is
+> in [PHASE_5_REVIEW.md](PHASE_5_REVIEW.md), [PHASE_2_REVIEW.md](PHASE_2_REVIEW.md) and
+> [SOURCE_ASSETS.md](SOURCE_ASSETS.md). All Arabic remains draft. Keep the approved area,
+> stadium-capacity restrictions, offline behavior, M1 1080p budget, EN/AR review captures and
+> local-commit/no-push rules. Stop for visual review; R3 begins only after the user's go-ahead.
+> R4 and Guided Tour remain pending. See the current report for actual measurements and limits.
+
+## Historical Phase 4 handoff and original brief — superseded where noted above
 
 You are taking over a project that is partly built. Phases 1, 3 and 4 are finished, and the
 next phase is 5. Read this whole document before you change anything. It explains:

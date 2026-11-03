@@ -513,6 +513,13 @@
         "invest": "Shared opportunity",
         "news": "The latest stories"
       }
+    },
+    "cinema": {
+      "navigation": "Scene navigation",
+      "previous": "Previous scene",
+      "next": "Next scene",
+      "position": "{current} / {total}",
+      "status": "{position}: {title}"
     }
   }
 }

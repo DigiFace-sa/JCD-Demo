@@ -14,11 +14,16 @@
 .scene {
   position: absolute;
   inset: 0;
-  display: grid;
-  align-items: end;
   overflow: hidden;
   background: var(--jcdc-ink);
-  will-change: clip-path, opacity;
+  will-change: transform, opacity;
+}
+.scene__frame {
+  position: absolute;
+  inset: 0;
+  display: grid;
+  align-items: end;
+  will-change: transform;
 }
 .scene__media {
   position: absolute;
@@ -55,7 +60,7 @@
   justify-items: start;
   padding-block: 0 clamp(3rem, 9svh, 7rem);
 }
-.scene[data-align='center'] {
+.scene[data-align='center'] .scene__frame {
   align-items: center;
 }
 .scene[data-align='center'] .scene__content {
@@ -109,11 +114,15 @@
   pointer-events: none;
 }
 /* Reduced motion: an ordinary sequence of full-screen pictures with their copy. */
-.scene-stack[data-motion='reduced'] .scene-stack__frame {
+.scene-stack:not([data-motion='full']) .scene-stack__frame {
   block-size: auto;
   overflow: visible;
 }
-.scene-stack[data-motion='reduced'] .scene {
+.scene-stack:not([data-motion='full']) .scene {
+  position: relative;
+  min-block-size: 100svh;
+}
+.scene-stack:not([data-motion='full']) .scene__frame {
   position: relative;
   min-block-size: 100svh;
 }
@@ -131,4 +140,70 @@
 .lab__figure img {
   inline-size: 100%;
   block-size: auto;
+}
+.scene-stack__scenes {
+  position: absolute;
+  inset: 0;
+}
+.scene-stack:not([data-motion='full']) .scene-stack__scenes {
+  position: relative;
+}
+/* Counters read left to right in both languages (01 / 14), like the digits themselves. */
+.scene-stack__count {
+  direction: ltr;
+  unicode-bidi: isolate;
+}
+
+/* The chapter controls remain in the tab order while inactive scene links are inert. */
+.scene-stack__navigation {
+  position: absolute;
+  inset-inline-end: var(--container-gutter);
+  inset-block-end: clamp(3.75rem, 7svh, 5rem);
+  z-index: 60;
+  display: flex;
+  gap: var(--space-2xs);
+  --color-focus: var(--jcdc-secondary);
+}
+.scene-stack__navigation button {
+  display: grid;
+  place-items: center;
+  inline-size: 2.75rem;
+  block-size: 2.75rem;
+  padding: 0.7rem;
+  border: 1px solid color-mix(in srgb, var(--jcdc-sand) 45%, transparent);
+  border-radius: 50%;
+  background: color-mix(in srgb, var(--jcdc-ink) 65%, transparent);
+  color: var(--jcdc-sand);
+  cursor: pointer;
+}
+.scene-stack__navigation button:disabled {
+  opacity: 0.35;
+  cursor: default;
+}
+.scene-stack__navigation .icon-slot {
+  display: block;
+}
+.scene-stack__previous .icon-slot {
+  rotate: 180deg;
+}
+.scene-stack:not([data-motion='full']) .scene-stack__navigation {
+  display: none;
+}
+.scene-stack:not([data-motion='full']) .scene,
+.scene-stack:not([data-motion='full']) .scene__frame,
+.scene-stack:not([data-motion='full']) .scene__media,
+.scene-stack:not([data-motion='full']) .scene__media img {
+  will-change: auto;
+}
+.scene-stack__credit {
+  position: absolute;
+  inset-inline-end: var(--container-gutter);
+  inset-block-end: 0.45rem;
+  z-index: 60;
+  color: color-mix(in srgb, var(--jcdc-sand) 70%, transparent);
+  font-size: 0.6rem;
+  pointer-events: none;
+}
+.scene-stack:not([data-motion='full']) .scene-stack__credit {
+  display: none;
 }

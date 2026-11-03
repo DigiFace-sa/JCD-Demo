@@ -4,7 +4,7 @@ import { ScrollTrigger } from 'gsap/ScrollTrigger';
 import { useRef, type ReactNode } from 'react';
 import { useI18n } from '../app/i18n';
 import { useReducedMotion } from '../app/useReducedMotion';
-import { addIntro, CHOREOGRAPHY, taggedElements } from './choreography';
+import { addIntro, cascadeStep, CHOREOGRAPHY, taggedElements } from './choreography';
 
 gsap.registerPlugin(ScrollTrigger, useGSAP);
 
@@ -41,9 +41,11 @@ export function Reveal({
     () => {
       const element = root.current;
       if (!element || reduced) return;
-      taggedElements(element).forEach(({ element: child, kind }, order) => {
+      const elements = taggedElements(element);
+      const step = cascadeStep(elements.length);
+      elements.forEach(({ element: child, kind }, order) => {
         const intro = gsap.timeline({ paused: true });
-        addIntro(intro, child, kind, rtl, order * CHOREOGRAPHY.cascade);
+        addIntro(intro, child, kind, rtl, order * step);
         intro.timeScale(REVEAL.timeScale);
         ScrollTrigger.create({
           trigger: child,

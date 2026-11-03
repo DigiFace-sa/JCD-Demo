@@ -15,6 +15,9 @@ let current: Lenis | null = null;
 const listeners = new Set<() => void>();
 const publish = (lenis: Lenis | null): void => {
   current = lenis;
+  // Review builds expose the scroller so automated QA can position the page exactly.
+  if (import.meta.env.VITE_ALLOW_DEBUG !== 'false')
+    (window as { __lenis?: Lenis | null }).__lenis = lenis;
   listeners.forEach((listener) => {
     listener();
   });

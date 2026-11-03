@@ -1,12 +1,24 @@
 import { useGSAP } from '@gsap/react';
 import { gsap } from 'gsap';
 import { ScrollTrigger } from 'gsap/ScrollTrigger';
-import { Children, cloneElement, isValidElement, useRef, type ReactElement, type ReactNode } from 'react';
+import {
+  Children,
+  cloneElement,
+  isValidElement,
+  useEffect,
+  useRef,
+  type ReactElement,
+  type ReactNode,
+} from 'react';
 import { useI18n } from '../app/i18n';
+import { useLenis } from '../app/SmoothScroll';
+import { onLangChange } from '../i18n/i18n';
 import { useReducedMotion } from '../app/useReducedMotion';
+import { useMediaQuery } from '../app/useMediaQuery';
+import { Icon } from '../app/shell/Icon';
 import { OfficialPicture } from '../app/OfficialPicture';
 import type { MarketingImage } from '../data/marketing';
-import { addIntro, addOutro, CHOREOGRAPHY, taggedElements } from './choreography';
+import { addIntro, addOutro, cascadeStep, CHOREOGRAPHY, taggedElements } from './choreography';
 
 gsap.registerPlugin(ScrollTrigger, useGSAP);
 
@@ -15,14 +27,17 @@ export type SceneTransition = 'dissolve' | 'zoom' | 'wipe';
 
 /** Timeline layout, in scene units (one scene = 1). Scroll distance per unit is `STACK.unitVh`. */
 const STACK = {
-  /** Viewport heights of scroll per scene. */
-  unitVh: 130,
+  /**
+   * Viewport heights of scroll per scene. Within one scene unit the beats are:
+   * arrive [-transition, 0] → intro (done by ~0.25) → hold → outro [~0.5, ~0.68] → next arrival.
+   */
+  unitVh: 140,
   /** Length of the crossing between two scenes. */
-  transition: 0.38,
-  /** Intros start just after a scene becomes the main subject. */
-  introDelay: 0.04,
-  /** Outros finish just before the next transition begins. */
-  outroLead: 0.12,
+  transition: 0.3,
+  /** Intros start slightly before the crossing completes, as the new scene takes over. */
+  introDelay: -0.05,
+  /** Gap between the end of the outros and the start of the next crossing. */
+  outroLead: 0.02,
   /** Slow camera push on every render, across its whole time on screen. */
   push: { from: 1.04, to: 1.14 },
   /** Depth layers (`data-depth`) travel this many percent of the viewport per unit depth. */
@@ -33,11 +48,20 @@ const STACK = {
   firstIntroTimeScale: 0.32,
   /** How many upcoming scenes' renders are decoded ahead of time. */
   decodeAhead: 2,
-  dissolve: { outScale: 0.9, outShade: 0.72, inScale: 1.3 },
+  /** Narrow screens keep all copy in normal flow instead of fitting it inside a pin. */
+  narrow: '(max-width: 60rem)',
+  /** Destination within each scene's reading hold when a chapter button is used. */
+  readingPoint: 0.35,
+  navigationDuration: 0.8,
+  film: { intro: 0.25, outro: 0.1 },
+  /** `sliver`: starting height of the horizon opening (a fraction; never 0, it is inverted). */
+  dissolve: { outScale: 0.9, outShade: 0.72, inScale: 1.3, sliver: 0.004 },
   zoom: { outScale: 2.6, inScale: 1.35 },
 } as const;
 
 export interface SceneProps {
+  /** Scroll units for this chapter; galleries get more reading time than a single picture. */
+  readonly duration?: number;
   /** Official render used as the scene's full-screen picture. */
   readonly image: MarketingImage;
   /** How this scene arrives (ignored on the first scene). */
@@ -52,6 +76,10 @@ export interface SceneProps {
   readonly label: string;
   /** Load at high priority (set by SceneStack on the opening scene). */
   readonly priority?: boolean;
+  /** Chapter name shown in the stack's meter while this scene is active. */
+  readonly chapter?: string;
+  /** Layout of the copy block (styled in motion.css / page CSS). */
+  readonly variant?: string;
   readonly children?: ReactNode;
 }
 
@@ -64,6 +92,9 @@ export function Scene(props: SceneProps): ReactNode {
       aria-label={props.label}
       data-transition={props.transition ?? 'dissolve'}
       data-align={props.align ?? 'start'}
+      data-chapter={props.chapter}
+      data-variant={props.variant}
+      data-scroll-units={props.duration ?? 1}
       style={
         {
           '--focus-x': `${focus.x * 100}%`,
@@ -71,12 +102,20 @@ export function Scene(props: SceneProps): ReactNode {
         } as React.CSSProperties
       }
     >
-      <div className="scene__media">
-        <OfficialPicture id={props.image} alt="" sizes="100vw" priority={props.priority ?? false} />
+      {/* The frame counter-moves against the section during reveals (see arriveOver). */}
+      <div className="scene__frame">
+        <div className="scene__media">
+          <OfficialPicture
+            id={props.image}
+            alt=""
+            sizes="100vw"
+            priority={props.priority ?? false}
+          />
+        </div>
+        <div className="scene__shade" aria-hidden="true" />
+        <div className="scene__dim" aria-hidden="true" />
+        <div className="scene__content container">{props.children}</div>
       </div>
-      <div className="scene__shade" aria-hidden="true" />
-      <div className="scene__dim" aria-hidden="true" />
-      <div className="scene__content container">{props.children}</div>
     </section>
   );
 }
@@ -87,26 +126,125 @@ export function Scene(props: SceneProps): ReactNode {
  * arrives through a transition (dissolve-through, zoom-through or scan-line wipe). Everything
  * reverses exactly on scroll up. Under reduced motion the scenes are simply stacked in flow.
  */
-export function SceneStack({ label, children }: { label: string; children: ReactNode }): ReactNode {
-  const { lang, rtl } = useI18n();
+export function SceneStack({
+  label,
+  ready = true,
+  children,
+}: {
+  label: string;
+  /** The first scene's copy plays its intro once this is true (e.g. after an opening sequence). */
+  ready?: boolean;
+  children: ReactNode;
+}): ReactNode {
+  const { lang, rtl, t } = useI18n();
   const reduced = useReducedMotion();
+  const narrow = useMediaQuery(STACK.narrow);
+  const flow = reduced || narrow;
   const root = useRef<HTMLDivElement>(null);
+  const firstIntroRef = useRef<gsap.core.Timeline | null>(null);
+  // Latest `ready` for timeline rebuilds (language changes) that happen after the opening.
+  const readyRef = useRef(ready);
+  const lenis = useLenis();
+  const lenisRef = useRef(lenis);
+  const navigateRef = useRef<((direction: number) => void) | null>(null);
+  const previousButton = useRef<HTMLButtonElement>(null);
+  const nextButton = useRef<HTMLButtonElement>(null);
+  const status = useRef<HTMLParagraphElement>(null);
+  useEffect(() => {
+    lenisRef.current = lenis;
+  }, [lenis]);
+  // A language switch rebuilds the pin, which briefly collapses the page; remember where the
+  // reader was (captured before React re-renders) and return there once rebuilt.
+  const savedScroll = useRef<number | null>(null);
+  useEffect(
+    () =>
+      onLangChange(() => {
+        savedScroll.current = window.scrollY;
+      }),
+    [],
+  );
   const scenes = Children.toArray(children).filter(
     (child): child is ReactElement<SceneProps> => isValidElement(child) && child.type === Scene,
   );
+  const durations = scenes.map((scene) => Math.max(1, scene.props.duration ?? 1));
+  const starts = durations.map((_, index) =>
+    durations.slice(0, index).reduce((sum, duration) => sum + duration, 0),
+  );
+  const totalUnits = durations.reduce((sum, duration) => sum + duration, 0);
 
   useGSAP(
     () => {
       const stack = root.current;
-      if (!stack || reduced) return;
+      if (!stack) return;
       const sections = [
-        ...stack.querySelectorAll<HTMLElement>(':scope > .scene-stack__frame > .scene'),
+        ...stack.querySelectorAll<HTMLElement>(
+          ':scope > .scene-stack__frame > .scene-stack__scenes > .scene',
+        ),
       ];
+      const detach: (() => void)[] = [];
+      const frames = sections.flatMap((section) => {
+        const frame = section.querySelector<HTMLElement>('.scene__frame');
+        return frame ? [frame] : [];
+      });
+      const restoreScenes = (): void => {
+        sections.forEach((section) => {
+          section.inert = false;
+        });
+        // Horizon reveals write through quickSetter while tweening a plain object. Clear those
+        // transforms explicitly: they are not owned by the timeline's normal DOM reversion.
+        gsap.set([...sections, ...frames], { clearProps: 'transform,opacity,visibility' });
+      };
+      const updateStage = (): void => {
+        const bounds = stack.getBoundingClientRect();
+        if (bounds.top <= 0 && bounds.bottom > 0) document.body.dataset.stage = 'cinema';
+        else delete document.body.dataset.stage;
+      };
+      const trackStage = (): void => {
+        // The pin ends one viewport before the stack leaves the screen. Track the complete
+        // element separately so the header regains its solid background over News and Footer.
+        ScrollTrigger.create({
+          trigger: stack,
+          start: 'top top',
+          end: 'bottom top',
+          onUpdate: updateStage,
+          onToggle: updateStage,
+        });
+      };
+      const restoreScroll = (): void => {
+        if (savedScroll.current === null) return;
+        const y = savedScroll.current;
+        savedScroll.current = null;
+        ScrollTrigger.refresh();
+        const scroller = lenisRef.current;
+        if (scroller) {
+          scroller.resize();
+          scroller.scrollTo(y, { immediate: true, force: true });
+        } else window.scrollTo(0, y);
+        ScrollTrigger.update();
+      };
+      updateStage();
+      if (flow) {
+        restoreScenes();
+        trackStage();
+        restoreScroll();
+        return () => {
+          restoreScenes();
+          delete document.body.dataset.stage;
+        };
+      }
       const scanLine = stack.querySelector<HTMLElement>('.scene-stack__scan');
       const horizon = stack.querySelector<HTMLElement>('.scene-stack__horizon');
       const count = sections.length;
       const master = gsap.timeline({ defaults: { ease: 'none' } });
       const firstIntro = gsap.timeline({ paused: true, delay: 0.25 });
+      firstIntroRef.current = firstIntro;
+      const meterChapter = stack.querySelector<HTMLElement>('.scene-stack__chapter');
+      const meterCount = stack.querySelector<HTMLElement>('.scene-stack__count');
+      const meterBar = stack.querySelector<HTMLElement>('.scene-stack__bar > span');
+      const setBar = meterBar
+        ? (gsap.quickSetter(meterBar, 'scaleX') as (value: number) => void)
+        : null;
+      const pad = (value: number): string => String(value).padStart(2, '0');
 
       /** The crossing from `previous` to `scene` over [arrive, at]. */
       const arriveOver = (
@@ -122,6 +260,7 @@ export function SceneStack({ label, children }: { label: string; children: React
         const previousImage = previous.querySelector<HTMLElement>('.scene__media img');
         const previousMedia = previous.querySelector<HTMLElement>('.scene__media');
         const previousDim = previous.querySelector<HTMLElement>('.scene__dim');
+        const frame = scene.querySelector<HTMLElement>('.scene__frame');
         master.set(scene, { autoAlpha: 1 }, arrive);
         if (kind === 'zoom') {
           // Zoom-through: fly into the focus point of the old render, land on the new one.
@@ -151,13 +290,23 @@ export function SceneStack({ label, children }: { label: string; children: React
               arrive + span * 0.4,
             );
         } else if (kind === 'wipe') {
-          // Scan-line wipe in reading direction.
+          // Scan-line wipe in reading direction. Transform-only (composited): the section slides
+          // in while its frame slides the opposite way, so the picture stays put and only the
+          // revealing edge travels.
+          const from = rtl ? 100 : -100;
           master.fromTo(
             scene,
-            { clipPath: rtl ? 'inset(0% 0% 0% 100%)' : 'inset(0% 100% 0% 0%)' },
-            { clipPath: 'inset(0% 0% 0% 0%)', duration: span, ease: 'power2.inOut' },
+            { xPercent: from },
+            { xPercent: 0, duration: span, ease: 'power2.inOut' },
             arrive,
           );
+          if (frame)
+            master.fromTo(
+              frame,
+              { xPercent: -from },
+              { xPercent: 0, duration: span, ease: 'power2.inOut' },
+              arrive,
+            );
           if (scanLine) {
             master.set(scanLine, { autoAlpha: 1 }, arrive);
             master.fromTo(
@@ -180,10 +329,26 @@ export function SceneStack({ label, children }: { label: string; children: React
             );
           if (previousDim)
             master.to(previousDim, { opacity: STACK.dissolve.outShade, duration: span }, arrive);
+          // Opens from the horizon line: the section scales up from a sliver while the frame
+          // counter-scales, so the picture never distorts. Transform-only, unlike clip-path,
+          // which would repaint the whole full-screen layer every frame.
+          const opening = { value: STACK.dissolve.sliver };
+          const setScene = gsap.quickSetter(scene, 'scaleY') as (value: number) => void;
+          const setFrame = frame
+            ? (gsap.quickSetter(frame, 'scaleY') as (value: number) => void)
+            : null;
           master.fromTo(
-            scene,
-            { clipPath: 'inset(50% 0% 50% 0%)' },
-            { clipPath: 'inset(0% 0% 0% 0%)', duration: span, ease: 'power3.inOut' },
+            opening,
+            { value: STACK.dissolve.sliver },
+            {
+              value: 1,
+              duration: span,
+              ease: 'power3.inOut',
+              onUpdate: () => {
+                setScene(opening.value);
+                setFrame?.(1 / opening.value);
+              },
+            },
             arrive,
           );
           if (horizon) {
@@ -218,14 +383,16 @@ export function SceneStack({ label, children }: { label: string; children: React
         const last = index === count - 1;
         // Scene i becomes the subject at time i; it arrives over [i - transition, i] and
         // starts leaving at `leave`, when the next scene's arrival begins.
-        const arrive = index === 0 ? 0 : index - STACK.transition;
-        const leave = last ? count : index + 1 - STACK.transition;
+        const at = starts[index] ?? 0;
+        const length = durations[index] ?? 1;
+        const arrive = index === 0 ? 0 : at - STACK.transition;
+        const leave = last ? totalUnits : at + length - STACK.transition;
         const kind = scene.dataset.transition;
 
         // Camera: a slow push while the scene is the subject. Arrival/departure tweens own the
         // image scale outside this span, so the segments never overlap.
         if (image) {
-          const pushStart = index === 0 ? 0 : index;
+          const pushStart = at;
           master.fromTo(
             image,
             { scale: STACK.push.from },
@@ -245,24 +412,59 @@ export function SceneStack({ label, children }: { label: string; children: React
           );
         }
 
-        if (index > 0) arriveOver(sections[index - 1], scene, image, kind, arrive, index);
+        if (index > 0) arriveOver(sections[index - 1], scene, image, kind, arrive, at);
         if (dim) master.set(dim, { opacity: 0 }, arrive);
 
         // Copy and pictures: intro, hold, outro.
-        const introAt = index === 0 ? 0 : index - STACK.transition * 0.3 + STACK.introDelay;
-        taggedElements(scene).forEach(({ element, kind: motion }, order) => {
-          if (index === 0) addIntro(firstIntro, element, motion, rtl, order * CHOREOGRAPHY.cascade);
-          else addIntro(master, element, motion, rtl, introAt + order * CHOREOGRAPHY.cascade);
+        const introAt = index === 0 ? 0 : at + STACK.introDelay;
+        const sceneElements = taggedElements(scene);
+        const step = cascadeStep(sceneElements.length);
+        sceneElements.forEach(({ element, kind: motion }, order) => {
+          if (index === 0) addIntro(firstIntro, element, motion, rtl, order * step);
+          else addIntro(master, element, motion, rtl, introAt + order * step);
           if (!last)
             addOutro(
               master,
               element,
-              leave -
-                STACK.outroLead -
-                CHOREOGRAPHY.outro.duration +
-                order * CHOREOGRAPHY.cascade * 0.5,
+              leave - STACK.outroLead - CHOREOGRAPHY.outro.duration + order * step * 0.5,
             );
         });
+        const film = scene.querySelector<HTMLElement>('[data-filmstrip]');
+        if (film) {
+          const distance = (): number =>
+            Math.max(0, film.scrollWidth - (film.parentElement?.clientWidth ?? 0));
+          const filmStart = at + STACK.film.intro;
+          const filmEnd = leave - STACK.film.outro;
+          master.fromTo(
+            film,
+            { x: 0 },
+            { x: () => distance() * (rtl ? 1 : -1), duration: filmEnd - filmStart },
+            filmStart,
+          );
+          const focusItem = (event: FocusEvent): void => {
+            if (!(event.target instanceof Element) || !event.target.matches(':focus-visible'))
+              return;
+            const item = event.target.closest('[data-film-item]');
+            const items = [...film.querySelectorAll('[data-film-item]')];
+            const selected = item ? items.indexOf(item) : -1;
+            const scrollTrigger = master.scrollTrigger;
+            if (selected < 0 || !scrollTrigger) return;
+            const time =
+              filmStart + (selected / Math.max(1, items.length - 1)) * (filmEnd - filmStart);
+            const y =
+              scrollTrigger.start + (time / totalUnits) * (scrollTrigger.end - scrollTrigger.start);
+            const scroller = lenisRef.current;
+            if (scroller) scroller.scrollTo(y, { immediate: true, force: true });
+            else window.scrollTo(0, y);
+            // Focus must reveal its card immediately rather than waiting for scrub smoothing.
+            scrollTrigger.getTween().progress(1);
+            master.time(time);
+          };
+          film.addEventListener('focusin', focusItem);
+          detach.push(() => {
+            film.removeEventListener('focusin', focusItem);
+          });
+        }
       });
 
       // Every scene but the first starts hidden; keyboard focus only reaches the active one.
@@ -274,44 +476,84 @@ export function SceneStack({ label, children }: { label: string; children: React
         for (let index = active; index <= active + STACK.decodeAhead && index < count; index++) {
           if (decoded.has(index)) continue;
           decoded.add(index);
-          const image = sections[index]?.querySelector('img');
-          if (image) void image.decode().catch(() => undefined);
+          for (const image of sections[index]?.querySelectorAll('img') ?? []) {
+            // Inline district and sustainability pictures need the same head start as the
+            // backdrop; lazy images outside the clipped strip otherwise decode during its cut.
+            image.loading = 'eager';
+            void image.decode().catch(() => undefined);
+          }
         }
       };
       let lastActive = -1;
-      const setActive = (progress: number): void => {
-        const active = Math.min(count - 1, Math.floor(progress * count + STACK.transition * 0.5));
+      const setActive = (): void => {
+        // Interaction follows the frame actually displayed, including scrub smoothing.
+        let active = 0;
+        starts.forEach((start, index) => {
+          if (master.time() >= start) active = index;
+        });
+        setBar?.(master.progress());
         if (active === lastActive) return;
         lastActive = active;
         sections.forEach((scene, index) => {
           scene.inert = index !== active;
         });
         decodeAhead(active);
+        if (meterChapter) meterChapter.textContent = sections[active]?.dataset.chapter ?? '';
+        const position = t('marketing.cinema.position', {
+          current: pad(active + 1),
+          total: pad(count),
+        });
+        if (meterCount) meterCount.textContent = position;
+        if (previousButton.current) previousButton.current.disabled = active === 0;
+        if (nextButton.current) nextButton.current.disabled = active === count - 1;
+        if (status.current)
+          status.current.textContent = t('marketing.cinema.status', {
+            position,
+            title: sections[active]?.getAttribute('aria-label') ?? '',
+          });
       };
-      setActive(0);
-      ScrollTrigger.create({
+      master.eventCallback('onUpdate', setActive);
+      setActive();
+      const trigger = ScrollTrigger.create({
         trigger: stack,
         start: 'top top',
-        end: `+=${count * STACK.unitVh}%`,
+        end: `+=${totalUnits * STACK.unitVh}%`,
         pin: stack.querySelector('.scene-stack__frame'),
         scrub: STACK.scrub,
         animation: master,
-        onUpdate: (self) => {
-          setActive(self.progress);
-        },
         // The header reads the stage: transparent and light while scenes fill the screen.
-        onToggle: (self) => {
-          if (self.isActive) document.body.dataset.stage = 'cinema';
-          else delete document.body.dataset.stage;
-        },
+        onUpdate: updateStage,
+        onToggle: updateStage,
       });
-      firstIntro.timeScale(STACK.firstIntroTimeScale).play();
+      trackStage();
+      navigateRef.current = (direction) => {
+        const target = Math.max(0, Math.min(count - 1, lastActive + direction));
+        const progress = ((starts[target] ?? 0) + STACK.readingPoint) / totalUnits;
+        const y = trigger.start + progress * (trigger.end - trigger.start);
+        const scroller = lenisRef.current;
+        if (scroller) scroller.scrollTo(y, { duration: STACK.navigationDuration, force: true });
+        else window.scrollTo({ top: y, behavior: 'smooth' });
+      };
+      restoreScroll();
+      firstIntro.timeScale(STACK.firstIntroTimeScale);
+      if (readyRef.current) firstIntro.play();
       return () => {
+        firstIntroRef.current = null;
+        navigateRef.current = null;
+        detach.forEach((remove) => {
+          remove();
+        });
+        restoreScenes();
         delete document.body.dataset.stage;
       };
     },
-    { scope: root, dependencies: [lang, reduced, scenes.length], revertOnUpdate: true },
+    { scope: root, dependencies: [lang, flow, scenes.length], revertOnUpdate: true },
   );
+
+  useEffect(() => {
+    readyRef.current = ready;
+    if (ready) firstIntroRef.current?.play();
+  }, [ready]);
 
   return (
     <div
@@ -319,13 +561,58 @@ export function SceneStack({ label, children }: { label: string; children: React
       ref={root}
       aria-label={label}
       role="region"
-      data-motion={reduced ? 'reduced' : 'full'}
+      data-motion={reduced ? 'reduced' : narrow ? 'flow' : 'full'}
+      data-scroll-vh={STACK.unitVh}
     >
-      {/* Remount on language change: split text is rebuilt from fresh React-rendered copy. */}
-      <div className="scene-stack__frame" key={lang}>
-        {scenes.map((scene, index) => (index === 0 ? cloneElement(scene, { priority: true }) : scene))}
+      {/* The pinned frame is never keyed or replaced: GSAP re-parents it into a pin spacer, and
+          React must not try to remove it from its original parent. */}
+      <div className="scene-stack__frame">
+        {/* Remount on language change: split text is rebuilt from fresh React-rendered copy. */}
+        <div className="scene-stack__scenes" key={lang}>
+          {scenes.map((scene, index) =>
+            index === 0 ? cloneElement(scene, { priority: true }) : scene,
+          )}
+        </div>
         <span className="scene-stack__horizon" aria-hidden="true" />
         <span className="scene-stack__scan" aria-hidden="true" />
+        <div className="scene-stack__meter" aria-hidden="true">
+          <span className="scene-stack__chapter" />
+          <span className="scene-stack__bar">
+            <span />
+          </span>
+          <span className="scene-stack__count" />
+        </div>
+        <nav className="scene-stack__navigation" aria-label={t('marketing.cinema.navigation')}>
+          <button
+            ref={previousButton}
+            className="scene-stack__previous"
+            type="button"
+            aria-label={t('marketing.cinema.previous')}
+            onClick={() => {
+              navigateRef.current?.(-1);
+            }}
+          >
+            <Icon name="arrow" />
+          </button>
+          <button
+            ref={nextButton}
+            type="button"
+            aria-label={t('marketing.cinema.next')}
+            onClick={() => {
+              navigateRef.current?.(1);
+            }}
+          >
+            <Icon name="arrow" />
+          </button>
+        </nav>
+        <p
+          className="visually-hidden"
+          role="status"
+          aria-live="polite"
+          aria-atomic="true"
+          ref={status}
+        />
+        <p className="scene-stack__credit">{t('marketing.common.officialRender')}</p>
       </div>
     </div>
   );
