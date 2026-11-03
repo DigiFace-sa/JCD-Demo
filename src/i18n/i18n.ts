@@ -32,6 +32,7 @@ const dictionaries: Record<Lang, Dictionary> = { en, ar };
 const STORAGE_KEY = 'jcdc.lang';
 const PLACEHOLDER_MARKER = /\s*\[(?:TBC|DRAFT|AR DRAFT)\b[^\]]*\]/g;
 const INTERPOLATION = /\{(\w+)\}/g;
+const DISPLAY_MARKER = /\s*(\[(?:TBC|DRAFT|AR DRAFT)\b[^\]]*\])/g;
 
 type Listener = (lang: Lang) => void;
 
@@ -88,7 +89,22 @@ export function translateDom(root: ParentNode = document): void {
 
   for (const element of elements) {
     const textKey = element.getAttribute('data-i18n');
-    if (textKey) element.textContent = translateRaw(textKey);
+    if (textKey) {
+      const value = translateRaw(textKey);
+      const parts = element.hasAttribute('data-copy') ? value.split(DISPLAY_MARKER) : [value];
+      if (parts.length === 1) element.textContent = value;
+      else
+        element.replaceChildren(
+          ...parts.filter(Boolean).map((part) => {
+            if (!part.startsWith('[')) return document.createTextNode(part);
+            const marker = document.createElement('span');
+            marker.className = 'copy-marker';
+            marker.dir = 'ltr';
+            marker.textContent = part;
+            return marker;
+          }),
+        );
+    }
 
     const attrSpec = element.getAttribute('data-i18n-attr');
     if (attrSpec) {

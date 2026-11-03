@@ -1,10 +1,14 @@
 # Jeddah Central Interactive Demo: Handoff Prompt for Codex
 
-> **Phase 5 update:** the stadium implementation is now ready for review. Read
-> [PHASE_5_REVIEW.md](PHASE_5_REVIEW.md) for the current implementation, measured performance,
-> disposal checks, open items and screenshot paths. The body below records the original
-> Phase 4 handoff and Phase 5 brief. Phase 6 remains pending the user’s go-ahead.
-
+> **Current update:** Phase 5 (stadium) and Phase 2 (marketing pages) are implemented.
+> The user requested the website/Home work next, moving Phase 2 ahead of Phase 6.
+> Read [PHASE_2_REVIEW.md](PHASE_2_REVIEW.md), [PHASE_5_REVIEW.md](PHASE_5_REVIEW.md) and
+> [SOURCE_ASSETS.md](SOURCE_ASSETS.md) for current results, limitations and source provenance.
+> The user explicitly authorised official JCDC pictures, identity and content; those assets
+> are now self-hosted. This supersedes the original no-client-imagery restriction below.
+> Masar remains a layout reference only. All Arabic remains draft. The approved area and
+> stadium-capacity restrictions are retained. Phases 6 and 7 await the user’s next go-ahead.
+> The rest of this document preserves the historical Phase 4 handoff and original briefs.
 
 You are taking over a project that is partly built. Phases 1, 3 and 4 are finished, and the
 next phase is 5. Read this whole document before you change anything. It explains:
@@ -34,6 +38,7 @@ bilingual EN/AR production websites. Quality and polish matter more than feature
    - wait for the user's go-ahead.
 
    **Never push.** Never commit unless a phase is complete or the user asks.
+
 2. **Never invent facts, statistics or claims about Jeddah Central.** Use only the content in
    §4 of this document. Anything missing becomes a visible `[TBC: …]` placeholder.
    Placeholder copy you write gets the marker `[DRAFT — client to approve]`.
@@ -82,31 +87,31 @@ bilingual EN/AR production websites. Quality and polish matter more than feature
 
 ## 2. Decisions already made (do not re-ask)
 
-| Topic | Decision |
-|---|---|
-| Brand colours | Placeholder tokens (teal, brass, coral, sand, ink), each marked `[TBC: replace with official JCDC hex]` in `src/styles/tokens.css`. Everything derives from five tokens via `color-mix()`. |
-| Logo | Neutral placeholder wordmarks in `public/brand/logo-en.svg` and `logo-ar.svg`. The real files drop in under the same names. |
-| Fonts | IBM Plex Sans and IBM Plex Sans Arabic for everything, self-hosted via `@fontsource`; light weights for display text. They swap automatically on `<html lang="ar">`. |
-| Imagery | No client images. Marketing pages use **stills rendered from our own 3D scene** plus gradient and pattern compositions. |
-| Audio | No files provided. Wire the system with **silent placeholders**, muted by default. |
-| Placeholder copy | Written drafts marked `[DRAFT — client to approve]`. Facts not yet confirmed are marked `[TBC: …]`. |
-| `SHOW_PLACEHOLDER_MARKERS` | Review build shows the markers; `npm run build:pitch` strips them automatically in `t()`. |
-| Area figure | Show **5.7 million m²**. The flag about 5.6 vs 5.7 lives in code comments and the README only, never on screen. |
-| Recognition strip | Goes on both Home and Invest (LEED Gold pre-certificate, EFQM 4-star, King Abdulaziz Quality Award silver). |
-| Arabic | No native reviewer: flag everything and keep the README list. Use Western digits (flagged for confirmation). |
-| Geography | Stylised, plausible coastline, not surveyed. A true sunset over the sea to the **west** is the hero look. |
-| Stadium | An original form. Fly-in route: **map → past the facade → through a vomitory tunnel → into the bowl**. |
-| Hosting | Local plus a static `dist/` that runs anywhere. Pitch launcher: `start-pitch.command` / `.bat`. |
-| Guided Tour | **2.5–3 minutes**, every shot timed in a data file; `?tour=1` autostarts it. |
-| Routing | **Hash routing** (`#/experience/stadium`). Deep links for every landmark and every stadium hotspot. |
-| Mobile | A reduced but working version is enough. |
-| Invest form | Fields: name, email, phone, company, sector interest, investor type, message, consent. Front-end only, validated, with a success state. |
-| Legal pages | Placeholder text. |
-| Git | Commit locally at the end of each phase. **Never push.** |
-| Phase order | 1 Setup ✅ → 3 3D foundation ✅ → 4 Masterplan ✅ → **5 Stadium** → 6 Guided Tour → 2 Marketing pages → 7 Polish. |
-| Pitch build | `npm run build:pitch` produces `dist-pitch/` with markers hidden and `?debug` ignored. |
-| Reflections | High tier only, kept only if they fit the budget. Done in Phase 4. |
-| Launcher | Forces Chrome to 1× device pixels by default (`--hidpi` opts out), so a HiDPI TV mode still renders at 1080p. |
+| Topic                      | Decision                                                                                                                                                                                   |
+| -------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| Brand colours              | Placeholder tokens (teal, brass, coral, sand, ink), each marked `[TBC: replace with official JCDC hex]` in `src/styles/tokens.css`. Everything derives from five tokens via `color-mix()`. |
+| Logo                       | Neutral placeholder wordmarks in `public/brand/logo-en.svg` and `logo-ar.svg`. The real files drop in under the same names.                                                                |
+| Fonts                      | IBM Plex Sans and IBM Plex Sans Arabic for everything, self-hosted via `@fontsource`; light weights for display text. They swap automatically on `<html lang="ar">`.                       |
+| Imagery                    | No client images. Marketing pages use **stills rendered from our own 3D scene** plus gradient and pattern compositions.                                                                    |
+| Audio                      | No files provided. Wire the system with **silent placeholders**, muted by default.                                                                                                         |
+| Placeholder copy           | Written drafts marked `[DRAFT — client to approve]`. Facts not yet confirmed are marked `[TBC: …]`.                                                                                        |
+| `SHOW_PLACEHOLDER_MARKERS` | Review build shows the markers; `npm run build:pitch` strips them automatically in `t()`.                                                                                                  |
+| Area figure                | Show **5.7 million m²**. The flag about 5.6 vs 5.7 lives in code comments and the README only, never on screen.                                                                            |
+| Recognition strip          | Goes on both Home and Invest (LEED Gold pre-certificate, EFQM 4-star, King Abdulaziz Quality Award silver).                                                                                |
+| Arabic                     | No native reviewer: flag everything and keep the README list. Use Western digits (flagged for confirmation).                                                                               |
+| Geography                  | Stylised, plausible coastline, not surveyed. A true sunset over the sea to the **west** is the hero look.                                                                                  |
+| Stadium                    | An original form. Fly-in route: **map → past the facade → through a vomitory tunnel → into the bowl**.                                                                                     |
+| Hosting                    | Local plus a static `dist/` that runs anywhere. Pitch launcher: `start-pitch.command` / `.bat`.                                                                                            |
+| Guided Tour                | **2.5–3 minutes**, every shot timed in a data file; `?tour=1` autostarts it.                                                                                                               |
+| Routing                    | **Hash routing** (`#/experience/stadium`). Deep links for every landmark and every stadium hotspot.                                                                                        |
+| Mobile                     | A reduced but working version is enough.                                                                                                                                                   |
+| Invest form                | Fields: name, email, phone, company, sector interest, investor type, message, consent. Front-end only, validated, with a success state.                                                    |
+| Legal pages                | Placeholder text.                                                                                                                                                                          |
+| Git                        | Commit locally at the end of each phase. **Never push.**                                                                                                                                   |
+| Phase order                | 1 Setup ✅ → 3 3D foundation ✅ → 4 Masterplan ✅ → **5 Stadium** → 6 Guided Tour → 2 Marketing pages → 7 Polish.                                                                          |
+| Pitch build                | `npm run build:pitch` produces `dist-pitch/` with markers hidden and `?debug` ignored.                                                                                                     |
+| Reflections                | High tier only, kept only if they fit the budget. Done in Phase 4.                                                                                                                         |
+| Launcher                   | Forces Chrome to 1× device pixels by default (`--hidpi` opts out), so a HiDPI TV mode still renders at 1080p.                                                                              |
 
 ---
 
@@ -118,25 +123,27 @@ bilingual EN/AR production websites. Quality and polish matter more than feature
   printWidth 100 and trailing commas. Plain CSS with tokens and logical properties.
 - Scripts:
 
-  | Script | What it does |
-  |---|---|
-  | `dev` | Dev server |
-  | `build` | Review build into `dist/` |
-  | `build:pitch` | Pitch build into `dist-pitch/` |
-  | `preview` | Serve `dist/` |
-  | `preview:pitch` | Serve `dist-pitch/` |
-  | `lint` | ESLint |
-  | `format` | Prettier |
+  | Script          | What it does                   |
+  | --------------- | ------------------------------ |
+  | `dev`           | Dev server                     |
+  | `build`         | Review build into `dist/`      |
+  | `build:pitch`   | Pitch build into `dist-pitch/` |
+  | `preview`       | Serve `dist/`                  |
+  | `preview:pitch` | Serve `dist-pitch/`            |
+  | `lint`          | ESLint                         |
+  | `format`        | Prettier                       |
+
 - Env files: `.env` (markers visible, debug allowed) and `.env.pitch` (both false), read in
   `src/config.ts`.
 - URL flags work in the query string or after the hash:
 
-  | Flag | Effect |
-  |---|---|
-  | `?lang=en\|ar` | Force the language for one visit |
-  | `?debug` | FPS panel, with buttons to force a tier and jump to reference views |
-  | `?quality=high\|medium\|low` | Lock the quality tier |
-  | `?tour=1` | Autostart the tour (implement in Phase 6) |
+  | Flag                         | Effect                                                              |
+  | ---------------------------- | ------------------------------------------------------------------- |
+  | `?lang=en\|ar`               | Force the language for one visit                                    |
+  | `?debug`                     | FPS panel, with buttons to force a tier and jump to reference views |
+  | `?quality=high\|medium\|low` | Lock the quality tier                                               |
+  | `?tour=1`                    | Autostart the tour (implement in Phase 6)                           |
+
 - Launcher: `scripts/pitch.mjs` is a zero-dependency Node server for `dist-pitch/`. It opens
   Chrome (or Edge) in kiosk mode at `#/experience`, using a dedicated profile with translation
   disabled. Flags: `--tour`, `--no-kiosk`, `--no-browser`, `--hidpi`.
@@ -350,6 +357,7 @@ src/
    The **first run after a file edit** on the dev server is noisy, because Vite is still
    recompiling. Repeat a measurement before trusting it, and measure the **production build**
    (`npm run build && npx vite preview --port 4173`).
+
 2. **Shadows must not re-render during camera moves.** A focus-following shadow frustum made
    flights about 30 fps. `Environment.fitShadow(min, max)` fits the frustum once, in light space,
    around a box (the masterplan region), with `shadowMap.autoUpdate = false`. When the stadium
@@ -513,6 +521,7 @@ existing exterior.
   7. end card.
 
   Total **2.5–3 minutes**.
+
 - **Captions:** bilingual, lower-third style, crossfading.
 - **Controls:** play/pause, next and previous shot, exit. **Any manual input pauses**: use
   `Experience.onUserInput` and marker or panel clicks.

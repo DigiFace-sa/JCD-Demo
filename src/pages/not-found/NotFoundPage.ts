@@ -4,23 +4,22 @@ import { fragmentFromHtml } from '../../utils/dom';
 
 const createNotFoundPage: PageFactory = () => ({
   mount(outlet) {
+    document.body.dataset.hero = 'false';
     outlet.append(
       fragmentFromHtml(`
-        <section class="stub">
-          <div class="container stub__inner">
-            <p class="eyebrow">404</p>
+        <section class="marketing-page legal-page section container">
+            <p class="eyebrow" data-i18n="pages.notFound.code"></p>
             <h1 class="display" data-i18n="pages.notFound.heading"></h1>
             <p class="lead" data-i18n="pages.notFound.lead"></p>
             <a class="btn btn--secondary" href="#/">
               <span data-i18n="pages.notFound.cta"></span>${icons.arrow}
             </a>
-          </div>
         </section>
       `),
     );
   },
   unmount() {
-    // Static markup only; the router clears the outlet.
+    delete document.body.dataset.hero;
   },
 });
 

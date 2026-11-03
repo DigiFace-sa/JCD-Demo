@@ -5,7 +5,7 @@ import globals from 'globals';
 import tseslint from 'typescript-eslint';
 
 export default defineConfig(
-  { ignores: ['dist', 'dist-pitch', 'node_modules'] },
+  { ignores: ['dist', 'dist-pitch', 'node_modules', 'review'] },
   js.configs.recommended,
   tseslint.configs.strictTypeChecked,
   {

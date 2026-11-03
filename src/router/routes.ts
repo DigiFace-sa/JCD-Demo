@@ -1,8 +1,8 @@
 import { LANDMARKS, isLandmarkId } from '../data/landmarks';
 import { isLegalDoc } from '../data/site';
 import { isStadiumViewId } from '../data/stadium';
+import { NEWS, isNewsId } from '../data/marketing';
 import type { TranslationKey } from '../i18n/i18n';
-import type { StubContent } from '../pages/stub/StubPage';
 import type { PageContext, PageModule } from './Page';
 
 /** `site` shows header + footer; `immersive` is full-bleed (the 3D Experience). */
@@ -23,13 +23,7 @@ export interface RouteDef {
   readonly load: () => Promise<PageModule>;
 }
 
-/** Temporary content pages until the marketing pages are built (Phase 2). */
-const stub =
-  (content: (params: Params) => StubContent): RouteDef['load'] =>
-  () =>
-    import('../pages/stub/StubPage').then((module) => ({
-      default: module.createStubPage(content),
-    }));
+const marketing: RouteDef['load'] = () => import('../pages/marketing/MarketingPage');
 
 const experienceRoute = (pattern: string): RouteDef => ({
   pattern,
@@ -49,32 +43,21 @@ export const routes: readonly RouteDef[] = [
     pageId: 'home',
     layout: 'site',
     title: () => null,
-    load: stub(() => ({
-      eyebrowKey: 'pages.home.eyebrow',
-      headingKey: 'pages.home.heading',
-      leadKey: 'pages.home.lead',
-      showExploreCta: true,
-    })),
+    load: marketing,
   },
   {
     pattern: '/destination',
     pageId: 'destination',
     layout: 'site',
     title: () => 'pages.destination.title',
-    load: stub(() => ({
-      headingKey: 'pages.destination.heading',
-      leadKey: 'pages.destination.lead',
-    })),
+    load: marketing,
   },
   {
     pattern: '/landmarks',
     pageId: 'landmarks',
     layout: 'site',
     title: () => 'pages.landmarks.title',
-    load: stub(() => ({
-      headingKey: 'pages.landmarks.heading',
-      leadKey: 'pages.landmarks.lead',
-    })),
+    load: marketing,
   },
   {
     pattern: '/landmarks/:id',
@@ -82,23 +65,29 @@ export const routes: readonly RouteDef[] = [
     layout: 'site',
     title: (params) => (isLandmarkId(params.id) ? LANDMARKS[params.id].nameKey : null),
     validate: (params) => isLandmarkId(params.id),
-    load: stub((params) => {
-      const landmark = isLandmarkId(params.id) ? LANDMARKS[params.id] : LANDMARKS.stadium;
-      return {
-        eyebrowKey: 'nav.landmarks',
-        headingKey: landmark.nameKey,
-        leadKey: landmark.summaryKey,
-        showExploreCta: true,
-        explorePath: `/experience/${landmark.id}`,
-      };
-    }),
+    load: marketing,
   },
   {
     pattern: '/invest',
     pageId: 'invest',
     layout: 'site',
     title: () => 'pages.invest.title',
-    load: stub(() => ({ headingKey: 'pages.invest.heading', leadKey: 'pages.invest.lead' })),
+    load: marketing,
+  },
+  {
+    pattern: '/news',
+    pageId: 'news',
+    layout: 'site',
+    title: () => 'marketing.common.news',
+    load: marketing,
+  },
+  {
+    pattern: '/news/:story',
+    pageId: 'news-story',
+    layout: 'site',
+    title: (params) => (isNewsId(params.story) ? NEWS[params.story].titleKey : null),
+    validate: (params) => isNewsId(params.story),
+    load: marketing,
   },
   {
     pattern: '/legal/:doc',
@@ -106,10 +95,7 @@ export const routes: readonly RouteDef[] = [
     layout: 'site',
     title: (params) => (isLegalDoc(params.doc) ? `legal.${params.doc}` : null),
     validate: (params) => isLegalDoc(params.doc),
-    load: stub((params) => ({
-      headingKey: isLegalDoc(params.doc) ? `legal.${params.doc}` : 'legal.privacy',
-      leadKey: 'pages.legal.lead',
-    })),
+    load: marketing,
   },
   experienceRoute('/experience'),
   experienceRoute('/experience/:landmark'),

@@ -4,8 +4,8 @@
  */
 :root {
   /* ── Brand ─────────────────────────────────────────────────────────── */
-  --jcdc-primary: #0d4a55; /* [TBC: replace with official JCDC hex] deep Red Sea teal */
-  --jcdc-secondary: #b98f5a; /* [TBC: replace with official JCDC hex] heritage brass */
+  --jcdc-primary: #0076a9; /* Observed on JCDC's public site; [TBC: confirm with brand manual] */
+  --jcdc-secondary: #cc9f53; /* Observed on JCDC's public site; [TBC: confirm with brand manual] */
   --jcdc-accent: #d9784a; /* [TBC: replace with official JCDC hex] sunset coral */
   --jcdc-sand: #efe6d6; /* [TBC: replace with official JCDC hex] coastal sand */
   --jcdc-ink: #11181c; /* [TBC: replace with official JCDC hex] near-black ink */
@@ -70,7 +70,7 @@
   --space-2xl: clamp(4rem, 3rem + 4vw, 7rem);
   --space-3xl: clamp(6rem, 4rem + 8vw, 11rem);
 
-  --container-max: 90rem;
+  --container-max: 108rem;
   --container-gutter: clamp(1rem, 4vw, 4rem);
   --header-height: clamp(4rem, 3.5rem + 1.5vw, 5.25rem);
   --measure: 38rem;

@@ -80,14 +80,15 @@ src/
   router/              hash router, route table, Page interface
   i18n/                en.json, ar.json, i18n.ts (t(), setLang(), DOM binding)
   components/          AppShell, Header, Footer, LangToggle, icons
-  pages/               routed pages (stub pages until Phase 2)
+  pages/marketing/     Home, Destination, landmark pages, Invest, News and legal pages
+  pages/experience/    immersive map and stadium UI
   data/                content structure: ids, i18n keys, links, map layout (no copy lives here)
     landmarks.ts       positions, footprints, camera shots, fact keys
     districts.ts       outlines, label positions, highlight colours
     attractions.ts     positions (only the three named in the brief)
   styles/              tokens.css, base.css, layout.css, components/*.css
   assets/patterns/     original roshan-inspired lattice tile
-  experience/          the 3D Experience (lazy-loaded; only the Experience route pays for it)
+  experience/          the 3D Experience (lazy-loaded on its route or near Home’s live preview)
     Experience.ts      renderer, scene, camera, frame loop, resize, dispose
     config/scene.ts    ART DIRECTION: sun, sky, light, haze, sea, post, coast (all look values)
     config/views.ts    camera limits, spawn map and reference views
@@ -102,7 +103,8 @@ src/
     interaction/       Controls, CameraDirector (flights), Markers (HTML), MapInteraction
     shaders/           GLSL: sea, atmosphere, facade, district, lattice
   pages/experience/ui/ SidePanel (overview, detail, lists)
-public/brand/          logo-en.svg, logo-ar.svg (placeholders: drop official files in)
+public/brand/          official light SVG and blue/gold PNG; original placeholders retained
+public/images/jcdc/   optimised, self-hosted official concept renders
 scripts/pitch.mjs      zero-dependency pitch launcher (see Pitch day)
 ```
 
@@ -216,19 +218,72 @@ baked while loading and reused on entry/exit. Changing shadow resolution invalid
 
 See [the Phase 5 review](docs/PHASE_5_REVIEW.md) for measurements, checks, open items and every review screenshot path.
 
+## Marketing pages (Phase 2)
+
+The marketing pages use Masar’s panoramic imagery, oversized typography and spacious editorial
+rhythm as a layout reference, with original implementation and Jeddah Central’s blue/gold identity.
+The user authorised official JCDC imagery and content for this phase. No Masar assets or code
+were copied. Home uses an official masterplan render for its opening hero; a separate live 3D
+section introduces the original interactive destination without loading WebGL at the top of Home.
+
+- `#/` — Home, destination counters, landmark cards, district links, live 3D, sustainability,
+  recognition, investment and news.
+- `#/destination` — keyboard-accessible district explorer, attractions and sustainability.
+  `#/destination?district=marina` preselects a district. The SVG projects the same illustrative
+  polygons as the 3D scene; its raised plates and abstract blocks are not surveyed geometry.
+- `#/landmarks` and `#/landmarks/{stadium,opera-house,oceanarium,museum}` — shared templates.
+  The stadium CTA opens `#/experience/stadium/inside` directly.
+- `#/invest` — sector selection, destination rationale, recognition and the demonstration form.
+- `#/news` and `#/news/{pif,forum,stadium}` — locally readable summaries with optional source links.
+- `#/legal/{privacy,terms,cookies}` — placeholder legal text requiring client approval.
+
+Edit marketing text in `marketing.*` in both dictionaries. `src/data/marketing.ts` defines image
+sizes, sector/type IDs and dated news metadata. `src/pages/marketing/` holds the templates and
+small interaction modules; `src/styles/components/marketing.css` holds their responsive styling.
+`data-copy` bindings render review markers in a separate small line while keeping them in the
+same translation string; the pitch build strips them as usual. Language changes preserve map
+selection and form values. New reveals and counters respect reduced motion.
+
+The investment form is **front-end only**. It validates required fields, email and optional phone,
+announces errors and focuses the first invalid control. Success explicitly states that no data
+was sent or stored; entered values are cleared immediately. Sector buttons preselect the form’s
+sector. A production form service, approved consent/legal text and delivery/error handling remain
+outside this demo.
+
+All images, logos and fonts are local. The 13 WebP concept renders total 5,361,834 bytes; lazy
+loading keeps supporting imagery out of the initial hero request. Exact origins, sizes, verified
+social profiles and news dates are recorded in [SOURCE_ASSETS.md](docs/SOURCE_ASSETS.md).
+External social and news-source links load only when followed. To replace imagery, keep the
+filenames and update dimensions in `MARKETING_IMAGES` if the aspect ratio changes.
+
+Home’s non-interactive scene loads when its section approaches the viewport, pauses offscreen,
+and disposes on route changes. It uses `Experience` with `variant: 'hero'`; `?debug&quality=high`
+can measure it in review builds. A missing WebGL capability leaves the official marina image
+visible. Tab visibility resumes only a scene that was previously running.
+
+The approved 5.7 million m² area and omission of stadium capacity remain in effect. The approved
+Opera House total (2,400, with the supplied theatre breakdown) is retained; the current official
+page’s headline and breakdown conflict, so obtain client confirmation before changing it.
+News is a dated local snapshot rather than a live feed. See [PHASE_2_REVIEW.md](docs/PHASE_2_REVIEW.md)
+for verification results, limitations and every review screenshot path.
+
 ## Brand tokens
 
 `src/styles/tokens.css` holds five brand colours (`--jcdc-primary`, `--jcdc-secondary`,
-`--jcdc-accent`, `--jcdc-sand`, `--jcdc-ink`), currently placeholders marked
-`[TBC: replace with official JCDC hex]`. Every other colour is mixed from these, so replacing the
-five hex values restyles the whole site. `--color-highlight` darkens the secondary colour for AA
+`--jcdc-accent`, `--jcdc-sand`, `--jcdc-ink`). Primary blue `#0076a9` and secondary gold
+`#cc9f53` were observed in JCDC’s public stylesheet; confirm them against the brand manual.
+Coral, sand and ink remain placeholders marked `[TBC: replace with official JCDC hex]`. Semantic
+colours are mixed from the brand tokens, so replacing them restyles the site. `--color-highlight` darkens the secondary colour for AA
 text contrast. Re-check it if the official secondary colour is much darker or lighter.
 
 Fonts: IBM Plex Sans (Latin) and IBM Plex Sans Arabic, self-hosted via `@fontsource` packages and
 bundled into the build. The family swaps automatically on `<html lang="ar">`.
 
-Logos: replace `public/brand/logo-en.svg` and `public/brand/logo-ar.svg`. They render at 32–40 px
-high, width auto.
+The marketing header and footer use `public/brand/official-logo-light.svg` and
+`official-logo-dark.png`, genuine assets from the official site. A native dark vector was not
+available, so its original PNG is preserved. The original `logo-en.svg` / `logo-ar.svg`
+placeholders are retained as fallback assets. No official logo was redrawn
+or recoloured.
 
 ## Arabic review list
 
@@ -252,3 +307,15 @@ sure of:
 | `stadium.hotspots.vip.*`                                                                      | كبار الشخصيات والضيافة                 | Confirm hospitality naming and tone                           |
 | `stadium.enter`, `stadium.back`, `stadium.inside*`, `stadium.explore`, `stadium.markersLabel` | ادخل إلى الملعب، العودة إلى الخريطة، … | Native review of navigation and arrival copy                  |
 | `stadium.hotspots.*.body`                                                                     | جميع النصوص الوصفية لنقاط الاهتمام     | Review every narrative draft with a native Arabic reviewer    |
+
+Additional marketing copy requiring Arabic review:
+
+| Key                                           | Review needed                                                                               |
+| --------------------------------------------- | ------------------------------------------------------------------------------------------- |
+| `marketing.home.*`, `marketing.destination.*` | Headlines, tone and natural line breaks; all creative copy remains draft.                   |
+| `marketing.landmarks.*`                       | Official landmark/district names, theatre terminology and industrial heritage wording.      |
+| `marketing.invest.*`, `marketing.form.*`      | Sector and investor classifications; validation, consent, privacy and demo success wording. |
+| `marketing.news.*`                            | All paraphrased story titles, body text, categories and Gregorian date presentation.        |
+| `marketing.sustainability.*`                  | Coral restoration, public realm, cooling and mobility terminology.                          |
+| `marketing.common.imageAlt.*`                 | Accurate Arabic descriptions of concept renders, including aquarium interiors.              |
+| `marketing.legal.*`                           | All placeholder policy language must be replaced with client-approved Arabic legal text.    |

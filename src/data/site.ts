@@ -10,6 +10,7 @@ export const MAIN_NAV: readonly NavItem[] = [
   { path: '/destination', labelKey: 'nav.destination' },
   { path: '/landmarks', labelKey: 'nav.landmarks' },
   { path: '/invest', labelKey: 'nav.invest' },
+  { path: '/news', labelKey: 'marketing.common.newsNav' },
   { path: '/experience', labelKey: 'nav.experience' },
 ];
 
@@ -28,14 +29,18 @@ export function isLegalDoc(value: string | undefined): value is LegalDoc {
 export interface SocialLink {
   readonly id: string;
   readonly labelKey: TranslationKey;
-  /** [TBC: official JCDC profile URLs]. Null renders the label without a link. */
+  /** Verified official profile URL. Null means an unverified profile, omitted from the footer. */
   readonly href: string | null;
 }
 
 export const SOCIAL_LINKS: readonly SocialLink[] = [
-  { id: 'x', labelKey: 'social.x', href: null },
-  { id: 'instagram', labelKey: 'social.instagram', href: null },
-  { id: 'linkedin', labelKey: 'social.linkedin', href: null },
+  { id: 'x', labelKey: 'social.x', href: 'https://x.com/JCD_SA' },
+  { id: 'instagram', labelKey: 'social.instagram', href: 'https://www.instagram.com/jcd_sa/' },
+  {
+    id: 'linkedin',
+    labelKey: 'social.linkedin',
+    href: 'https://www.linkedin.com/company/jeddahcentral',
+  },
   { id: 'youtube', labelKey: 'social.youtube', href: null },
 ];
 

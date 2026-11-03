@@ -64,6 +64,7 @@ export class Experience implements Disposable {
   private lastTime = 0;
   private elapsed = 0;
   private running = false;
+  private pausedByVisibility = false;
   private disposed = false;
 
   constructor(
@@ -195,6 +196,11 @@ export class Experience implements Disposable {
 
   start(): void {
     if (this.running || this.disposed) return;
+    if (document.hidden) {
+      this.pausedByVisibility = true;
+      return;
+    }
+    this.pausedByVisibility = false;
     this.running = true;
     this.lastTime = performance.now();
     this.frameId = requestAnimationFrame(this.tick);
@@ -202,6 +208,7 @@ export class Experience implements Disposable {
 
   stop(): void {
     this.running = false;
+    this.pausedByVisibility = false;
     cancelAnimationFrame(this.frameId);
   }
 
@@ -295,8 +302,10 @@ export class Experience implements Disposable {
 
   private readonly onVisibilityChange = (): void => {
     if (document.hidden) {
+      const wasRunning = this.running || this.pausedByVisibility;
       this.stop();
-    } else if (!this.disposed) {
+      this.pausedByVisibility = wasRunning;
+    } else if (!this.disposed && this.pausedByVisibility) {
       this.quality.reset(this.elapsed);
       this.start();
     }

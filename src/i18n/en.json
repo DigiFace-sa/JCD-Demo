@@ -103,7 +103,8 @@
       "title": "Page not found",
       "heading": "Page not found",
       "lead": "The page you are looking for does not exist or has moved.",
-      "cta": "Back to home"
+      "cta": "Back to home",
+      "code": "404"
     }
   },
   "status": {
@@ -230,6 +231,249 @@
         "title": "Sports Park",
         "body": "Gardens and green open spaces extend the experience beyond the stadium, inviting time outdoors. [DRAFT — client to approve]"
       }
+    }
+  },
+  "marketing": {
+    "actions": {
+      "discover": "Discover the destination",
+      "explore": "Explore",
+      "viewLandmarks": "Explore the landmarks",
+      "viewAll": "View all stories",
+      "readStory": "Read story",
+      "viewProject": "Discover the landmark",
+      "backLandmarks": "All landmarks",
+      "backNews": "All stories",
+      "register": "Register your interest",
+      "scroll": "Scroll to discover",
+      "map": "Explore the masterplan",
+      "in3d": "Explore in 3D",
+      "enterStadium": "Enter the stadium in 3D",
+      "source": "Original JCDC story",
+      "backHome": "Back to home",
+      "learnMore": "Discover more"
+    },
+    "common": {
+      "destination": "Jeddah Central Destination",
+      "location": "Jeddah, Saudi Arabia",
+      "landmark": "Signature landmark",
+      "officialRender": "Official JCDC concept render",
+      "threeD": "3D Experience",
+      "conceptNote": "An original, illustrative 3D experience. Official project imagery is shown on these pages.",
+      "recognition": "Recognised for a better tomorrow",
+      "recognitionLead": "Quality, excellence and sustainable design.",
+      "leed": "LEED Gold pre-certificate",
+      "efqm": "EFQM 4-star recognition",
+      "kaqa": "King Abdulaziz Quality Award · Silver",
+      "district": "District",
+      "number": "{number}",
+      "news": "News & stories",
+      "newsNav": "News",
+      "imageAlt": {
+        "masterplan": "Official concept aerial of Jeddah Central and its Red Sea waterfront",
+        "waterfront": "Official concept of the waterfront promenade, gardens and industrial heritage buildings",
+        "stadium": "Official concept aerial of the Jeddah Central Stadium",
+        "opera-house": "Official concept of the Opera House on the waterfront",
+        "oceanarium": "Official concept of the Oceanarium and Coral Farm",
+        "museum": "Official concept of the Museum within a former desalination plant",
+        "beach": "Official concept of the public beach and coastal promenade",
+        "marina": "Official concept of the marina and waterfront at sunset",
+        "coral": "Official concept of coral reef exhibits inside the Oceanarium",
+        "park": "Official concept of landscaped public gardens",
+        "sustainability": "Official JCDC waterfront concept illustrating public spaces and landscape",
+        "entertainment-pier": "Official concept of the Entertainment Pier",
+        "cruise-terminal": "Official concept of the Cruise Terminal"
+      }
+    },
+    "home": {
+      "line1": "Jeddah",
+      "line2": "Central",
+      "eyebrow": "A destination on the Red Sea",
+      "lead": "A waterfront destination in the heart of Jeddah, bringing culture, leisure and contemporary living together.",
+      "overviewEye": "The destination",
+      "overviewTitle": "The spirit of Jeddah.\nA new horizon. [DRAFT — client to approve]",
+      "overviewBody": "Along the Red Sea, a new waterfront destination brings a stadium, an opera house, an oceanarium and an industrial heritage museum into the heart of the city.",
+      "overviewNote": "Distinctive places.\nShared possibilities. [DRAFT — client to approve]",
+      "landmarksEye": "Landmarks with a sense of place",
+      "landmarksTitle": "Extraordinary places,\nunforgettable experiences. [DRAFT — client to approve]",
+      "districtsEye": "Six districts. One destination.",
+      "districtsTitle": "Find your place\nin Jeddah Central. [DRAFT — client to approve]",
+      "districtsBody": "Explore the character of each district, from the marina and the beach to culture, sport and wellbeing. [DRAFT — client to approve]",
+      "experienceEye": "A different perspective",
+      "experienceTitle": "Don’t just imagine it.\nExplore it. [DRAFT — client to approve]",
+      "experienceBody": "Move across the waterfront, discover the landmarks and fly into our original stadium experience.",
+      "sustainEye": "Sustainability by design",
+      "sustainTitle": "A future with\nmore room for life. [DRAFT — client to approve]",
+      "sustainBody": "Coral restoration, shaded streets, smart mobility and generous public spaces shape the destination’s approach to sustainability.",
+      "publicRealm": "Public realm",
+      "publicRealmValue": "40%",
+      "investEye": "A waterfront of opportunity",
+      "investTitle": "Be part of\nwhat comes next. [DRAFT — client to approve]",
+      "investBody": "Explore opportunities across residential, hospitality, retail, wellness and commercial sectors.",
+      "newsTitle": "The destination,\nin the making. [DRAFT — client to approve]"
+    },
+    "destination": {
+      "title": "A new perspective\non waterfront living. [DRAFT — client to approve]",
+      "lead": "A Red Sea waterfront in the heart of Jeddah, connected by culture, leisure and green open spaces.",
+      "mapEye": "Explore the districts",
+      "mapTitle": "Many ways to belong. [DRAFT — client to approve]",
+      "mapLead": "Select a district to discover its character.",
+      "mapLabel": "Interactive illustrative district map",
+      "mapNote": "Illustrative district diagram; not a surveyed masterplan. [DRAFT — client to approve]",
+      "attractionsEye": "Along the waterfront",
+      "attractionsTitle": "Open to discovery. [DRAFT — client to approve]",
+      "sustainTitle": "Sustainability,\npart of everyday life. [DRAFT — client to approve]"
+    },
+    "landmarks": {
+      "title": "Places that\nbring us together. [DRAFT — client to approve]",
+      "lead": "Sport, performance, marine discovery and industrial heritage. Explore the landmarks at the heart of Jeddah Central.",
+      "storyEye": "A landmark. A new perspective.",
+      "facts": "At a glance",
+      "experienceTitle": "See it from\na new perspective. [DRAFT — client to approve]",
+      "experienceBody": "Continue into the interactive destination and discover our original interpretation of this landmark.",
+      "related": "Continue your discovery",
+      "districtLabel": "District",
+      "purposeLabel": "Experience",
+      "stadium": {
+        "title": "Sport. Culture.\nShared moments. [DRAFT — client to approve]",
+        "body": "The stadium is a sports, entertainment and cultural hub inspired by local architecture. Gardens and green open spaces connect the venue to the wider destination.",
+        "detail": "Enter our original interactive stadium, travel through the passage into the bowl and explore its pitch, seating, roof and hospitality spaces.",
+        "district": "Sports Park",
+        "purpose": "Sport, entertainment & culture"
+      },
+      "opera-house": {
+        "title": "A new stage\nfor culture. [DRAFT — client to approve]",
+        "body": "The Opera House brings performance and cultural programming to the waterfront. Flexible theatres create spaces for a range of performances, gatherings and creative expression.",
+        "detail": "Saudi Arabia’s first opera house is planned with a main theatre, a medium theatre and a training hall.",
+        "district": "Beach, Leisure & Lifestyle",
+        "purpose": "Performance & culture"
+      },
+      "oceanarium": {
+        "title": "A closer connection\nto the Red Sea. [DRAFT — client to approve]",
+        "body": "The Oceanarium and Coral Farm celebrates the Red Sea’s marine environment through exhibits, learning and coral conservation.",
+        "detail": "The destination’s marine landmark connects discovery with research, coral farming and restoration.",
+        "district": "Marina",
+        "purpose": "Marine discovery & conservation"
+      },
+      "museum": {
+        "title": "Industrial heritage.\nCreative futures. [DRAFT — client to approve]",
+        "body": "The Museum reimagines a former desalination plant as a place for industrial heritage, art education and cultural programming.",
+        "detail": "Galleries, learning spaces and a Makers’ Souk connect Jeddah’s industrial past with the work of artists, designers and craftspeople.",
+        "district": "Culture & Creativity",
+        "purpose": "Heritage, art & learning"
+      }
+    },
+    "sustainability": {
+      "coral": {
+        "title": "Coral restoration",
+        "body": "Supporting the Red Sea’s marine ecosystems through coral research and restoration."
+      },
+      "realm": {
+        "title": "Space for everyone",
+        "body": "Public realm is part of the destination’s commitment to shared outdoor life. [DRAFT — client to approve]"
+      },
+      "shade": {
+        "title": "Shade & comfort",
+        "body": "Shading systems and active outdoor cooling create more comfortable spaces."
+      },
+      "mobility": {
+        "title": "Smarter connections",
+        "body": "Smart mobility and infrastructure connect places across the destination."
+      }
+    },
+    "invest": {
+      "title": "Your next chapter\nstarts here. [DRAFT — client to approve]",
+      "lead": "Investment opportunities on Jeddah’s Red Sea waterfront, across residential, hospitality, retail, wellness and commercial sectors.",
+      "sectorsEye": "A destination. A range of opportunities.",
+      "sectorsTitle": "Invest in the\npossibilities. [DRAFT — client to approve]",
+      "whyEye": "Why Jeddah Central",
+      "whyTitle": "A distinctive setting\nfor long-term ambition. [DRAFT — client to approve]",
+      "locationTitle": "At the heart of Jeddah",
+      "locationBody": "A waterfront location on the Red Sea, within the city.",
+      "landmarksTitle": "Signature destinations",
+      "landmarksBody": "A stadium, an opera house, an oceanarium and a museum.",
+      "scaleTitle": "A connected masterplan",
+      "scaleBody": "Districts, landmarks and public spaces within a shared destination.",
+      "sustainTitle": "Sustainability by design",
+      "sustainBody": "Coral restoration, public realm, shade and smart mobility.",
+      "sectors": {
+        "residential": "Residential",
+        "hospitality": "Hospitality",
+        "retail": "Retail",
+        "wellness": "Wellness",
+        "commercial": "Commercial"
+      },
+      "sectorBody": {
+        "residential": "Places for everyday living, connected to the waterfront. [DRAFT — client to approve]",
+        "hospitality": "Welcoming experiences that connect visitors with the destination. [DRAFT — client to approve]",
+        "retail": "Spaces for discovery, dining and daily life. [DRAFT — client to approve]",
+        "wellness": "Opportunities centred on wellbeing and a more balanced way of life. [DRAFT — client to approve]",
+        "commercial": "A setting for business within a mixed-use destination. [DRAFT — client to approve]"
+      }
+    },
+    "form": {
+      "eye": "Start a conversation",
+      "title": "Register your interest",
+      "intro": "Tell us about yourself and the opportunities you are interested in.",
+      "demo": "Demonstration form. Your details are not sent or stored.",
+      "required": "Required",
+      "optional": "Optional",
+      "name": "Full name",
+      "email": "Email address",
+      "phone": "Phone number",
+      "company": "Company",
+      "sector": "Sector of interest",
+      "type": "Investor type",
+      "message": "Your message",
+      "choose": "Please select",
+      "consent": "I agree to the privacy notice for this demonstration.",
+      "privacy": "Read the privacy notice",
+      "submit": "Submit your interest",
+      "errors": {
+        "required": "Please complete this field.",
+        "email": "Please enter a valid email address.",
+        "phone": "Please enter a valid phone number.",
+        "consent": "Please confirm your agreement to continue.",
+        "summary": "Please review the highlighted fields."
+      },
+      "types": {
+        "investor": "Investor",
+        "developer": "Developer",
+        "operator": "Operator",
+        "advisor": "Advisor"
+      },
+      "successTitle": "Thank you for your interest.",
+      "successBody": "You have completed the demonstration. No details have been sent or stored.",
+      "again": "Start another enquiry"
+    },
+    "news": {
+      "title": "A destination\ntaking shape. [DRAFT — client to approve]",
+      "lead": "Updates from Jeddah Central, summarised from the official newsroom.",
+      "categoryInvestment": "Investment",
+      "categoryCompany": "Company news",
+      "categoryStadium": "Stadium",
+      "pif": {
+        "title": "Connecting with investors at the PIF–Private Sector Forum",
+        "date": "09 February 2026",
+        "body": "Jeddah Central presented investment opportunities and development plans at the PIF–Private Sector Forum in Riyadh. The participation included an investor session focused on mixed-use, residential and commercial opportunities in the Central District."
+      },
+      "forum": {
+        "title": "Jeddah Central at the Future Real Estate Forum",
+        "date": "25 January 2026",
+        "body": "Jeddah Central participated as a strategic partner at the Future Real Estate Forum in Riyadh. Discussions covered destination development, investment opportunities and partnerships."
+      },
+      "stadium": {
+        "title": "A site visit focused on stadium progress",
+        "date": "22 January 2026",
+        "body": "Jeddah Central hosted a Ministry of Sport delegation to review progress at the stadium. The visit included discussions on construction, sports infrastructure and opportunities for collaboration."
+      }
+    },
+    "legal": {
+      "eye": "Legal information",
+      "title": "Information & policies",
+      "body": "Legal wording for this demonstration is awaiting client approval. [TBC: JCDC to provide approved legal text]",
+      "privacyBody": "This local demonstration does not transmit or store information entered in the investment form. Approved wording for any future data collection will be supplied by JCDC. [TBC: official privacy notice]",
+      "termsBody": "Project information, imagery and interactive models are presented for demonstration. Approved terms for the production website will be supplied by JCDC. [TBC: official terms]",
+      "cookiesBody": "This demonstration stores the selected language in your browser. It does not load analytics or marketing cookies. [TBC: production cookies policy]"
     }
   }
 }

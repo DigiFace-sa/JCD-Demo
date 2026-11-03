@@ -123,7 +123,6 @@ code {
 /* Copy can collapse to empty when placeholder markers are stripped (pitch build). */
 .lead:empty,
 .eyebrow:empty,
-.stub__note:empty,
 .site-footer__pif:empty {
   display: none;
 }

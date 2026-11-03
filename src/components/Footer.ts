@@ -11,11 +11,13 @@ const navList = (items: readonly NavItem[]): string =>
     .join('');
 
 const socialList = (): string =>
-  SOCIAL_LINKS.map((link) =>
-    link.href
-      ? `<li><a class="site-footer__link" href="${link.href}" rel="noopener" target="_blank" data-i18n="${link.labelKey}"></a></li>`
-      : `<li><span class="site-footer__link site-footer__link--inert" data-i18n="${link.labelKey}"></span></li>`,
-  ).join('');
+  SOCIAL_LINKS.filter((link) => link.href !== null)
+    .map((link) =>
+      link.href
+        ? `<li><a class="site-footer__link" href="${link.href}" rel="noopener" target="_blank" data-i18n="${link.labelKey}"></a></li>`
+        : `<li><span class="site-footer__link site-footer__link--inert" data-i18n="${link.labelKey}"></span></li>`,
+    )
+    .join('');
 
 export function createFooter(): HTMLElement {
   const fragment = fragmentFromHtml(`
@@ -23,6 +25,7 @@ export function createFooter(): HTMLElement {
       <div class="site-footer__pattern pattern-roshan" aria-hidden="true"></div>
       <div class="container site-footer__grid">
         <div class="site-footer__brand">
+          <img class="site-footer__logo" src="brand/official-logo-light.svg" alt="" width="104" height="56" loading="lazy" />
           <p class="site-footer__name" data-i18n="meta.siteName"></p>
           <p class="site-footer__tagline" data-i18n="footer.tagline"></p>
           <p class="site-footer__pif" data-i18n="footer.pifCompany"></p>

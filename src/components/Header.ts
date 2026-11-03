@@ -1,5 +1,5 @@
 import { MAIN_NAV } from '../data/site';
-import { getLang, onLangChange, translateDom } from '../i18n/i18n';
+import { translateDom } from '../i18n/i18n';
 import type { Router } from '../router/Router';
 import { notFoundRoute } from '../router/routes';
 import { fragmentFromHtml, requireElement } from '../utils/dom';
@@ -8,8 +8,6 @@ import { createLangToggle } from './LangToggle';
 
 /** Scroll distance (px) after which the header gains its solid background. */
 const SCROLLED_THRESHOLD = 8;
-
-const logoSrc = (): string => `brand/logo-${getLang()}.svg`;
 
 function isActive(itemPath: string, currentPath: string): boolean {
   return itemPath === '/'
@@ -27,7 +25,8 @@ export function createHeader(router: Router): HTMLElement {
     <header class="site-header" data-scrolled="false" data-menu-open="false">
       <div class="site-header__inner container">
         <a class="site-header__brand" href="#/" data-i18n-attr="aria-label:a11y.homeLink">
-          <img class="site-header__logo" alt="" height="40" />
+          <img class="site-header__logo site-header__logo--dark" src="brand/official-logo-dark.png" alt="" width="132" height="72" />
+          <img class="site-header__logo site-header__logo--light" src="brand/official-logo-light.svg" alt="" width="104" height="56" />
         </a>
         <nav class="site-nav" id="site-nav" data-i18n-attr="aria-label:a11y.mainNav">
           <ul class="site-nav__list">${navItems}</ul>
@@ -47,20 +46,16 @@ export function createHeader(router: Router): HTMLElement {
   `);
 
   const header = requireElement(fragment, '.site-header', HTMLElement);
-  const logo = requireElement(header, '.site-header__logo', HTMLImageElement);
   const menuButton = requireElement(header, '.site-header__menu', HTMLButtonElement);
   requireElement(header, '.site-header__lang', HTMLSpanElement).replaceWith(createLangToggle());
-
-  logo.src = logoSrc();
-  onLangChange(() => {
-    logo.src = logoSrc();
-  });
 
   const setMenuOpen = (open: boolean): void => {
     header.dataset.menuOpen = String(open);
     menuButton.setAttribute('aria-expanded', String(open));
     menuButton.setAttribute('data-i18n-attr', `aria-label:a11y.${open ? 'closeMenu' : 'openMenu'}`);
     translateDom(menuButton);
+    if (open)
+      header.querySelector<HTMLAnchorElement>('.site-nav__link')?.focus({ preventScroll: true });
   };
 
   menuButton.addEventListener('click', () => {
