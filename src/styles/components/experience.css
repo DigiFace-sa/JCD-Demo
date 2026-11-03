@@ -1,24 +1,43 @@
 .experience {
   position: relative;
-  display: grid;
-  place-items: center;
   min-block-size: 100dvh;
-  padding: var(--space-xl) var(--container-gutter);
   overflow: hidden;
   color: var(--color-inverse-text);
   --color-focus: var(--color-inverse-focus);
-  /* Stand-in sunset until the WebGL scene lands in Phase 3. */
+  /* Backdrop while the scene loads; tuned to the scene's dusk palette. */
   background:
     radial-gradient(
-      120% 70% at 50% 100%,
-      color-mix(in oklab, var(--jcdc-accent) 55%, transparent),
+      120% 70% at 30% 100%,
+      color-mix(in oklab, var(--jcdc-accent) 45%, transparent),
       transparent 60%
     ),
     linear-gradient(
       to bottom,
       var(--jcdc-ink),
-      color-mix(in oklab, var(--jcdc-primary) 70%, var(--jcdc-ink))
+      color-mix(in oklab, var(--jcdc-primary) 60%, var(--jcdc-ink))
     );
+}
+
+.experience__stage {
+  position: absolute;
+  inset: 0;
+}
+
+.experience-canvas {
+  inline-size: 100%;
+  block-size: 100%;
+  opacity: 0;
+  transition: opacity 1.2s var(--ease-out);
+}
+
+.experience[data-state='ready'] .experience-canvas {
+  opacity: 1;
+}
+
+.experience-canvas:focus-visible {
+  outline: 2px solid var(--color-inverse-focus);
+  outline-offset: -4px;
+  border-radius: 0;
 }
 
 .experience__toolbar {
@@ -28,20 +47,99 @@
   display: flex;
   justify-content: space-between;
   gap: var(--space-s);
+  pointer-events: none;
 }
 
-.experience__placeholder {
-  display: grid;
+.experience__toolbar > * {
+  pointer-events: auto;
+}
+
+.experience__status {
+  position: absolute;
+  inset-block-end: var(--space-xl);
+  inset-inline: 0;
+  text-align: center;
+  font-size: var(--step--1);
+  letter-spacing: var(--tracking-eyebrow);
+  text-transform: uppercase;
+  color: var(--color-inverse-muted);
+  transition: opacity var(--duration-slow) var(--ease-out);
+  animation: experience-pulse 2.4s var(--ease-in-out) infinite;
+}
+
+.experience:not([data-state='loading']) .experience__status {
+  opacity: 0;
+  animation: none;
+}
+
+@keyframes experience-pulse {
+  50% {
+    opacity: 0.45;
+  }
+}
+
+.experience__fallback {
+  position: absolute;
+  inset: 0;
+  display: none;
+  place-content: center;
   justify-items: center;
   gap: var(--space-m);
+  padding: var(--container-gutter);
   text-align: center;
 }
 
-.experience__placeholder .lead {
+.experience__fallback .lead {
   color: var(--color-inverse-muted);
 }
 
-.experience__target {
-  font-size: var(--step--1);
-  color: var(--color-inverse-muted);
+.experience[data-state='fallback'] .experience__fallback {
+  display: grid;
+}
+
+/* ?debug overlay (developer tooling; absent from pitch builds). */
+.debug-panel {
+  position: absolute;
+  inset-block-end: var(--space-s);
+  left: var(--space-s);
+  z-index: var(--z-overlay);
+  display: grid;
+  gap: var(--space-2xs);
+  padding: var(--space-xs);
+  border-radius: var(--radius-m);
+  background: rgb(0 0 0 / 0.72);
+  color: #e8f0e8;
+  font: 12px/1.45 var(--font-mono);
+  direction: ltr;
+  text-align: left;
+}
+
+.debug-panel pre {
+  margin: 0;
+  font: inherit;
+}
+
+.debug-panel__row {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.debug-panel__row span {
+  inline-size: 3.5em;
+  opacity: 0.7;
+}
+
+.debug-panel button {
+  padding: 2px 8px;
+  border: 1px solid rgb(255 255 255 / 0.25);
+  border-radius: 4px;
+  background: transparent;
+  color: inherit;
+  font: inherit;
+  cursor: pointer;
+}
+
+.debug-panel button:hover {
+  background: rgb(255 255 255 / 0.12);
 }

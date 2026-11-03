@@ -26,19 +26,43 @@ npm run dev            # local dev server
 
 Both builds are fully self-contained and run offline. Routing uses the URL hash (`#/experience`),
 so any static server works with no rewrite rules. Opening `index.html` straight from disk
-(`file://`) is not supported: browsers block ES modules there. Use `npm run preview:pitch` or any
-static server.
+(`file://`) is not supported: browsers block ES modules there. Use the pitch launcher below,
+`npm run preview:pitch`, or any static server.
+
+## Pitch day
+
+One-time preparation on the pitch machine: install [Node.js](https://nodejs.org) (LTS), copy this
+folder over, then run `npm install` and `npm run build:pitch` once.
+
+On the day, **double-click**:
+
+- macOS: `start-pitch.command` (the first time, right-click › Open to get past Gatekeeper)
+- Windows: `start-pitch.bat`
+
+It serves `dist-pitch/` on `localhost` (no internet needed) and opens Chrome, or Edge if Chrome
+is missing, full-screen in kiosk mode at the 3D Experience. A separate browser profile is used,
+so personal tabs, extensions and translation prompts never appear. Exit with **Cmd+Q** (Mac) or
+**Alt+F4** (Windows); the local server stops with it.
+
+For rehearsals or other entry points, run the script directly:
+
+```bash
+node scripts/pitch.mjs              # kiosk, 3D Experience
+node scripts/pitch.mjs --tour       # kiosk, autostart the Guided Tour (Phase 6)
+node scripts/pitch.mjs --no-kiosk   # normal window
+node scripts/pitch.mjs --no-browser # serve only (open the printed address yourself)
+```
 
 ## URL flags
 
 Flags work in the query string or after the hash: `?debug#/experience` or `#/experience?debug`.
 
-| Flag                         | Effect                                                      |
-| ---------------------------- | ----------------------------------------------------------- |
-| `?lang=en` / `?lang=ar`      | Force the language for this visit (not persisted)           |
-| `?debug`                     | FPS panel and diagnostics (Phase 3; ignored in pitch build) |
-| `?quality=high\|medium\|low` | Override adaptive 3D quality (Phase 3)                      |
-| `?tour=1`                    | Autostart the Guided Tour (Phase 6)                         |
+| Flag                         | Effect                                                    |
+| ---------------------------- | --------------------------------------------------------- |
+| `?lang=en` / `?lang=ar`      | Force the language for this visit (not persisted)         |
+| `?debug`                     | FPS panel, tier/view buttons (ignored in the pitch build) |
+| `?quality=high\|medium\|low` | Lock the 3D quality tier (disables adaptive quality)      |
+| `?tour=1`                    | Autostart the Guided Tour (Phase 6)                       |
 
 ## Project structure
 
@@ -53,8 +77,44 @@ src/
   data/                content structure (ids, i18n keys, links); no copy lives here
   styles/              tokens.css, base.css, layout.css, components/*.css
   assets/patterns/     original roshan-inspired lattice tile
+  experience/          the 3D Experience (lazy-loaded; only the Experience route pays for it)
+    Experience.ts      renderer, scene, camera, frame loop, resize, dispose
+    config/scene.ts    ART DIRECTION: sun, sky, light, haze, sea, post, coast (all look values)
+    config/views.ts    camera limits and reference views
+    core/              Renderer, Composer (post chain), Quality (tiers + adaptive), Debug
+    world/             Environment (sky/sun/IBL), Atmosphere (haze), Sea, Terrain, ContextCity,
+                       Facade, ShoreField (shore distance field), Coastline (placeholder outline)
+    interaction/       Controls (orbit/pan/zoom with limits and damping)
+    shaders/           GLSL: sea, atmosphere, facade
 public/brand/          logo-en.svg, logo-ar.svg (placeholders: drop official files in)
+scripts/pitch.mjs      zero-dependency pitch launcher (see Pitch day)
 ```
+
+## 3D quality and performance
+
+Three tiers (`src/experience/core/Quality.ts`):
+
+| Tier   | Render cap         | Shadows | MSAA | Bloom      |
+| ------ | ------------------ | ------- | ---- | ---------- |
+| High   | 2560×1440 (≤2×DPR) | 4096    | 4×   | ½-res blur |
+| Medium | 1920×1080          | 2048    | 2×   | ⅓-res blur |
+| Low    | 1280×720           | off     | off  | off        |
+
+The starting tier comes from the GPU name (software renderers → Low, integrated Intel → Medium,
+everything else → High). While running, if frames average slower than ~50 fps, render resolution
+drops in steps (×0.85, ×0.7), then the tier drops. It never climbs back a tier on its own, because
+visible oscillation would be worse than a slightly softer image. `?quality=` or the debug panel
+locks a tier.
+
+Output is always the full display resolution; a 4K TV gets a 1440p render upscaled. Measured on
+an entry-level Apple M1 (the dev machine): High holds 60 fps at 1080p, about 48 fps at 1440p.
+
+## 3D art direction
+
+Every look value lives in `src/experience/config/scene.ts` (sun bearing and elevation, sky
+model and grading, light colours, haze density, sea colours and glitter, bloom, vignette). Change
+values there and reload; no other file needs touching. Reference views for checking the look are
+in `config/views.ts` and selectable from the `?debug` panel.
 
 ## Editing content
 

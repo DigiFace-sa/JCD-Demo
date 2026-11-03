@@ -18,6 +18,11 @@ export default defineConfig(
       '@typescript-eslint/restrict-template-expressions': ['error', { allowNumber: true }],
     },
   },
-  { files: ['**/*.js'], extends: [tseslint.configs.disableTypeChecked] },
+  { files: ['**/*.js', '**/*.mjs'], extends: [tseslint.configs.disableTypeChecked] },
+  {
+    files: ['scripts/**'],
+    languageOptions: { globals: globals.node },
+    rules: { 'no-console': 'off' },
+  },
   prettier,
 );
