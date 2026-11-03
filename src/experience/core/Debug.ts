@@ -1,4 +1,4 @@
-import type { WebGLRenderer } from 'three';
+import type { PerspectiveCamera, WebGLRenderer } from 'three';
 import { QUALITY_TIERS, type QualityTier } from '../../config';
 import type { Disposable } from '../types';
 import type { QualityState } from './Quality';
@@ -12,6 +12,7 @@ export interface DebugCallbacks {
 }
 
 export interface DebugFrame {
+  readonly camera: PerspectiveCamera;
   readonly delta: number;
   readonly quality: QualityState;
   readonly pixelRatio: number;
@@ -86,6 +87,7 @@ export class Debug implements Disposable {
       `Viewport ${frame.width}×${frame.height} css`,
       `Calls    ${render.calls}   tris ${(render.triangles / 1000).toFixed(0)}k`,
       `Memory   ${memory.geometries} geo, ${memory.textures} tex, ${programs?.length ?? 0} programs`,
+      `Camera   ${frame.camera.position.x.toFixed(1)}, ${frame.camera.position.y.toFixed(1)}, ${frame.camera.position.z.toFixed(1)}; FOV ${frame.camera.fov.toFixed(1)}`,
       `Effects  shadows ${settings.shadows ? settings.shadowMapSize : 'off'}, MSAA ${settings.msaaSamples}, bloom ${settings.bloom ? `×${settings.bloomScale}` : 'off'}`,
       `GPU      ${this.gpu}`,
     ].join('\n');

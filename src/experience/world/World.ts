@@ -1,4 +1,10 @@
-import type { PerspectiveCamera, Scene, WebGLRenderer } from 'three';
+import {
+  AmbientLight,
+  MathUtils,
+  type PerspectiveCamera,
+  type Scene,
+  type WebGLRenderer,
+} from 'three';
 import { MASTERPLAN } from '../config/masterplan';
 import { COAST } from '../config/scene';
 import type { Disposable } from '../types';
@@ -12,8 +18,14 @@ import { Sea } from './Sea';
 import { ShoreField } from './ShoreField';
 import { Terrain } from './Terrain';
 
+/** Bounced floodlights lift the enclosed terraces without changing the exterior lighting. */
+const STADIUM_FILL = { color: '#d8e4ed', intensity: 1.8, damping: 5 } as const;
+
 /** Assembles the world: sky and light, sea, coast, surrounding city, masterplan, landmarks. */
 export class World implements Disposable {
+  private interior = false;
+  /** Bounced floodlight fill for the enclosed bowl; exterior art direction stays untouched. */
+  private readonly stadiumFill = new AmbientLight(STADIUM_FILL.color, 0);
   readonly atmosphere = new Atmosphere();
   readonly environment: Environment;
   readonly shore: { readonly fine: ShoreField; readonly coarse: ShoreField };
@@ -51,15 +63,36 @@ export class World implements Disposable {
       this.city.object,
       this.masterplan.object,
       this.landmarks.object,
+      this.stadiumFill,
     );
     this.environment.bake(renderer);
   }
 
   update(delta: number, elapsed: number, camera: PerspectiveCamera): void {
+    this.stadiumFill.intensity = MathUtils.lerp(
+      this.stadiumFill.intensity,
+      this.interior ? STADIUM_FILL.intensity : 0,
+      1 - Math.exp(-STADIUM_FILL.damping * delta),
+    );
     this.environment.update(delta, elapsed);
     this.sea.follow(camera);
     this.sea.update(delta, elapsed);
-    this.landmarks.update(delta, elapsed);
+    this.landmarks.update(delta, elapsed, camera);
+  }
+
+  /** Interior occlusion avoids submitting the whole instanced city behind an opaque bowl. */
+  setInterior(interior: boolean): void {
+    if (this.interior === interior) return;
+    this.interior = interior;
+    for (const object of [
+      this.sea.object,
+      this.terrain.object,
+      this.city.object,
+      this.masterplan.object,
+    ])
+      object.visible = !interior;
+    for (const [id, model] of this.landmarks.models)
+      if (id !== 'stadium') model.object.visible = !interior;
   }
 
   dispose(): void {
@@ -69,6 +102,7 @@ export class World implements Disposable {
       this.city.object,
       this.masterplan.object,
       this.landmarks.object,
+      this.stadiumFill,
     );
     this.sea.dispose();
     this.terrain.dispose();

@@ -1,4 +1,12 @@
-import { Box3, CylinderGeometry, Group, Mesh, MeshBasicMaterial, type Object3D } from 'three';
+import {
+  Box3,
+  CylinderGeometry,
+  Group,
+  Mesh,
+  MeshBasicMaterial,
+  type Object3D,
+  type PerspectiveCamera,
+} from 'three';
 import { LANDMARKS, type LandmarkId } from '../../../data/landmarks';
 import { COAST } from '../../config/scene';
 import type { Disposable, Updatable } from '../../types';
@@ -10,6 +18,10 @@ import type { Atmosphere } from '../Atmosphere';
  * by changing one line in Landmarks.ts (see `gltfLandmark`).
  */
 export interface LandmarkModel extends Disposable, Partial<Updatable> {
+  /** Optional camera-dependent detail, independent of animation. */
+  updateView?: (camera: PerspectiveCamera) => void;
+  /** Pin close detail during an entry flight so the one-time shadow fit uses the real interior. */
+  setDetailPinned?: (pinned: boolean) => void;
   readonly id: LandmarkId;
   /** Positioned at the landmark's site (data/landmarks.ts). */
   readonly object: Object3D;

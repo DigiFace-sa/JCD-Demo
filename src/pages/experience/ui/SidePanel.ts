@@ -4,6 +4,12 @@ import { ATTRACTION_IDS, ATTRACTIONS, type AttractionId } from '../../../data/at
 import { DISTRICT_IDS, DISTRICTS, isDistrictId } from '../../../data/districts';
 import { isLandmarkId, LANDMARK_IDS, LANDMARKS } from '../../../data/landmarks';
 import { DESTINATION_STATS } from '../../../data/site';
+import {
+  STADIUM_HOTSPOTS,
+  STADIUM_HOTSPOT_IDS,
+  isStadiumHotspotId,
+  isStadiumViewId,
+} from '../../../data/stadium';
 import type { Focus } from '../../../experience/types';
 import { translateDom, type TranslationKey } from '../../../i18n/i18n';
 import { fragmentFromHtml, requireElement } from '../../../utils/dom';
@@ -29,6 +35,17 @@ interface DetailContent {
 const SWITCH_OFFSET = 14;
 
 function detailFor(focus: Focus): DetailContent | null {
+  if (focus.kind === 'hotspot' && isStadiumViewId(focus.id)) {
+    const hotspot = isStadiumHotspotId(focus.id) ? STADIUM_HOTSPOTS[focus.id] : null;
+    return {
+      kindKey: 'stadium.kind',
+      nameKey: hotspot?.titleKey ?? 'stadium.insideTitle',
+      summaryKey: hotspot?.bodyKey ?? 'stadium.insideBody',
+      factKeys: [],
+      noteKey: null,
+      color: null,
+    };
+  }
   if (focus.kind === 'landmark' && isLandmarkId(focus.id)) {
     const landmark = LANDMARKS[focus.id];
     return {
@@ -36,7 +53,7 @@ function detailFor(focus: Focus): DetailContent | null {
       nameKey: landmark.nameKey,
       summaryKey: landmark.summaryKey,
       factKeys: landmark.factKeys,
-      noteKey: 'map.previewNote',
+      noteKey: focus.id === 'stadium' ? null : 'map.previewNote',
       color: null,
     };
   }
@@ -124,6 +141,11 @@ export class SidePanel {
             <p class="map-panel__lead map-panel__summary"></p>
             <ul class="map-panel__facts"></ul>
             <p class="map-panel__note"></p>
+            <a class="btn btn--primary map-panel__enter" href="#/experience/stadium/inside" data-i18n="stadium.enter" hidden></a>
+            <div class="map-panel__hotspots" hidden>
+              <h3 class="map-panel__heading" data-i18n="stadium.explore"></h3>
+              <ul class="map-list">${STADIUM_HOTSPOT_IDS.map((id) => listItem({ kind: 'hotspot', id }, STADIUM_HOTSPOTS[id].titleKey)).join('')}</ul>
+            </div>
           </section>
         </div>
       </aside>
@@ -149,8 +171,23 @@ export class SidePanel {
   show(focus: Focus | null, moveFocus = false): void {
     if (focus?.kind === this.showing?.kind && focus?.id === this.showing?.id) return;
     this.showing = focus;
+    requireElement(this.detail, '.map-panel__enter', HTMLAnchorElement).hidden = !(
+      focus?.kind === 'landmark' && focus.id === 'stadium'
+    );
+    requireElement(this.detail, '.map-panel__hotspots', HTMLDivElement).hidden =
+      focus?.kind !== 'hotspot';
+    requireElement(this.detail, '.map-panel__back span[data-i18n]', HTMLSpanElement).setAttribute(
+      'data-i18n',
+      focus?.kind === 'hotspot' ? 'stadium.back' : 'map.back',
+    );
     const content = focus ? detailFor(focus) : null;
     if (content) this.fillDetail(content);
+    for (const item of this.detail.querySelectorAll<HTMLButtonElement>('.map-list__item')) {
+      item.setAttribute(
+        'aria-pressed',
+        String(focus?.kind === 'hotspot' && item.dataset.id === focus.id),
+      );
+    }
     const incoming = content ? this.detail : this.overview;
     const outgoing = content ? this.overview : this.detail;
     if (this.collapsed && content) this.setCollapsed(false);
@@ -215,11 +252,22 @@ export class SidePanel {
     this.callbacks.onCollapse(collapsed);
   }
 
+  focusHeading(): void {
+    if (this.showing && !this.collapsed)
+      this.detail
+        .querySelector<HTMLElement>('.map-panel__detail-title')
+        ?.focus({ preventScroll: true });
+  }
+
   private focusFromTarget(target: EventTarget | null): Focus | null {
     const item = target instanceof Element ? target.closest<HTMLElement>('.map-list__item') : null;
     const kind = item?.dataset.kind;
     const id = item?.dataset.id;
-    if (!id || (kind !== 'landmark' && kind !== 'district' && kind !== 'attraction')) return null;
+    if (
+      !id ||
+      (kind !== 'landmark' && kind !== 'district' && kind !== 'attraction' && kind !== 'hotspot')
+    )
+      return null;
     return { kind, id };
   }
 
@@ -248,6 +296,7 @@ export class SidePanel {
   private readonly onKeyDown = (event: KeyboardEvent): void => {
     if (event.key === 'Escape' && this.showing) {
       event.preventDefault();
+      event.stopPropagation();
       this.callbacks.onBack();
     }
   };

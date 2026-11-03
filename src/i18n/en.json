@@ -196,5 +196,40 @@
     "select": "Show {name}",
     "hint": "Drag to explore · Scroll to zoom",
     "markersLabel": "Places on the map"
+  },
+  "stadium": {
+    "enter": "Enter the stadium",
+    "back": "Back to map",
+    "kind": "Inside the stadium",
+    "explore": "Explore the stadium",
+    "insideTitle": "Within the bowl",
+    "insideBody": "A new perspective on sport, culture and the city. Explore the pitch, the terraces and the spaces between. [DRAFT — client to approve]",
+    "markersLabel": "Stadium points of interest",
+    "hotspots": {
+      "pitch": {
+        "title": "Pitch",
+        "body": "At the heart of the bowl, a shared stage for moments that bring people together. [DRAFT — client to approve]"
+      },
+      "seating": {
+        "title": "Seating Bowl",
+        "body": "Layered terraces draw the eye towards the field, shaping a continuous embrace around the action. [DRAFT — client to approve]"
+      },
+      "roof": {
+        "title": "Roof",
+        "body": "A light canopy frames the open sky. Its rhythm of structural ribs brings depth to the space below. [DRAFT — client to approve]"
+      },
+      "vip": {
+        "title": "VIP & Hospitality",
+        "body": "Warm interiors and framed views offer a quieter perspective on the energy of the bowl. [DRAFT — client to approve]"
+      },
+      "concourse": {
+        "title": "Concourse",
+        "body": "A sheltered passage connects the gardens with the terraces, revealing the field as you move towards the light. [DRAFT — client to approve]"
+      },
+      "sports-park": {
+        "title": "Sports Park",
+        "body": "Gardens and green open spaces extend the experience beyond the stadium, inviting time outdoors. [DRAFT — client to approve]"
+      }
+    }
   }
 }

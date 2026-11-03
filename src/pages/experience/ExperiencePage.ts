@@ -10,6 +10,7 @@ import { icons } from '../../components/icons';
 import { createLangToggle } from '../../components/LangToggle';
 import { readRuntimeFlags } from '../../config';
 import { isLandmarkId } from '../../data/landmarks';
+import { isStadiumViewId } from '../../data/stadium';
 import type { Experience, Focus } from '../../experience/Experience';
 import { onLangChange } from '../../i18n/i18n';
 import type { PageContext, PageFactory } from '../../router/Page';
@@ -22,7 +23,11 @@ type StageState = 'loading' | 'ready' | 'fallback';
 const HINT_TIMEOUT = 9000;
 
 const landmarkFromContext = (context: PageContext): Focus | null =>
-  isLandmarkId(context.params.landmark) ? { kind: 'landmark', id: context.params.landmark } : null;
+  context.params.landmark === 'stadium' && isStadiumViewId(context.params.hotspot)
+    ? { kind: 'hotspot', id: context.params.hotspot }
+    : isLandmarkId(context.params.landmark)
+      ? { kind: 'landmark', id: context.params.landmark }
+      : null;
 
 const createExperiencePage: PageFactory = (initialContext) => {
   let root: HTMLElement | null = null;
@@ -42,17 +47,22 @@ const createExperiencePage: PageFactory = (initialContext) => {
   const applyFocus = (focus: Focus | null, immediate = false): void => {
     focused = focus;
     panel?.show(focus);
+    const mapBack = root?.querySelector<HTMLElement>('.experience__map-back');
+    if (mapBack) mapBack.hidden = focus?.kind !== 'hotspot';
+    if (root) root.dataset.focus = focus ? `${focus.kind}:${focus.id}` : 'map';
     void experience?.focus(focus, immediate);
   };
 
   /** Map/panel selection: landmarks via the URL, everything else directly. */
   const select = (focus: Focus): void => {
-    if (focus.kind === 'landmark') window.location.hash = `#/experience/${focus.id}`;
+    if (focus.kind === 'hotspot') window.location.hash = `#/experience/stadium/${focus.id}`;
+    else if (focus.kind === 'landmark') window.location.hash = `#/experience/${focus.id}`;
     else applyFocus(focus);
   };
 
   const back = (): void => {
-    if (focused?.kind === 'landmark') window.location.hash = '#/experience';
+    if (focused?.kind === 'landmark' || focused?.kind === 'hotspot')
+      window.location.hash = '#/experience';
     else applyFocus(null);
   };
 
@@ -111,6 +121,23 @@ const createExperiencePage: PageFactory = (initialContext) => {
         requireElement(root, '.experience__toolbar', HTMLElement),
       ]);
       cleanups.push(instance.onSelect(select));
+      cleanups.push(
+        instance.onFlightChange((flying) => {
+          if (root) root.dataset.flying = String(flying);
+          if (panel) panel.element.inert = flying;
+          if (!flying && focused?.kind === 'hotspot') panel?.focusHeading();
+        }),
+      );
+      const escape = (event: KeyboardEvent): void => {
+        if (event.key === 'Escape' && focused) {
+          event.preventDefault();
+          back();
+        }
+      };
+      window.addEventListener('keydown', escape);
+      cleanups.push(() => {
+        window.removeEventListener('keydown', escape);
+      });
       cleanups.push(onLangChange(() => requestAnimationFrame(syncPanelInset)));
       window.addEventListener('resize', syncPanelInset);
       cleanups.push(() => {
@@ -145,6 +172,9 @@ const createExperiencePage: PageFactory = (initialContext) => {
             <a class="btn btn--ghost-on-dark" href="#/">
               <span class="icon-flip-back">${icons.arrow}</span><span data-i18n="nav.backToSite"></span>
             </a>
+            <a class="btn btn--ghost-on-dark experience__map-back" href="#/experience" hidden>
+              <span class="icon-flip-back">${icons.arrow}</span><span data-i18n="stadium.back"></span>
+            </a>
             <span class="experience__lang"></span>
           </div>
           <p class="map-hint" data-visible="false" aria-hidden="true" data-i18n="map.hint"></p>
@@ -168,7 +198,7 @@ const createExperiencePage: PageFactory = (initialContext) => {
       if (!experience || !panel) return; // applied when boot completes
       const landmark = landmarkFromContext(next);
       if (landmark) applyFocus(landmark);
-      else if (focused?.kind === 'landmark') applyFocus(null);
+      else if (focused?.kind === 'landmark' || focused?.kind === 'hotspot') applyFocus(null);
     },
     unmount() {
       unmounted = true;

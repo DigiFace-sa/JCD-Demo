@@ -3,7 +3,7 @@ import { Vector3 } from 'three';
 import { onLangChange, translateDom, type TranslationKey } from '../../i18n/i18n';
 import type { Disposable } from '../types';
 
-export type MarkerKind = 'landmark' | 'district' | 'attraction';
+export type MarkerKind = 'landmark' | 'district' | 'attraction' | 'hotspot';
 
 export interface MarkerSpec {
   readonly kind: MarkerKind;
@@ -18,10 +18,13 @@ export interface MarkerCallbacks {
 }
 
 /** Per kind: draw priority (higher wins overlaps) and the distance band (m) where it shows. */
-const KIND_RULES: Readonly<Record<MarkerKind, { priority: number; near: number; far: number }>> = {
+const KIND_RULES: Readonly<
+  Record<MarkerKind, { priority: number; near: number; far: number; fade?: number }>
+> = {
   landmark: { priority: 3, near: 120, far: 11_000 },
   district: { priority: 2, near: 600, far: 9_000 },
   attraction: { priority: 1, near: 80, far: 4_500 },
+  hotspot: { priority: 4, near: 0, far: 700, fade: 12 },
 };
 /** Distance (m) over which markers fade in/out at the ends of their band. */
 const FADE_RANGE = 400;
@@ -65,6 +68,7 @@ export class Markers implements Disposable {
   private avoidBoxes: Box[] = [];
   private avoidDirty = true;
   private visible = true;
+  private visibilityTest: ((position: Vector3) => boolean) | null = null;
   private active: { kind: MarkerKind; id: string } | null = null;
   private readonly unsubscribeLang: () => void;
   private readonly resizeObserver = new ResizeObserver(() => {
@@ -144,6 +148,9 @@ export class Markers implements Disposable {
   setVisible(visible: boolean): void {
     this.visible = visible;
     this.element.classList.toggle('map-markers--hidden', !visible);
+    this.element.inert = !visible;
+    for (const marker of this.markers)
+      marker.element.tabIndex = visible && marker.opacity >= 0.05 ? 0 : -1;
   }
 
   setActive(active: { kind: MarkerKind; id: string } | null): void {
@@ -153,6 +160,11 @@ export class Markers implements Disposable {
       marker.element.classList.toggle('marker--active', isActive);
       marker.element.setAttribute('aria-pressed', String(isActive));
     }
+  }
+
+  /** Optional inexpensive, domain-specific occlusion (stadium walls, terraces and tunnel). */
+  setVisibilityTest(test: (position: Vector3) => boolean): void {
+    this.visibilityTest = test;
   }
 
   update(camera: PerspectiveCamera, width: number, height: number): void {
@@ -182,7 +194,8 @@ export class Markers implements Disposable {
       const onScreen =
         this.projected.z < 1 &&
         Math.abs(this.projected.x) < 1.1 &&
-        Math.abs(this.projected.y) < 1.1;
+        Math.abs(this.projected.y) < 1.1 &&
+        (this.visibilityTest?.(marker.spec.position) ?? true);
 
       let opacity = 0;
       let x = marker.x;
@@ -191,8 +204,8 @@ export class Markers implements Disposable {
       if (onScreen) {
         x = ((this.projected.x + 1) / 2) * width;
         y = ((1 - this.projected.y) / 2) * height;
-        const fadeIn = Math.min(1, (distance - rules.near) / FADE_RANGE);
-        const fadeOut = Math.min(1, (rules.far - distance) / FADE_RANGE);
+        const fadeIn = Math.min(1, (distance - rules.near) / (rules.fade ?? FADE_RANGE));
+        const fadeOut = Math.min(1, (rules.far - distance) / (rules.fade ?? FADE_RANGE));
         opacity = Math.max(0, Math.min(fadeIn, fadeOut));
         const isActive =
           this.active?.kind === marker.spec.kind && this.active.id === marker.spec.id;

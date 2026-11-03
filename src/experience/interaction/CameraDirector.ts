@@ -1,5 +1,5 @@
 import { gsap } from 'gsap';
-import { MathUtils } from 'three';
+import { CatmullRomCurve3, MathUtils, Vector3 } from 'three';
 import { EASE_IN_OUT, motionDuration } from '../../utils/motion';
 import type { Disposable } from '../types';
 import type { Controls, OrbitView } from './Controls';
@@ -18,6 +18,11 @@ export interface FlightOptions {
   readonly duration?: number;
 }
 
+export interface FlightPath {
+  readonly positions: readonly Vector3[];
+  readonly targets: readonly Vector3[];
+}
+
 const wrapAngle = (angle: number): number => Math.atan2(Math.sin(angle), Math.cos(angle));
 
 /**
@@ -32,6 +37,38 @@ export class CameraDirector implements Disposable {
 
   get flying(): boolean {
     return this.tween !== null;
+  }
+
+  /** Position and look-at curves share a parameter, keeping the reveal directed through the tunnel. */
+  flyAlong(
+    path: FlightPath,
+    options: FlightOptions = {},
+    onProgress?: (t: number) => void,
+  ): Promise<void> {
+    this.cancel();
+    const positions = new CatmullRomCurve3([...path.positions], false, 'centripetal');
+    const targets = new CatmullRomCurve3([...path.targets], false, 'centripetal');
+    const position = new Vector3();
+    const target = new Vector3();
+    const progress = { t: 0 };
+    this.controls.enabled = false;
+    return new Promise((resolve) => {
+      this.settle = resolve;
+      this.tween = gsap.to(progress, {
+        t: 1,
+        duration: motionDuration(options.duration ?? 3.8),
+        ease: EASE_IN_OUT,
+        onUpdate: () => {
+          positions.getPoint(progress.t, position);
+          targets.getPoint(progress.t, target);
+          this.controls.setPose(position, target);
+          onProgress?.(progress.t);
+        },
+        onComplete: () => {
+          this.finish();
+        },
+      });
+    });
   }
 
   flyTo(to: OrbitView, options: FlightOptions = {}): Promise<void> {

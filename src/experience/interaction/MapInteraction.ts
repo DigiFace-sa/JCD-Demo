@@ -3,7 +3,8 @@ import { ATTRACTION_IDS, ATTRACTIONS, type AttractionId } from '../../data/attra
 import { DISTRICT_IDS, DISTRICTS, isDistrictId, type DistrictId } from '../../data/districts';
 import type { CameraShot } from '../../data/geo';
 import { isLandmarkId, LANDMARK_IDS, LANDMARKS } from '../../data/landmarks';
-import { COAST } from '../config/scene';
+import { isStadiumViewId } from '../../data/stadium';
+import { COAST, RENDER } from '../config/scene';
 import { VIEWS } from '../config/views';
 import type { Disposable, Focus, FocusKind } from '../types';
 import { pointInPolygon, polygonBounds } from '../utils/polygon';
@@ -11,6 +12,7 @@ import type { World } from '../world/World';
 import { CameraDirector } from './CameraDirector';
 import type { Controls, OrbitView } from './Controls';
 import { Markers, type MarkerSpec } from './Markers';
+import { StadiumNavigation } from './StadiumNavigation';
 
 /** A pointer press that moves less than this (px) and is this quick (ms) counts as a click. */
 const CLICK_SLOP = 6;
@@ -35,6 +37,9 @@ const toView = (target: { x: number; y: number; z: number }, shot: CameraShot): 
 export class MapInteraction implements Disposable {
   readonly director: CameraDirector;
   private readonly markers: Markers;
+  private readonly stadium: StadiumNavigation;
+  private readonly flightListeners = new Set<(flying: boolean) => void>();
+  private request = 0;
   private readonly raycaster = new Raycaster();
   private readonly pointer = new Vector2();
   private readonly groundPlane = new Plane(new Vector3(0, 1, 0), -COAST.landHeight);
@@ -46,7 +51,6 @@ export class MapInteraction implements Disposable {
   private markerHover: DistrictId | null = null;
   private pointerHover: DistrictId | null = null;
   private externalHover: DistrictId | null = null;
-  private current: Focus | null = null;
   /** Screen pixels covered by the side panel: positive = right edge, negative = left (RTL). */
   private panelInset = 0;
 
@@ -73,6 +77,9 @@ export class MapInteraction implements Disposable {
       },
       'map.markersLabel',
     );
+    this.stadium = new StadiumNavigation(host, camera, controls, this.director, world, (focus) => {
+      this.emit(focus);
+    });
     canvas.addEventListener('pointerdown', this.onPointerDown);
     canvas.addEventListener('pointerup', this.onPointerUp);
     canvas.addEventListener('pointermove', this.onPointerMove);
@@ -126,11 +133,19 @@ export class MapInteraction implements Disposable {
 
   setAvoidElements(elements: readonly Element[]): void {
     this.markers.setAvoidElements(elements);
+    this.stadium.setAvoidElements(elements);
   }
 
   setPanelInset(pixels: number): void {
     this.panelInset = pixels;
+    this.stadium.setPanelInset(pixels);
     this.markers.invalidateAvoidAreas();
+    this.stadium.invalidateAvoidAreas();
+  }
+
+  onFlightChange(listener: (flying: boolean) => void): () => void {
+    this.flightListeners.add(listener);
+    return () => this.flightListeners.delete(listener);
   }
 
   /** The spawn-map framing, shifted clear of the side panel. */
@@ -138,23 +153,42 @@ export class MapInteraction implements Disposable {
     return this.offsetForPanel(VIEWS.map);
   }
 
+  get occludesWorld(): boolean {
+    return this.stadium.occludesWorld;
+  }
+
   /** Frame `focus` (or the whole map for null): highlight, then fly. */
   async focus(focus: Focus | null, immediate = false): Promise<void> {
-    this.current = focus;
+    const request = ++this.request;
     this.world.masterplan.setSelected(
       focus?.kind === 'district' && isDistrictId(focus.id) ? focus.id : null,
     );
     this.markers.setActive(focus);
-    const view = this.offsetForPanel(this.viewFor(focus));
-    if (immediate) {
-      this.director.cancel();
-      this.controls.setView(view, true);
-      return;
-    }
     this.markers.setVisible(false);
-    await this.director.flyTo(view);
-    // A newer focus may have started while this flight ran; only the latest restores markers.
-    if (this.current === focus) this.markers.setVisible(true);
+    this.flightListeners.forEach((listener) => {
+      listener(!immediate);
+    });
+    if (focus?.kind === 'hotspot' && isStadiumViewId(focus.id)) {
+      this.canvas.style.cursor = '';
+      this.pointerHover = null;
+      this.world.masterplan.setHovered(null);
+      await this.stadium.focus(focus.id, immediate);
+    } else {
+      const view = this.offsetForPanel(this.viewFor(focus));
+      if (this.stadium.active) {
+        await this.stadium.exit(view, immediate);
+      } else if (immediate) {
+        this.director.cancel();
+        this.controls.setView(view, true);
+      } else {
+        await this.director.flyTo(view);
+      }
+    }
+    if (request !== this.request) return;
+    this.markers.setVisible(!this.stadium.active);
+    this.flightListeners.forEach((listener) => {
+      listener(false);
+    });
   }
 
   private viewFor(focus: Focus | null): OrbitView {
@@ -192,7 +226,7 @@ export class MapInteraction implements Disposable {
     if (this.panelInset === 0) return view;
     const width = this.canvas.clientWidth || 1;
     const halfFovX = Math.atan(
-      Math.tan(MathUtils.degToRad(this.camera.fov) / 2) * this.camera.aspect,
+      Math.tan(MathUtils.degToRad(RENDER.fovDeg) / 2) * this.camera.aspect,
     );
     const visibleWidth = 2 * view.radius * Math.sin(view.polar) * Math.tan(halfFovX);
     const shift = (this.panelInset / 2 / width) * visibleWidth;
@@ -209,8 +243,9 @@ export class MapInteraction implements Disposable {
     };
   }
 
-  update(width: number, height: number): void {
+  update(width: number, height: number, delta: number): void {
     this.markers.update(this.camera, width, height);
+    this.stadium.update(width, height, delta);
   }
 
   /** Hover driven from outside the canvas (e.g. the side panel's district list). */
@@ -246,7 +281,7 @@ export class MapInteraction implements Disposable {
   private readonly onPointerUp = (event: PointerEvent): void => {
     const press = this.press;
     this.press = null;
-    if (!press || this.director.flying || !this.controls.enabled) return;
+    if (!press || this.director.flying || !this.controls.enabled || this.stadium.active) return;
     const moved = Math.hypot(event.clientX - press.x, event.clientY - press.y);
     if (moved > CLICK_SLOP || performance.now() - press.time > CLICK_MAX_MS) return;
     const hit = this.pick(event);
@@ -261,7 +296,7 @@ export class MapInteraction implements Disposable {
     requestAnimationFrame(() => {
       this.hoverQueued = false;
       const pointer = this.lastPointer;
-      if (!pointer || this.press || this.director.flying) return;
+      if (!pointer || this.press || this.director.flying || this.stadium.active) return;
       const hit = this.pick(pointer);
       this.canvas.style.cursor = hit ? 'pointer' : '';
       this.pointerHover = hit?.kind === 'district' && isDistrictId(hit.id) ? hit.id : null;
@@ -277,12 +312,15 @@ export class MapInteraction implements Disposable {
   };
 
   dispose(): void {
+    this.request++;
     this.canvas.removeEventListener('pointerdown', this.onPointerDown);
     this.canvas.removeEventListener('pointerup', this.onPointerUp);
     this.canvas.removeEventListener('pointermove', this.onPointerMove);
     this.canvas.removeEventListener('pointerleave', this.onPointerLeave);
     this.director.dispose();
+    this.stadium.dispose();
     this.markers.dispose();
     this.listeners.clear();
+    this.flightListeners.clear();
   }
 }

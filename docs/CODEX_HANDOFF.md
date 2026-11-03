@@ -1,5 +1,11 @@
 # Jeddah Central Interactive Demo: Handoff Prompt for Codex
 
+> **Phase 5 update:** the stadium implementation is now ready for review. Read
+> [PHASE_5_REVIEW.md](PHASE_5_REVIEW.md) for the current implementation, measured performance,
+> disposal checks, open items and screenshot paths. The body below records the original
+> Phase 4 handoff and Phase 5 brief. Phase 6 remains pending the user’s go-ahead.
+
+
 You are taking over a project that is partly built. Phases 1, 3 and 4 are finished, and the
 next phase is 5. Read this whole document before you change anything. It explains:
 

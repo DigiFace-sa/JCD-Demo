@@ -1,5 +1,6 @@
 import { LANDMARKS, isLandmarkId } from '../data/landmarks';
 import { isLegalDoc } from '../data/site';
+import { isStadiumViewId } from '../data/stadium';
 import type { TranslationKey } from '../i18n/i18n';
 import type { StubContent } from '../pages/stub/StubPage';
 import type { PageContext, PageModule } from './Page';
@@ -35,7 +36,10 @@ const experienceRoute = (pattern: string): RouteDef => ({
   pageId: 'experience',
   layout: 'immersive',
   title: () => 'pages.experience.title',
-  validate: (params) => params.landmark === undefined || isLandmarkId(params.landmark),
+  validate: (params) =>
+    (params.landmark === undefined || isLandmarkId(params.landmark)) &&
+    (params.hotspot === undefined ||
+      (params.landmark === 'stadium' && isStadiumViewId(params.hotspot))),
   load: () => import('../pages/experience/ExperiencePage'),
 });
 

@@ -11,8 +11,10 @@ export default defineConfig(({ mode }) => {
       target: 'es2022',
       outDir: isPitch ? 'dist-pitch' : 'dist',
       sourcemap: !isPitch,
-      // The lazy Experience chunk is mostly three.js (~150 KB gzipped) and only loads on
-      // the 3D route; marketing pages stay small.
+      // Keep the engine separate from growing scene code; both remain behind the lazy 3D route.
+      rolldownOptions: {
+        output: { codeSplitting: { groups: [{ name: 'three', test: /node_modules\/three\// }] } },
+      },
       chunkSizeWarningLimit: 700,
     },
   };

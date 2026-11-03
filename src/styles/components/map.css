@@ -62,7 +62,8 @@
 }
 
 /* Landmark: brass dot with a slow halo, label in a glass pill. */
-.marker--landmark .marker__label {
+.marker--landmark .marker__label,
+.marker--hotspot .marker__label {
   padding: 0.4rem 0.8rem;
   border: 1px solid var(--glass-line);
   border-radius: var(--radius-pill);
@@ -70,12 +71,14 @@
   transition: background-color var(--duration-fast) var(--ease-out);
 }
 
-.marker--landmark .marker__dot {
+.marker--landmark .marker__dot,
+.marker--hotspot .marker__dot {
   background: var(--jcdc-secondary);
   box-shadow: 0 0 0 2px var(--color-inverse-text);
 }
 
-.marker--landmark .marker__dot::after {
+.marker--landmark .marker__dot::after,
+.marker--hotspot .marker__dot::after {
   content: '';
   position: absolute;
   inset: -0.4rem;
@@ -158,7 +161,29 @@
   inline-size: var(--panel-width);
   display: flex;
   color: var(--color-inverse-text);
-  transition: transform var(--duration-slow) var(--ease-out);
+  transition:
+    transform var(--duration-slow) var(--ease-out),
+    opacity var(--duration-base) var(--ease-out);
+}
+
+.experience[data-flying='true'] .map-panel,
+.experience[data-flying='true'] .map-hint {
+  opacity: 0;
+  pointer-events: none;
+}
+
+.experience__map-back[hidden],
+.map-panel__enter[hidden],
+.map-panel__hotspots[hidden] {
+  display: none;
+}
+
+.map-panel__enter {
+  margin-block-start: var(--space-m);
+}
+
+.map-list__item[aria-pressed='true'] {
+  color: var(--jcdc-secondary);
 }
 
 .map-panel[data-collapsed='true'] {
@@ -417,6 +442,12 @@
 
 /* Phones: the panel becomes a bottom sheet. */
 @media (max-width: 45rem) {
+  .experience__toolbar {
+    flex-wrap: wrap;
+  }
+  .experience__map-back {
+    order: 3;
+  }
   .map-panel {
     inset-block: auto 0;
     inset-inline: 0;

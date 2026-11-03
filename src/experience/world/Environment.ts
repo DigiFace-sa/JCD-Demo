@@ -85,6 +85,9 @@ function sunDirectionFrom(bearingDeg: number, elevationDeg: number): Vector3 {
 export class Environment implements Updatable, Disposable {
   readonly sky = new Sky();
   readonly sun = new DirectionalLight(LIGHT.sunColor, LIGHT.sunIntensity);
+  /** Static map and stadium fits keep separate baked targets, avoiding a shadow draw on return. */
+  private readonly mapShadow = this.sun.shadow;
+  private readonly stadiumShadow = this.sun.shadow.clone();
   readonly hemisphere = new HemisphereLight(
     LIGHT.hemiSkyColor,
     LIGHT.hemiGroundColor,
@@ -141,6 +144,7 @@ export class Environment implements Updatable, Disposable {
     this.sun.castShadow = true;
     this.sun.shadow.bias = -0.0003;
     this.sun.shadow.normalBias = 0.8;
+    this.stadiumShadow.copy(this.mapShadow);
     const region = LIGHT.shadowRegion;
     this.fitShadow(
       new Vector3(region.minX, 0, region.minZ),
@@ -262,13 +266,24 @@ export class Environment implements Updatable, Disposable {
     this.renderer.shadowMap.needsUpdate = true;
   }
 
+  /** Refit once on entry/exit; reuse the matching static depth map when it has already baked. */
+  useShadowRegion(region: 'map' | 'stadium', min: Vector3, max: Vector3): void {
+    this.sun.shadow = region === 'map' ? this.mapShadow : this.stadiumShadow;
+    const baked = this.sun.shadow.map !== null;
+    this.fitShadow(min, max);
+    this.sun.shadow.updateMatrices(this.sun);
+    this.renderer.shadowMap.needsUpdate = !baked;
+  }
+
   setShadows(enabled: boolean, mapSize: number): void {
     this.sun.castShadow = enabled;
     this.renderer.shadowMap.needsUpdate = true;
-    if (this.sun.shadow.mapSize.x !== mapSize) {
-      this.sun.shadow.mapSize.set(mapSize, mapSize);
-      this.sun.shadow.map?.dispose();
-      this.sun.shadow.map = null;
+    for (const shadow of [this.mapShadow, this.stadiumShadow]) {
+      if (shadow.mapSize.x === mapSize) continue;
+      shadow.mapSize.set(mapSize, mapSize);
+      shadow.dispose();
+      shadow.map = null;
+      shadow.mapPass = null;
     }
   }
 
@@ -283,7 +298,8 @@ export class Environment implements Updatable, Disposable {
     this.skyCube.dispose();
     this.hazeTarget.dispose();
     this.environmentMap?.dispose();
-    this.sun.shadow.map?.dispose();
+    this.mapShadow.dispose();
+    this.stadiumShadow.dispose();
     this.sun.dispose();
     this.hemisphere.dispose();
   }

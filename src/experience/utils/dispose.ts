@@ -1,5 +1,5 @@
 import type { BufferGeometry, Material, Object3D, Texture } from 'three';
-import { Line, Mesh, Points } from 'three';
+import { InstancedMesh, Line, Mesh, Points } from 'three';
 
 type Drawable = Mesh<BufferGeometry, Material | Material[]>;
 
@@ -16,6 +16,7 @@ function disposeMaterial(material: Material): void {
  */
 export function disposeObject(root: Object3D): void {
   root.traverse((object) => {
+    if (object instanceof InstancedMesh) object.dispose();
     if (object instanceof Mesh || object instanceof Points || object instanceof Line) {
       const drawable = object as Drawable;
       drawable.geometry.dispose();

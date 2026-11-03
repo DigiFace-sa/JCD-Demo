@@ -18,6 +18,10 @@ export interface ControlLimits {
   readonly maxPolar: number;
   /** Lowest camera height (m) above sea level. */
   readonly minHeight: number;
+  readonly minAzimuth?: number;
+  readonly maxAzimuth?: number;
+  /** Optional world-space safety envelope for the stadium bowl (never applied to path flights). */
+  readonly constrainPosition?: (position: Vector3) => void;
   readonly bounds: {
     readonly minX: number;
     readonly maxX: number;
@@ -95,6 +99,18 @@ export class Controls implements Updatable, Disposable {
     this.clamp(this.desired);
   }
 
+  /** Scripted position/look-at pose. Bypasses orbit clamps while crossing the entry tunnel. */
+  setPose(position: Vector3, target: Vector3): void {
+    const offset = this.scratch.copy(position).sub(target);
+    const radius = offset.length();
+    this.desired.target.copy(target);
+    this.desired.radius = radius;
+    this.desired.polar = Math.acos(MathUtils.clamp(offset.y / radius, -1, 1));
+    this.desired.azimuth = Math.atan2(offset.x, offset.z);
+    this.copyView(this.desired, this.current);
+    this.applyToCamera();
+  }
+
   /** Move to a view: eased by default, or instantly (e.g. on first frame). */
   setView(view: OrbitView, immediate = false): void {
     this.desired.target.set(view.target.x, view.target.y, view.target.z);
@@ -133,6 +149,7 @@ export class Controls implements Updatable, Disposable {
     this.current.radius += (this.desired.radius - this.current.radius) * t;
     this.current.polar += (this.desired.polar - this.current.polar) * t;
     this.current.azimuth += (this.desired.azimuth - this.current.azimuth) * t;
+    if (this.enabled && this.limits.constrainPosition) this.clamp(this.current);
     this.applyToCamera();
   }
 
@@ -150,11 +167,28 @@ export class Controls implements Updatable, Disposable {
     const { minRadius, maxRadius, minPolar, maxPolar, minHeight, bounds } = this.limits;
     view.radius = MathUtils.clamp(view.radius, minRadius, maxRadius);
     view.polar = MathUtils.clamp(view.polar, minPolar, maxPolar);
+    view.azimuth = MathUtils.clamp(
+      view.azimuth,
+      this.limits.minAzimuth ?? -Infinity,
+      this.limits.maxAzimuth ?? Infinity,
+    );
     view.target.x = MathUtils.clamp(view.target.x, bounds.minX, bounds.maxX);
     view.target.z = MathUtils.clamp(view.target.z, bounds.minZ, bounds.maxZ);
     // Keep the camera above minHeight by tilting up rather than letting it sink.
     const ratio = (minHeight - view.target.y) / view.radius;
     if (ratio > -1 && ratio < 1) view.polar = Math.min(view.polar, Math.acos(ratio));
+    if (this.limits.constrainPosition) {
+      this.scratch.set(
+        view.target.x + view.radius * Math.sin(view.polar) * Math.sin(view.azimuth),
+        view.target.y + view.radius * Math.cos(view.polar),
+        view.target.z + view.radius * Math.sin(view.polar) * Math.cos(view.azimuth),
+      );
+      this.limits.constrainPosition(this.scratch);
+      this.scratch.sub(view.target);
+      view.radius = this.scratch.length();
+      view.polar = Math.acos(MathUtils.clamp(this.scratch.y / view.radius, -1, 1));
+      view.azimuth = Math.atan2(this.scratch.x, this.scratch.z);
+    }
   }
 
   private copyView(from: MutableView, to: MutableView): void {

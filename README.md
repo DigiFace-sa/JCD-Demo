@@ -7,7 +7,7 @@ cinematic 3D Experience of the masterplan. Vite + TypeScript (strict), Three.js,
 
 ## Setup
 
-Requires Node 20+.
+Requires Node 24.
 
 ```bash
 npm install
@@ -187,6 +187,35 @@ Facts flagged in code rather than on screen:
    is used. Materials get the shared haze automatically, and the picking proxy resizes to the
    model.
 
+### Stadium interior (Phase 5)
+
+The exterior lives at `#/experience/stadium`. Its **Enter the stadium** button follows the
+east-side passage into the bowl. **Back to map** or Escape returns through the passage; requests
+made during a flight replace the current request. Cold interior links skip the flight:
+
+- `#/experience/stadium/inside` — arrival view
+- `#/experience/stadium/pitch`
+- `#/experience/stadium/seating`
+- `#/experience/stadium/roof`
+- `#/experience/stadium/vip`
+- `#/experience/stadium/concourse`
+- `#/experience/stadium/sports-park`
+
+Hotspot metadata (translation keys, anchors and viewpoints) is in `src/data/stadium.ts`. Draft
+copy is in `stadium.*` in both language files. Dimensions, tier profiles, entry waypoints and
+the camera's clearance calculation share `src/experience/config/stadium.ts`. If an official
+stadium GLB replaces the original model, align these waypoints and profiles with its actual
+openings before using the interior routes.
+
+`CameraDirector.flyAlong()` follows position and look-at curves. `StadiumNavigation` owns
+entry/exit state, reversal, interior controls, lens framing and shadow fits. The wider interior
+lens and panel offset follow RTL without mirroring the scene. Enclosed views omit occluded city
+and water passes; a distant bowl proxy keeps the map inexpensive. Interior depth shaders are
+warmed behind the loading screen. The map and stadium shadow fits keep separate static targets,
+baked while loading and reused on entry/exit. Changing shadow resolution invalidates both targets.
+
+See [the Phase 5 review](docs/PHASE_5_REVIEW.md) for measurements, checks, open items and every review screenshot path.
+
 ## Brand tokens
 
 `src/styles/tokens.css` holds five brand colours (`--jcdc-primary`, `--jcdc-secondary`,
@@ -207,14 +236,19 @@ There is no native reviewer on the project yet, so **every Arabic string is a dr
 (`ar.json › _meta`). Review builds show an “AR DRAFT” badge while in Arabic. Phrases I am least
 sure of:
 
-| Key                         | Draft                                 | Concern                                                       |
-| --------------------------- | ------------------------------------- | ------------------------------------------------------------- |
-| `nav.exploreIn3d`           | استكشف بتقنية ثلاثية الأبعاد          | Long for a button; “استكشف ثلاثياً” or “جولة ثلاثية الأبعاد”? |
-| `landmarks.oceanarium.name` | الأحياء المائية ومزرعة المرجان        | Check JCDC’s official Arabic name for the Oceanarium          |
-| `pages.invest.lead`         | …والعافية…                            | “العافية” vs “الصحة والعافية” for _wellness_                  |
-| `footer.pifCompany`         | إحدى شركات صندوق الاستثمارات العامة   | Match PIF’s official lockup wording                           |
-| `meta.siteName`             | وسط جدة                               | Confirm brand name usage in Arabic                            |
-| (all)                       | Western digits (9.5, 2,400)           | Confirm JCDC’s numeral convention for Arabic copy             |
-| `districts.*.name`          | المنطقة المركزية، المرسى، …           | Official Arabic district names                                |
-| `stats.area.value`          | 5.7 مليون م²                          | “م²” vs “متر مربع”                                            |
-| `stats.phase1.label`        | الموعد المستهدف لإنجاز المرحلة الأولى | Long for a stat label                                         |
+| Key                                                                                           | Draft                                  | Concern                                                       |
+| --------------------------------------------------------------------------------------------- | -------------------------------------- | ------------------------------------------------------------- |
+| `nav.exploreIn3d`                                                                             | استكشف بتقنية ثلاثية الأبعاد           | Long for a button; “استكشف ثلاثياً” or “جولة ثلاثية الأبعاد”? |
+| `landmarks.oceanarium.name`                                                                   | الأحياء المائية ومزرعة المرجان         | Check JCDC’s official Arabic name for the Oceanarium          |
+| `pages.invest.lead`                                                                           | …والعافية…                             | “العافية” vs “الصحة والعافية” for _wellness_                  |
+| `footer.pifCompany`                                                                           | إحدى شركات صندوق الاستثمارات العامة    | Match PIF’s official lockup wording                           |
+| `meta.siteName`                                                                               | وسط جدة                                | Confirm brand name usage in Arabic                            |
+| (all)                                                                                         | Western digits (9.5, 2,400)            | Confirm JCDC’s numeral convention for Arabic copy             |
+| `districts.*.name`                                                                            | المنطقة المركزية، المرسى، …            | Official Arabic district names                                |
+| `stats.area.value`                                                                            | 5.7 مليون م²                           | “م²” vs “متر مربع”                                            |
+| `stats.phase1.label`                                                                          | الموعد المستهدف لإنجاز المرحلة الأولى  | Long for a stat label                                         |
+| `stadium.hotspots.seating.*`                                                                  | المدرجات                               | Review stadium terminology and all draft hotspot bodies       |
+| `stadium.hotspots.concourse.*`                                                                | الممر الداخلي                          | Confirm the preferred term for the concourse / entry passage  |
+| `stadium.hotspots.vip.*`                                                                      | كبار الشخصيات والضيافة                 | Confirm hospitality naming and tone                           |
+| `stadium.enter`, `stadium.back`, `stadium.inside*`, `stadium.explore`, `stadium.markersLabel` | ادخل إلى الملعب، العودة إلى الخريطة، … | Native review of navigation and arrival copy                  |
+| `stadium.hotspots.*.body`                                                                     | جميع النصوص الوصفية لنقاط الاهتمام     | Review every narrative draft with a native Arabic reviewer    |

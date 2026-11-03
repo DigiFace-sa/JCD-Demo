@@ -1,5 +1,6 @@
 import { MathUtils, PerspectiveCamera, Scene, type WebGLRenderer } from 'three';
 import type { QualityTier } from '../config';
+import { STADIUM_HOTSPOT_IDS } from '../data/stadium';
 import { prefersReducedMotion } from '../utils/motion';
 import { RENDER } from './config/scene';
 import { MAP_LIMITS, VIEWS, type ViewName } from './config/views';
@@ -99,6 +100,7 @@ export class Experience implements Disposable {
         },
         onView: (name) => {
           if (!(name in VIEWS)) return;
+          void this.map?.focus(null, true);
           this.map?.director.cancel();
           this.controls.setView(VIEWS[name as ViewName]);
         },
@@ -114,10 +116,32 @@ export class Experience implements Disposable {
 
   /** Compile every shader up front so the first visible frames don't hitch. */
   async ready(): Promise<void> {
+    // Disposal can happen from a route change while any warm-up promise is pending.
+    const isDisposed = (): boolean => this.disposed;
     this.controls.update(0);
     await this.renderer.compileAsync(this.scene, this.camera);
-    if (this.disposed) return;
+    if (isDisposed()) return;
     this.renderFrame(0);
+    // Warm depth/instancing variants while the loading screen covers the canvas. Main-scene
+    // compileAsync alone does not exercise the tighter stadium shadow pass or the interior LOD.
+    if (this.map) {
+      await this.map.focus({ kind: 'landmark', id: 'stadium' }, true);
+      if (isDisposed()) return;
+      this.renderFrame(0);
+      await this.map.focus({ kind: 'hotspot', id: 'inside' }, true);
+      if (isDisposed()) return;
+      this.renderFrame(0);
+      for (const id of STADIUM_HOTSPOT_IDS) {
+        await this.map.focus({ kind: 'hotspot', id }, true);
+        if (isDisposed()) return;
+        this.renderFrame(0);
+      }
+      await this.map.focus(null, true);
+      if (isDisposed()) return;
+    }
+    this.renderFrame(0);
+    // Drain the hidden warm-up draws before exposing the scene, including ANGLE's lazy pipelines.
+    this.renderer.getContext().finish();
   }
 
   /** Opening camera move onto the spawn map (skipped under reduced motion). */
@@ -138,6 +162,10 @@ export class Experience implements Disposable {
   /** Listen for map selections (markers, landmark clicks, district clicks). */
   onSelect(listener: (focus: Focus) => void): () => void {
     return this.map?.onSelect(listener) ?? (() => undefined);
+  }
+
+  onFlightChange(listener: (flying: boolean) => void): () => void {
+    return this.map?.onFlightChange(listener) ?? (() => undefined);
   }
 
   /** Frame a landmark, district or attraction, or the whole map (null). */
@@ -188,6 +216,7 @@ export class Experience implements Disposable {
     if (this.quality.sample(frameMs, this.elapsed)) this.applyQuality();
     this.renderFrame(delta);
     this.debug?.update({
+      camera: this.camera,
       delta: frameMs / 1000,
       quality: this.quality.state,
       pixelRatio: this.pixelRatio,
@@ -199,12 +228,14 @@ export class Experience implements Disposable {
   private renderFrame(delta: number): void {
     this.controls.update(delta);
     this.updateNearPlane();
+    const interior = this.map?.occludesWorld ?? false;
+    this.world.setInterior(interior);
     this.world.update(delta, this.elapsed, this.camera);
     this.world.masterplan.setViewDistance(this.controls.radius);
     this.renderer.info.reset();
-    this.reflection?.render(this.renderer, this.scene, this.camera);
+    if (!interior) this.reflection?.render(this.renderer, this.scene, this.camera);
     this.composer.render(delta);
-    this.map?.update(this.width, this.height);
+    this.map?.update(this.width, this.height, delta);
   }
 
   private updateNearPlane(): void {

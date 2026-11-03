@@ -1,4 +1,4 @@
-import { Group, type Raycaster } from 'three';
+import { Group, type Raycaster, type PerspectiveCamera } from 'three';
 import { LANDMARK_IDS, type LandmarkId } from '../../../data/landmarks';
 import type { Disposable } from '../../types';
 import type { Atmosphere } from '../Atmosphere';
@@ -43,8 +43,11 @@ export class Landmarks implements Disposable {
     return LANDMARK_IDS.find((landmark) => landmark === id) ?? null;
   }
 
-  update(delta: number, elapsed: number): void {
-    for (const model of this.models.values()) model.update?.(delta, elapsed);
+  update(delta: number, elapsed: number, camera: PerspectiveCamera): void {
+    for (const model of this.models.values()) {
+      model.update?.(delta, elapsed);
+      model.updateView?.(camera);
+    }
   }
 
   dispose(): void {
