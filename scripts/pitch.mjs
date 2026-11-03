@@ -7,6 +7,10 @@
  *   node scripts/pitch.mjs --tour     → opens the Experience and autostarts the Guided Tour
  *   node scripts/pitch.mjs --no-kiosk → normal browser window (for rehearsals)
  *   node scripts/pitch.mjs --no-browser → serve only
+ *   node scripts/pitch.mjs --hidpi      → render at the display's full pixel density
+ *
+ * By default Chrome is forced to 1× device pixels: on the pitch M1 the 3D holds 60 fps at
+ * 1080p, even if macOS drives the TV in a HiDPI ("looks like 1080p") mode.
  *
  * The server stops automatically when the browser window is closed.
  */
@@ -128,6 +132,7 @@ if (!browser) {
     '--disable-infobars',
     '--autoplay-policy=no-user-gesture-required',
     '--ignore-gpu-blocklist',
+    ...(args.has('--hidpi') ? [] : ['--force-device-scale-factor=1']),
     args.has('--no-kiosk') ? '--start-maximized' : '--kiosk',
     url,
   ];

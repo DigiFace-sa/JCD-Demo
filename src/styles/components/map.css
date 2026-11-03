@@ -1,0 +1,447 @@
+/* ── 3D map: markers, side panel, hint ─────────────────────────────── */
+.experience {
+  /* Opaque-ish glass, no backdrop blur: blurring over a canvas that redraws every frame costs
+     ~4 fps on the pitch M1. */
+  --glass: color-mix(in oklab, var(--jcdc-ink) 84%, transparent);
+  --glass-strong: color-mix(in oklab, var(--jcdc-ink) 90%, transparent);
+  --glass-line: color-mix(in oklab, var(--jcdc-sand) 14%, transparent);
+  --panel-width: clamp(20rem, 24vw, 26rem);
+}
+
+/* Markers ------------------------------------------------------------ */
+.map-markers {
+  position: absolute;
+  inset: 0;
+  overflow: hidden;
+  pointer-events: none;
+  transition: opacity var(--duration-base) var(--ease-out);
+}
+
+.map-markers--hidden {
+  opacity: 0;
+}
+
+.map-markers--hidden .marker {
+  pointer-events: none !important;
+}
+
+.marker {
+  position: absolute;
+  inset-block-start: 0;
+  left: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.45rem;
+  padding: 0;
+  border: 0;
+  background: none;
+  color: var(--color-inverse-text);
+  font: inherit;
+  cursor: pointer;
+  pointer-events: auto;
+  transform-origin: 50% 100%;
+  will-change: transform, opacity;
+  /* Opacity is driven per frame; ease it so declutter swaps never pop. */
+  transition: opacity var(--duration-base) var(--ease-out);
+}
+
+.marker__label {
+  order: -1;
+  white-space: nowrap;
+  font-size: var(--step--1);
+  font-weight: var(--weight-medium);
+  line-height: 1.2;
+}
+
+.marker__dot {
+  position: relative;
+  inline-size: 0.75rem;
+  block-size: 0.75rem;
+  border-radius: 50%;
+}
+
+/* Landmark: brass dot with a slow halo, label in a glass pill. */
+.marker--landmark .marker__label {
+  padding: 0.4rem 0.8rem;
+  border: 1px solid var(--glass-line);
+  border-radius: var(--radius-pill);
+  background: var(--glass);
+  transition: background-color var(--duration-fast) var(--ease-out);
+}
+
+.marker--landmark .marker__dot {
+  background: var(--jcdc-secondary);
+  box-shadow: 0 0 0 2px var(--color-inverse-text);
+}
+
+.marker--landmark .marker__dot::after {
+  content: '';
+  position: absolute;
+  inset: -0.4rem;
+  border: 1px solid var(--jcdc-secondary);
+  border-radius: 50%;
+  animation: marker-halo 2.8s var(--ease-out) infinite;
+}
+
+@keyframes marker-halo {
+  from {
+    opacity: 0.9;
+    transform: scale(0.6);
+  }
+  to {
+    opacity: 0;
+    transform: scale(1.8);
+  }
+}
+
+/* District: quiet spaced caps, no chrome. */
+.marker--district .marker__label {
+  font-size: 0.72rem;
+  letter-spacing: var(--tracking-eyebrow);
+  text-transform: uppercase;
+  text-shadow: 0 1px 6px rgb(0 0 0 / 0.6);
+  opacity: 0.88;
+}
+
+.marker--district .marker__dot {
+  display: none;
+}
+
+/* Attraction: small dot, name appears on hover/focus. */
+.marker--attraction .marker__dot {
+  inline-size: 0.55rem;
+  block-size: 0.55rem;
+  background: var(--color-inverse-text);
+  box-shadow: 0 0 0 3px color-mix(in oklab, var(--jcdc-ink) 45%, transparent);
+}
+
+.marker--attraction .marker__label {
+  padding: 0.3rem 0.65rem;
+  border-radius: var(--radius-pill);
+  background: var(--glass-strong);
+  opacity: 0;
+  translate: 0 4px;
+  transition:
+    opacity var(--duration-fast) var(--ease-out),
+    translate var(--duration-fast) var(--ease-out);
+}
+
+.marker:hover .marker__label,
+.marker:focus-visible .marker__label,
+.marker--active .marker__label {
+  opacity: 1;
+  translate: 0 0;
+}
+
+.marker--landmark:hover .marker__label,
+.marker--landmark.marker--active .marker__label {
+  background: var(--glass-strong);
+  border-color: var(--jcdc-secondary);
+}
+
+.marker:focus-visible {
+  outline: none;
+}
+
+.marker:focus-visible .marker__label {
+  outline: 2px solid var(--color-inverse-focus);
+  outline-offset: 3px;
+}
+
+/* Side panel ---------------------------------------------------------- */
+.map-panel {
+  position: absolute;
+  inset-block: calc(var(--space-m) + 3.5rem) var(--space-m);
+  inset-inline-end: var(--space-m);
+  z-index: 2;
+  inline-size: var(--panel-width);
+  display: flex;
+  color: var(--color-inverse-text);
+  transition: transform var(--duration-slow) var(--ease-out);
+}
+
+.map-panel[data-collapsed='true'] {
+  transform: translateX(calc(100% + var(--space-m)));
+}
+
+[dir='rtl'] .map-panel[data-collapsed='true'] {
+  transform: translateX(calc(-100% - var(--space-m)));
+}
+
+.map-panel__toggle {
+  position: absolute;
+  inset-block-start: var(--space-s);
+  inset-inline-start: calc(-2.75rem - var(--space-xs));
+  display: grid;
+  place-items: center;
+  inline-size: 2.75rem;
+  block-size: 2.75rem;
+  padding: 0;
+  border: 1px solid var(--glass-line);
+  border-radius: var(--radius-pill);
+  background: var(--glass);
+  color: inherit;
+  cursor: pointer;
+}
+
+/* Arrow points toward the panel's edge when open ("hide"), away when collapsed ("show"). */
+.map-panel__toggle .icon-flip-back {
+  transform: scaleX(1);
+  transition: transform var(--duration-base) var(--ease-out);
+}
+
+.map-panel[data-collapsed='true'] .map-panel__toggle .icon-flip-back {
+  transform: scaleX(-1);
+}
+
+.map-panel__body {
+  flex: 1;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  padding: var(--space-l) var(--space-m);
+  border: 1px solid var(--glass-line);
+  border-radius: var(--radius-m);
+  background: var(--glass);
+  scrollbar-width: thin;
+  scrollbar-color: var(--glass-line) transparent;
+}
+
+.map-panel__view {
+  display: grid;
+  gap: var(--space-s);
+}
+
+.map-panel__view[hidden] {
+  display: none;
+}
+
+.map-panel .eyebrow {
+  color: var(--jcdc-secondary);
+}
+
+.map-panel__title {
+  font-size: var(--step-3);
+  font-weight: var(--weight-light);
+  line-height: var(--leading-snug);
+  letter-spacing: var(--tracking-display);
+}
+
+.map-panel__title:focus {
+  outline: none;
+}
+
+.map-panel__lead {
+  color: var(--color-inverse-muted);
+  font-size: var(--step-0);
+  font-weight: var(--weight-light);
+  line-height: var(--leading-body);
+}
+
+.map-panel__lead:empty {
+  display: none;
+}
+
+.map-panel__heading {
+  margin-block-start: var(--space-m);
+  padding-block-end: var(--space-2xs);
+  border-block-end: 1px solid var(--glass-line);
+  font-size: 0.72rem;
+  font-weight: var(--weight-medium);
+  letter-spacing: var(--tracking-eyebrow);
+  text-transform: uppercase;
+  color: var(--color-inverse-muted);
+}
+
+.map-stats {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: var(--space-s) var(--space-m);
+  margin: 0;
+}
+
+.map-stats__item {
+  display: flex;
+  flex-direction: column-reverse;
+  gap: 0.15rem;
+}
+
+.map-stats__item:first-child {
+  grid-column: 1 / -1;
+}
+
+.map-stats dd {
+  margin: 0;
+  font-size: var(--step-2);
+  font-weight: var(--weight-light);
+  line-height: 1.1;
+}
+
+.map-stats dt {
+  font-size: var(--step--1);
+  color: var(--color-inverse-muted);
+}
+
+.map-list {
+  display: grid;
+}
+
+.map-list__item {
+  display: flex;
+  align-items: center;
+  gap: var(--space-xs);
+  inline-size: 100%;
+  padding: var(--space-xs) var(--space-2xs);
+  border: 0;
+  border-radius: var(--radius-s);
+  background: none;
+  color: inherit;
+  font: inherit;
+  font-size: var(--step-0);
+  text-align: start;
+  cursor: pointer;
+  transition: background-color var(--duration-fast) var(--ease-out);
+}
+
+.map-list__item:hover,
+.map-list__item:focus-visible {
+  background: color-mix(in oklab, var(--jcdc-sand) 8%, transparent);
+}
+
+.map-list__label {
+  flex: 1;
+}
+
+.map-list__item .icon {
+  opacity: 0.5;
+  inline-size: 1rem;
+  transition:
+    opacity var(--duration-fast) var(--ease-out),
+    translate var(--duration-base) var(--ease-out);
+}
+
+.map-list__item:hover .icon {
+  opacity: 1;
+  translate: 0.15rem 0;
+}
+
+[dir='rtl'] .map-list__item:hover .icon {
+  translate: -0.15rem 0;
+}
+
+.map-list__swatch {
+  inline-size: 0.6rem;
+  block-size: 0.6rem;
+  border-radius: 2px;
+  background: var(--swatch);
+  box-shadow: 0 0 10px var(--swatch);
+}
+
+.map-panel__back {
+  justify-self: start;
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-2xs);
+  padding: var(--space-2xs) 0;
+  border: 0;
+  background: none;
+  color: var(--color-inverse-muted);
+  font: inherit;
+  font-size: var(--step--1);
+  cursor: pointer;
+}
+
+.map-panel__back:hover {
+  color: var(--color-inverse-text);
+}
+
+.map-panel__detail {
+  border-inline-start: 2px solid var(--accent, var(--jcdc-secondary));
+  padding-inline-start: var(--space-m);
+}
+
+.map-panel__facts {
+  display: grid;
+  gap: var(--space-2xs);
+  margin-block-start: var(--space-2xs);
+}
+
+.map-panel__facts li {
+  padding: var(--space-xs) var(--space-s);
+  border-radius: var(--radius-s);
+  background: color-mix(in oklab, var(--jcdc-sand) 7%, transparent);
+  font-size: var(--step--1);
+}
+
+.map-panel__facts:empty,
+.map-panel__note:empty {
+  display: none;
+}
+
+.map-panel__note {
+  margin-block-start: var(--space-s);
+  font-size: var(--step--1);
+  color: var(--jcdc-secondary);
+}
+
+/* Hint ----------------------------------------------------------------- */
+.map-hint {
+  position: absolute;
+  inset-block-end: var(--space-l);
+  inset-inline-start: 50%;
+  translate: -50% 0.5rem;
+  padding: 0.55rem 1.1rem;
+  border-radius: var(--radius-pill);
+  background: var(--glass);
+  color: var(--color-inverse-text);
+  font-size: var(--step--1);
+  opacity: 0;
+  pointer-events: none;
+  transition:
+    opacity var(--duration-slow) var(--ease-out),
+    translate var(--duration-slow) var(--ease-out);
+}
+
+[dir='rtl'] .map-hint {
+  translate: 50% 0.5rem;
+}
+
+.map-hint[data-visible='true'] {
+  opacity: 1;
+  translate: -50% 0;
+}
+
+[dir='rtl'] .map-hint[data-visible='true'] {
+  translate: 50% 0;
+}
+
+/* Phones: the panel becomes a bottom sheet. */
+@media (max-width: 45rem) {
+  .map-panel {
+    inset-block: auto 0;
+    inset-inline: 0;
+    inline-size: auto;
+    max-block-size: 55dvh;
+  }
+
+  .map-panel__body {
+    border-radius: var(--radius-m) var(--radius-m) 0 0;
+    padding: var(--space-m);
+  }
+
+  .map-panel[data-collapsed='true'],
+  [dir='rtl'] .map-panel[data-collapsed='true'] {
+    transform: translateY(calc(100% - 3.5rem));
+  }
+
+  .map-panel__toggle {
+    inset-block-start: -3.25rem;
+    inset-inline-start: auto;
+    inset-inline-end: var(--space-s);
+    rotate: -90deg;
+  }
+
+  .map-hint {
+    display: none;
+  }
+}

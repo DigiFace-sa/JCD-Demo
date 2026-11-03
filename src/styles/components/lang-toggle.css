@@ -30,8 +30,7 @@
 .lang-toggle--on-dark {
   border-color: var(--color-inverse-line);
   color: var(--color-inverse-text);
-  background: color-mix(in oklab, var(--jcdc-ink) 35%, transparent);
-  backdrop-filter: blur(12px);
+  background: color-mix(in oklab, var(--jcdc-ink) 55%, transparent);
 }
 
 .lang-toggle--on-dark:focus-visible {

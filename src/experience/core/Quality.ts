@@ -12,6 +12,8 @@ export interface QualitySettings {
   /** Bloom buffer resolution as a fraction of the render size. */
   readonly bloomScale: number;
   readonly anisotropy: number;
+  /** Planar water reflections of waterfront landmarks. */
+  readonly reflections: boolean;
 }
 
 export const QUALITY_PRESETS: Readonly<Record<QualityTier, QualitySettings>> = {
@@ -26,6 +28,7 @@ export const QUALITY_PRESETS: Readonly<Record<QualityTier, QualitySettings>> = {
     // Bloom is soft by nature: a half-resolution blur chain looks the same at ~¼ the cost.
     bloomScale: 0.5,
     anisotropy: 8,
+    reflections: true,
   },
   medium: {
     tier: 'medium',
@@ -37,6 +40,7 @@ export const QUALITY_PRESETS: Readonly<Record<QualityTier, QualitySettings>> = {
     bloom: true,
     bloomScale: 0.35,
     anisotropy: 4,
+    reflections: false,
   },
   low: {
     tier: 'low',
@@ -48,6 +52,7 @@ export const QUALITY_PRESETS: Readonly<Record<QualityTier, QualitySettings>> = {
     bloom: false,
     bloomScale: 0.5,
     anisotropy: 2,
+    reflections: false,
   },
 };
 

@@ -38,3 +38,22 @@ export const SOCIAL_LINKS: readonly SocialLink[] = [
   { id: 'linkedin', labelKey: 'social.linkedin', href: null },
   { id: 'youtube', labelKey: 'social.youtube', href: null },
 ];
+
+export interface Stat {
+  readonly valueKey: TranslationKey;
+  readonly labelKey: TranslationKey;
+}
+
+/**
+ * Destination facts (brief §7 only). Area: some official pages say 5.6 million m²;
+ * 5.7 is used per the brief. [TBC: confirm with JCDC]
+ */
+export const DESTINATION_STATS: readonly Stat[] = [
+  { valueKey: 'stats.area.value', labelKey: 'stats.area.label' },
+  { valueKey: 'stats.shoreline.value', labelKey: 'stats.shoreline.label' },
+  { valueKey: 'stats.beach.value', labelKey: 'stats.beach.label' },
+  { valueKey: 'stats.landmarks.value', labelKey: 'stats.landmarks.label' },
+  { valueKey: 'stats.attractions.value', labelKey: 'stats.attractions.label' },
+  { valueKey: 'stats.districts.value', labelKey: 'stats.districts.label' },
+  { valueKey: 'stats.phase1.value', labelKey: 'stats.phase1.label' },
+];

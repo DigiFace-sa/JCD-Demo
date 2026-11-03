@@ -52,14 +52,14 @@ export const LIGHT = {
   hemiIntensity: 0.75,
   /** Image-based lighting strength from the sky environment map. */
   environmentIntensity: 0.7,
-  /** Half-size (m) of the area covered by the sun's shadow camera at the widest view. */
-  shadowExtent: 1800,
+  /** World box (m) that receives sun shadows: the masterplan plus its immediate surroundings. */
+  shadowRegion: { minX: -800, maxX: 3000, minZ: -3000, maxZ: 3400, maxHeight: 180 },
 } as const;
 
 /** Height-based aerial perspective (see world/Atmosphere.ts). */
 export const ATMOSPHERE = {
   /** Haze density at sea level, per metre. */
-  density: 0.000_16,
+  density: 0.000_11,
   /** How quickly haze thins with altitude, per metre. */
   heightFalloff: 0.0028,
   /** Extra warm in-scattering when looking toward the sun. */
@@ -71,7 +71,7 @@ export const ATMOSPHERE = {
 export const SEA = {
   /** Far beyond the horizon so the quad's edge never shows (the far plane clips it). */
   size: 200_000,
-  deepColor: '#0b2c3a',
+  deepColor: '#16475a',
   shallowColor: '#2c8f8f',
   foamColor: '#f4efe6',
   /** Distance offshore (m) over which shallow turquoise fades to deep blue. */
@@ -84,6 +84,9 @@ export const SEA = {
   /** Upper bound on water radiance (keeps glitter bloom tight). */
   maxRadiance: 30,
   normalStrength: 0.55,
+  /** Planar reflections of waterfront landmarks (High tier): blend strength, ripple warp. */
+  reflectionStrength: 0.85,
+  reflectionDistortion: 0.06,
 } as const;
 
 /** Bloom tuned for HDR sun highlights only; the rest of the frame stays crisp. */
@@ -95,11 +98,11 @@ export const POST = {
 } as const;
 
 /**
- * Placeholder coastline used until the masterplan (Phase 4) supplies the real outline.
+ * Natural coastline beyond the masterplan (see config/masterplan.ts for the masterplan itself).
  * The shore runs roughly north–south; x(z) is the waterline.
  */
 export const COAST = {
-  /** Square area (m) covered by the shore distance field and terrain, centred on the origin. */
+  /** Square area (m) covered by the coarse shore field and the context city, centred on the origin. */
   fieldSize: 12_000,
   fieldResolution: 512,
   waves: [
@@ -121,11 +124,9 @@ export const CONTEXT_CITY = {
   streetWidth: 22,
   /** Distance inland (m) where context buildings start / end. */
   inlandStart: 260,
-  inlandEnd: 3600,
-  /** Kept clear for the masterplan (Phase 4): |z| below this, within masterplanDepth of the shore. */
-  masterplanHalfLength: 1700,
-  masterplanDepth: 1500,
-  color: '#e9dfd0',
+  inlandEnd: 2300,
+  /** Darker and warmer than the masterplan's white, so the masterplan reads as the subject. */
+  color: '#9e8f7b',
 } as const;
 
 /** Procedural facades (world/Facade.ts) for context and placeholder buildings. */

@@ -13,12 +13,12 @@ import { disposeObject } from '../utils/dispose';
 import { createRandom } from '../utils/random';
 import type { Atmosphere } from './Atmosphere';
 import { facadeExtension } from './Facade';
-import type { ShoreField } from './ShoreField';
+import { isInsideMasterplan, landDistance } from './masterplan/MasterplanShape';
 
 /** Share of buildings that are towers rather than low/mid-rise. */
-const TOWER_CHANCE = 0.035;
+const TOWER_CHANCE = 0.012;
 const LOW_RISE = { min: 6, range: 26 };
-const TOWER = { min: 45, range: 85 };
+const TOWER = { min: 40, range: 45 };
 /** Gap (m) between buildings that share a block. */
 const PLOT_GAP = 6;
 /** Max brightness variation between buildings (± fraction). */
@@ -34,14 +34,14 @@ interface Plot {
 
 /**
  * Generic surrounding city for scale and long sunset shadows, one instanced draw call.
- * Deliberately anonymous; it stays clear of the masterplan area.
+ * Deliberately anonymous; it stays clear of the masterplan (see MASTERPLAN.exclusion).
  */
 export class ContextCity implements Disposable {
   readonly object: InstancedMesh;
 
-  constructor(field: ShoreField, atmosphere: Atmosphere) {
+  constructor(atmosphere: Atmosphere) {
     const random = createRandom(CONTEXT_CITY.seed);
-    const plots = this.layout(field, random);
+    const plots = this.layout(random);
 
     const geometry = new BoxGeometry(1, 1, 1).translate(0, 0.5, 0);
     const material = atmosphere.patch(
@@ -69,7 +69,7 @@ export class ContextCity implements Disposable {
     this.object.computeBoundingSphere();
   }
 
-  private layout(field: ShoreField, random: () => number): Plot[] {
+  private layout(random: () => number): Plot[] {
     const { blockSize, streetWidth, inlandStart, inlandEnd } = CONTEXT_CITY;
     const pitch = blockSize + streetWidth;
     const half = COAST.fieldSize / 2;
@@ -77,9 +77,9 @@ export class ContextCity implements Disposable {
 
     for (let z = -half + pitch / 2; z < half; z += pitch) {
       for (let x = -half + pitch / 2; x < half; x += pitch) {
-        const distance = field.sample(x, z);
+        const distance = landDistance(x, z);
         if (distance < inlandStart || distance > inlandEnd) continue;
-        if (this.inMasterplanArea(z, distance)) continue;
+        if (isInsideMasterplan(x, z)) continue;
 
         // Split each block into one or two buildings along a random axis.
         const split = random() < 0.55;
@@ -103,12 +103,6 @@ export class ContextCity implements Disposable {
       }
     }
     return plots;
-  }
-
-  private inMasterplanArea(z: number, distance: number): boolean {
-    return (
-      Math.abs(z) < CONTEXT_CITY.masterplanHalfLength && distance < CONTEXT_CITY.masterplanDepth
-    );
   }
 
   dispose(): void {

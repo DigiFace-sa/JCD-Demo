@@ -25,16 +25,8 @@ import type { Atmosphere } from './Atmosphere';
 const SKY_CUBE_SIZE = 256;
 /** Distance (m) of the shadow-casting sun from its focus point, along the sun direction. */
 const SUN_DISTANCE = 6000;
-const SHADOW_NEAR = 100;
-const SHADOW_FAR = 14_000;
-/** Shadow extent changes are quantised to this ratio so zooming doesn't shimmer every frame. */
-const SHADOW_EXTENT_STEP = 1.25;
-/**
- * The shadow frustum only moves in steps of extent × this, and is that much larger than
- * requested so the view stays covered between steps. The scene is static, so the shadow map
- * is re-rendered only when the frustum moves, not every frame.
- */
-const SHADOW_FOCUS_STEP = 0.25;
+/** Margin (m) added around the fitted shadow frustum in light space. */
+const SHADOW_MARGIN = 20;
 /** Compass resolution of the baked horizon-haze lookup. */
 const HAZE_LUT_SIZE = 256;
 
@@ -116,8 +108,6 @@ export class Environment implements Updatable, Disposable {
     depthBuffer: false,
   });
   private environmentMap: Texture | null = null;
-  private shadowExtent = 0;
-  private shadowPlaced = false;
 
   constructor(
     private readonly scene: Scene,
@@ -149,11 +139,13 @@ export class Environment implements Updatable, Disposable {
     this.sunLight.set(color.r, color.g, color.b).multiplyScalar(LIGHT.sunIntensity);
 
     this.sun.castShadow = true;
-    this.sun.shadow.camera.near = SHADOW_NEAR;
-    this.sun.shadow.camera.far = SHADOW_FAR;
     this.sun.shadow.bias = -0.0003;
     this.sun.shadow.normalBias = 0.8;
-    this.setShadowFocus(new Vector3(), LIGHT.shadowExtent);
+    const region = LIGHT.shadowRegion;
+    this.fitShadow(
+      new Vector3(region.minX, 0, region.minZ),
+      new Vector3(region.maxX, region.maxHeight, region.maxZ),
+    );
 
     atmosphere.uniforms.uAtmoSunDir.value.copy(this.sunDirection);
     atmosphere.uniforms.uAtmoSky.value = this.skyCube.texture;
@@ -232,40 +224,41 @@ export class Environment implements Updatable, Disposable {
     material.dispose();
   }
 
-  /** Centre the sun's shadow frustum on what the camera is looking at. */
-  setShadowFocus(focus: Vector3, extent: number): void {
-    const padded = extent * (1 + SHADOW_FOCUS_STEP);
-    const quantised =
-      SHADOW_EXTENT_STEP ** Math.ceil(Math.log(padded) / Math.log(SHADOW_EXTENT_STEP));
-    if (quantised !== this.shadowExtent) {
-      this.shadowExtent = quantised;
-      const camera = this.sun.shadow.camera;
-      camera.left = -quantised;
-      camera.right = quantised;
-      camera.top = quantised;
-      camera.bottom = -quantised;
-      camera.updateProjectionMatrix();
+  /**
+   * Fit the sun's shadow frustum tightly (in light space) around a world box and render the
+   * shadow map once. The world is static and the sun doesn't move, so shadows never re-render
+   * during camera moves. With a sun this low, a light-space fit (not a square around the
+   * camera) also puts the map's resolution where the ground actually is.
+   */
+  fitShadow(min: Vector3, max: Vector3): void {
+    const center = new Vector3().addVectors(min, max).multiplyScalar(0.5);
+    this.sun.target.position.copy(center);
+    this.sun.position.copy(center).addScaledVector(this.sunDirection, SUN_DISTANCE);
+    this.sun.updateMatrixWorld();
+    this.sun.target.updateMatrixWorld();
+    const camera = this.sun.shadow.camera;
+    this.sun.shadow.updateMatrices(this.sun);
+
+    const lightMin = new Vector3(Infinity, Infinity, Infinity);
+    const lightMax = new Vector3(-Infinity, -Infinity, -Infinity);
+    const corner = new Vector3();
+    for (const x of [min.x, max.x]) {
+      for (const y of [min.y, max.y]) {
+        for (const z of [min.z, max.z]) {
+          corner.set(x, y, z).applyMatrix4(camera.matrixWorldInverse);
+          lightMin.min(corner);
+          lightMax.max(corner);
+        }
+      }
     }
-    // Coarse steps that are whole shadow texels, so shadow edges never crawl between updates.
-    const texel = (this.shadowExtent * 2) / this.sun.shadow.mapSize.x;
-    const step = Math.max(
-      texel,
-      Math.round((this.shadowExtent * SHADOW_FOCUS_STEP) / texel) * texel,
-    );
-    const snappedX = Math.round(focus.x / step) * step;
-    const snappedZ = Math.round(focus.z / step) * step;
-    const target = this.sun.target.position;
-    if (
-      target.x === snappedX &&
-      target.z === snappedZ &&
-      quantised === this.shadowExtent &&
-      this.shadowPlaced
-    ) {
-      return;
-    }
-    this.shadowPlaced = true;
-    target.set(snappedX, 0, snappedZ);
-    this.sun.position.copy(target).addScaledVector(this.sunDirection, SUN_DISTANCE);
+    camera.left = lightMin.x - SHADOW_MARGIN;
+    camera.right = lightMax.x + SHADOW_MARGIN;
+    camera.bottom = lightMin.y - SHADOW_MARGIN;
+    camera.top = lightMax.y + SHADOW_MARGIN;
+    // The camera looks down −z in its own space.
+    camera.near = Math.max(1, -lightMax.z - SHADOW_MARGIN);
+    camera.far = -lightMin.z + SHADOW_MARGIN;
+    camera.updateProjectionMatrix();
     this.renderer.shadowMap.needsUpdate = true;
   }
 

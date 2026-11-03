@@ -1,34 +1,57 @@
 import type { PerspectiveCamera, Scene, WebGLRenderer } from 'three';
+import { MASTERPLAN } from '../config/masterplan';
 import { COAST } from '../config/scene';
 import type { Disposable } from '../types';
 import { Atmosphere } from './Atmosphere';
-import { coastlineDistance } from './Coastline';
 import { ContextCity } from './ContextCity';
 import { Environment } from './Environment';
+import { Landmarks } from './landmarks/Landmarks';
+import { Masterplan } from './masterplan/Masterplan';
+import { beachWeight, landDistance } from './masterplan/MasterplanShape';
 import { Sea } from './Sea';
 import { ShoreField } from './ShoreField';
 import { Terrain } from './Terrain';
 
-/** Assembles the static world: sky and light, sea, coast terrain, surrounding city. */
+/** Assembles the world: sky and light, sea, coast, surrounding city, masterplan, landmarks. */
 export class World implements Disposable {
   readonly atmosphere = new Atmosphere();
   readonly environment: Environment;
-  readonly shore: ShoreField;
+  readonly shore: { readonly fine: ShoreField; readonly coarse: ShoreField };
   readonly sea: Sea;
   readonly terrain: Terrain;
   readonly city: ContextCity;
+  readonly masterplan: Masterplan;
+  readonly landmarks: Landmarks;
 
   constructor(
     private readonly scene: Scene,
     renderer: WebGLRenderer,
   ) {
     this.environment = new Environment(scene, renderer, this.atmosphere);
-    this.shore = new ShoreField(coastlineDistance, COAST.fieldSize, COAST.fieldResolution);
+    const half = COAST.fieldSize / 2;
+    const { field } = MASTERPLAN;
+    this.shore = {
+      fine: new ShoreField(landDistance, (_x, z) => beachWeight(z), field, field.cell),
+      coarse: new ShoreField(
+        landDistance,
+        (_x, z) => beachWeight(z),
+        { minX: -half, minZ: -half, maxX: half, maxZ: half },
+        COAST.fieldSize / COAST.fieldResolution,
+      ),
+    };
     this.sea = new Sea(this.atmosphere, this.shore, this.environment.sunLight);
-    this.terrain = new Terrain(this.shore, this.atmosphere);
-    this.city = new ContextCity(this.shore, this.atmosphere);
+    this.terrain = new Terrain(this.atmosphere);
+    this.city = new ContextCity(this.atmosphere);
+    this.masterplan = new Masterplan(this.atmosphere);
+    this.landmarks = new Landmarks(this.atmosphere);
 
-    scene.add(this.sea.object, this.terrain.object, this.city.object);
+    scene.add(
+      this.sea.object,
+      this.terrain.object,
+      this.city.object,
+      this.masterplan.object,
+      this.landmarks.object,
+    );
     this.environment.bake(renderer);
   }
 
@@ -36,14 +59,24 @@ export class World implements Disposable {
     this.environment.update(delta, elapsed);
     this.sea.follow(camera);
     this.sea.update(delta, elapsed);
+    this.landmarks.update(delta, elapsed);
   }
 
   dispose(): void {
-    this.scene.remove(this.sea.object, this.terrain.object, this.city.object);
+    this.scene.remove(
+      this.sea.object,
+      this.terrain.object,
+      this.city.object,
+      this.masterplan.object,
+      this.landmarks.object,
+    );
     this.sea.dispose();
     this.terrain.dispose();
     this.city.dispose();
-    this.shore.dispose();
+    this.masterplan.dispose();
+    this.landmarks.dispose();
+    this.shore.fine.dispose();
+    this.shore.coarse.dispose();
     this.environment.dispose();
   }
 }

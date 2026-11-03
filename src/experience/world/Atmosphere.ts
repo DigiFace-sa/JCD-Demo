@@ -23,7 +23,11 @@ export interface MaterialExtension {
   /** Unique per extension: distinguishes compiled shader programs. */
   readonly key: string;
   readonly uniforms: Record<string, IUniform>;
-  /** Declarations and helper functions. */
+  /** Vertex-shader declarations (attributes, varyings). */
+  readonly vertexPars?: string;
+  /** Runs at the end of the vertex shader's main(). */
+  readonly vertexMain?: string;
+  /** Fragment-shader declarations and helper functions. */
   readonly fragmentPars: string;
   /** Runs after the base colour is known; may modify `diffuseColor`. */
   readonly afterDiffuse?: string;
@@ -79,6 +83,12 @@ export class Atmosphere {
           'gl_FragColor.rgb = applyAtmosphere(gl_FragColor.rgb, vAtmoWorldPos);',
         );
       if (extension) {
+        shader.vertexShader = shader.vertexShader
+          .replace('#include <common>', `#include <common>\n${extension.vertexPars ?? ''}`)
+          .replace(
+            '#include <project_vertex>',
+            `#include <project_vertex>\n${extension.vertexMain ?? ''}`,
+          );
         shader.fragmentShader = shader.fragmentShader
           .replace(atmosphereGlsl, `${atmosphereGlsl}\n${extension.fragmentPars}`)
           .replace(

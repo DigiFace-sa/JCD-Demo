@@ -1,5 +1,5 @@
 import type { Camera, Texture } from 'three';
-import { Color, Mesh, PlaneGeometry, ShaderMaterial, Vector3 } from 'three';
+import { Color, Matrix4, Mesh, PlaneGeometry, ShaderMaterial, Vector3 } from 'three';
 import { SEA } from '../config/scene';
 import fragmentShader from '../shaders/sea.frag.glsl?raw';
 import vertexShader from '../shaders/sea.vert.glsl?raw';
@@ -17,7 +17,11 @@ export class Sea implements Updatable, Disposable {
   readonly object: Mesh<PlaneGeometry, ShaderMaterial>;
   private readonly waveNormals: Texture;
 
-  constructor(atmosphere: Atmosphere, field: ShoreField, sunLight: Vector3) {
+  constructor(
+    atmosphere: Atmosphere,
+    shore: { readonly fine: ShoreField; readonly coarse: ShoreField },
+    sunLight: Vector3,
+  ) {
     this.waveNormals = createWaveNormalMap();
     const material = new ShaderMaterial({
       name: 'SeaMaterial',
@@ -27,8 +31,10 @@ export class Sea implements Updatable, Disposable {
         ...atmosphere.uniforms,
         uTime: { value: 0 },
         uWaveNormals: { value: this.waveNormals },
-        uShoreField: { value: field.texture },
-        uShoreBounds: { value: field.bounds },
+        uShoreFine: { value: shore.fine.texture },
+        uShoreFineBounds: { value: shore.fine.bounds },
+        uShoreCoarse: { value: shore.coarse.texture },
+        uShoreCoarseBounds: { value: shore.coarse.bounds },
         uDeepColor: { value: new Color(SEA.deepColor) },
         uShallowColor: { value: new Color(SEA.shallowColor) },
         uFoamColor: { value: new Color(SEA.foamColor) },
@@ -39,6 +45,10 @@ export class Sea implements Updatable, Disposable {
         uSunSheen: { value: SEA.sunSheen },
         uNormalStrength: { value: SEA.normalStrength },
         uMaxRadiance: { value: SEA.maxRadiance },
+        uReflection: { value: null },
+        uReflectionMatrix: { value: new Matrix4() },
+        uReflectionStrength: { value: 0 },
+        uReflectionDistortion: { value: SEA.reflectionDistortion },
       },
     });
 
@@ -46,6 +56,16 @@ export class Sea implements Updatable, Disposable {
     this.object = new Mesh(geometry, material);
     this.object.name = 'sea';
     this.object.frustumCulled = false;
+  }
+
+  /** Mirror a planar reflection (texture + world→UV matrix) into the water; null disables it. */
+  setReflection(reflection: { texture: Texture; matrix: Matrix4 } | null): void {
+    const uniforms = this.object.material.uniforms;
+    if (uniforms.uReflection) uniforms.uReflection.value = reflection?.texture ?? null;
+    if (uniforms.uReflectionMatrix && reflection)
+      uniforms.uReflectionMatrix.value = reflection.matrix;
+    if (uniforms.uReflectionStrength)
+      uniforms.uReflectionStrength.value = reflection ? SEA.reflectionStrength : 0;
   }
 
   setAnisotropy(anisotropy: number): void {

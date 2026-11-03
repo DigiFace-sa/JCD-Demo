@@ -1,55 +1,51 @@
-import { DataTexture, DataUtils, HalfFloatType, LinearFilter, RedFormat, Vector4 } from 'three';
+import { DataTexture, DataUtils, HalfFloatType, LinearFilter, RGFormat, Vector4 } from 'three';
 import type { Disposable } from '../types';
 
 /** Signed distance to the waterline in metres: positive inland, negative offshore. */
 export type SignedDistanceFn = (x: number, z: number) => number;
 
+/** 0–1 per point: 1 where the shore is a natural beach (foam, shallows), 0 at quay walls. */
+export type BeachFn = (x: number, z: number) => number;
+
+export interface FieldBounds {
+  readonly minX: number;
+  readonly minZ: number;
+  readonly maxX: number;
+  readonly maxZ: number;
+}
+
 /**
- * Baked signed-distance-to-shore field over a square area centred on the origin.
- * The sea shader samples it (shallow-water colour, foam); terrain and placement code
- * query it on the CPU. Any coastline source works: it only needs a distance function.
+ * Signed-distance-to-shore field baked into a texture over a rectangle (R = distance,
+ * G = beach weight). The sea shader samples it for shallow-water colour and foam. Any
+ * coastline source works: it only needs a distance function.
  */
 export class ShoreField implements Disposable {
   readonly texture: DataTexture;
-  /** (minX, minZ, size, size) — maps world xz to texture uv in shaders. */
+  /** (minX, minZ, sizeX, sizeZ): maps world xz to texture uv in shaders. */
   readonly bounds: Vector4;
-  private readonly values: Float32Array;
 
-  constructor(
-    private readonly distance: SignedDistanceFn,
-    private readonly size: number,
-    resolution: number,
-  ) {
-    const half = size / 2;
-    this.bounds = new Vector4(-half, -half, size, size);
-    this.values = new Float32Array(resolution * resolution);
-    const halfFloats = new Uint16Array(resolution * resolution);
+  constructor(distance: SignedDistanceFn, beach: BeachFn, area: FieldBounds, cell: number) {
+    const sizeX = area.maxX - area.minX;
+    const sizeZ = area.maxZ - area.minZ;
+    const width = Math.ceil(sizeX / cell);
+    const height = Math.ceil(sizeZ / cell);
+    this.bounds = new Vector4(area.minX, area.minZ, sizeX, sizeZ);
 
-    for (let row = 0; row < resolution; row++) {
-      const z = -half + ((row + 0.5) / resolution) * size;
-      for (let col = 0; col < resolution; col++) {
-        const x = -half + ((col + 0.5) / resolution) * size;
-        const index = row * resolution + col;
-        const value = distance(x, z);
-        this.values[index] = value;
-        halfFloats[index] = DataUtils.toHalfFloat(value);
+    const halfFloats = new Uint16Array(width * height * 2);
+    for (let row = 0; row < height; row++) {
+      const z = area.minZ + ((row + 0.5) / height) * sizeZ;
+      for (let col = 0; col < width; col++) {
+        const x = area.minX + ((col + 0.5) / width) * sizeX;
+        const index = (row * width + col) * 2;
+        halfFloats[index] = DataUtils.toHalfFloat(distance(x, z));
+        halfFloats[index + 1] = DataUtils.toHalfFloat(beach(x, z));
       }
     }
 
-    this.texture = new DataTexture(halfFloats, resolution, resolution, RedFormat, HalfFloatType);
+    this.texture = new DataTexture(halfFloats, width, height, RGFormat, HalfFloatType);
     this.texture.magFilter = LinearFilter;
     this.texture.minFilter = LinearFilter;
     this.texture.needsUpdate = true;
-  }
-
-  /** Exact signed distance (uses the source function, not the baked grid). */
-  sample(x: number, z: number): number {
-    return this.distance(x, z);
-  }
-
-  contains(x: number, z: number): boolean {
-    const half = this.size / 2;
-    return Math.abs(x) <= half && Math.abs(z) <= half;
   }
 
   dispose(): void {

@@ -20,6 +20,13 @@ export const MAP_LIMITS: ControlLimits = {
 export const VIEWS = {
   wide: { target: { x: -900, y: 0, z: 250 }, radius: 3600, polar: deg(77), azimuth: deg(90) },
   low: { target: { x: -1400, y: 0, z: 420 }, radius: 260, polar: deg(85), azimuth: deg(100) },
+  map: { target: { x: 400, y: 0, z: 200 }, radius: 5000, polar: deg(58), azimuth: deg(-72) },
+  waterfront: {
+    target: { x: -330, y: 20, z: -620 },
+    radius: 620,
+    polar: deg(84),
+    azimuth: deg(-70),
+  },
   city: { target: { x: 700, y: 0, z: 2300 }, radius: 650, polar: deg(76), azimuth: deg(-75) },
   sun: { target: { x: -2600, y: 0, z: -180 }, radius: 1100, polar: deg(81), azimuth: deg(103) },
 } as const satisfies Record<string, OrbitView>;

@@ -8,10 +8,13 @@ import { Debug } from './core/Debug';
 import { pixelRatioFor, Quality } from './core/Quality';
 import { createRenderer, gpuName } from './core/Renderer';
 import { Controls } from './interaction/Controls';
-import type { Disposable } from './types';
+import { MapInteraction } from './interaction/MapInteraction';
+import type { Disposable, Focus } from './types';
+import { PlanarReflection } from './world/PlanarReflection';
 import { World } from './world/World';
 
 export { isWebGL2Available } from './core/Renderer';
+export type { Focus, FocusKind } from './types';
 
 /** `full` = interactive Experience page; `hero` = non-interactive backdrop (Home hero). */
 export type ExperienceVariant = 'full' | 'hero';
@@ -30,9 +33,10 @@ const HERO_DRIFT = MathUtils.degToRad(0.6);
 const NEAR_PER_HEIGHT = 0.02;
 const NEAR_MIN = 0.5;
 const NEAR_MAX = 8;
-/** Shadow frustum half-size as a multiple of the orbit radius. */
-const SHADOW_EXTENT_PER_RADIUS = 0.75;
-const SHADOW_EXTENT_MIN = 250;
+/** Opening move: start this much further out and higher, then settle onto the map view. */
+const INTRO_RADIUS_SCALE = 1.7;
+const INTRO_POLAR = MathUtils.degToRad(38);
+const INTRO_DURATION = 4.2;
 
 /**
  * Owns the renderer, scene, camera, frame loop and resize handling. Construct, `await ready()`,
@@ -48,6 +52,8 @@ export class Experience implements Disposable {
   private readonly composer: Composer;
   private readonly quality: Quality;
   private readonly debug: Debug | null = null;
+  private readonly map: MapInteraction | null = null;
+  private reflection: PlanarReflection | null = null;
   private readonly resizeObserver: ResizeObserver;
 
   private width = 1;
@@ -75,12 +81,14 @@ export class Experience implements Disposable {
     this.composer = new Composer(this.renderer, this.scene, this.camera);
 
     this.controls = new Controls(this.camera, this.canvas, MAP_LIMITS);
-    this.controls.setView(VIEWS.wide, true);
     if (options.variant === 'hero') {
+      this.controls.setView(VIEWS.wide, true);
       this.controls.enabled = false;
       this.controls.autoRotateSpeed = prefersReducedMotion() ? 0 : HERO_DRIFT;
     } else {
+      this.controls.setView(VIEWS.map, true);
       this.canvas.tabIndex = 0;
+      this.map = new MapInteraction(container, this.canvas, this.camera, this.controls, this.world);
     }
 
     if (options.debug) {
@@ -90,7 +98,9 @@ export class Experience implements Disposable {
           this.applyQuality();
         },
         onView: (name) => {
-          if (name in VIEWS) this.controls.setView(VIEWS[name as ViewName]);
+          if (!(name in VIEWS)) return;
+          this.map?.director.cancel();
+          this.controls.setView(VIEWS[name as ViewName]);
         },
       });
     }
@@ -108,6 +118,51 @@ export class Experience implements Disposable {
     await this.renderer.compileAsync(this.scene, this.camera);
     if (this.disposed) return;
     this.renderFrame(0);
+  }
+
+  /** Opening camera move onto the spawn map (skipped under reduced motion). */
+  async intro(): Promise<void> {
+    if (!this.map) return;
+    const mapView = this.map.mapView;
+    if (prefersReducedMotion()) {
+      this.controls.setView(mapView, true);
+      return;
+    }
+    this.controls.setView(
+      { ...mapView, radius: mapView.radius * INTRO_RADIUS_SCALE, polar: INTRO_POLAR },
+      true,
+    );
+    await this.map.director.flyTo(mapView, { duration: INTRO_DURATION });
+  }
+
+  /** Listen for map selections (markers, landmark clicks, district clicks). */
+  onSelect(listener: (focus: Focus) => void): () => void {
+    return this.map?.onSelect(listener) ?? (() => undefined);
+  }
+
+  /** Frame a landmark, district or attraction, or the whole map (null). */
+  focus(focus: Focus | null, immediate = false): Promise<void> {
+    return this.map?.focus(focus, immediate) ?? Promise.resolve();
+  }
+
+  /** Preview-highlight a district from outside the canvas (null clears). */
+  hover(focus: Focus | null): void {
+    this.map?.setExternalHover(focus);
+  }
+
+  /** Fires on any direct camera input (used to fade hints and, later, pause the tour). */
+  onUserInput(listener: () => void): () => void {
+    return this.controls.onUserInput(listener);
+  }
+
+  /** UI elements markers must stay clear of. */
+  setAvoidElements(elements: readonly Element[]): void {
+    this.map?.setAvoidElements(elements);
+  }
+
+  /** Width (px) the side panel covers: positive on the right, negative on the left (RTL). */
+  setPanelInset(pixels: number): void {
+    this.map?.setPanelInset(pixels);
   }
 
   start(): void {
@@ -145,12 +200,11 @@ export class Experience implements Disposable {
     this.controls.update(delta);
     this.updateNearPlane();
     this.world.update(delta, this.elapsed, this.camera);
-    this.world.environment.setShadowFocus(
-      this.controls.target,
-      Math.max(SHADOW_EXTENT_MIN, this.controls.radius * SHADOW_EXTENT_PER_RADIUS),
-    );
+    this.world.masterplan.setViewDistance(this.controls.radius);
     this.renderer.info.reset();
+    this.reflection?.render(this.renderer, this.scene, this.camera);
     this.composer.render(delta);
+    this.map?.update(this.width, this.height);
   }
 
   private updateNearPlane(): void {
@@ -180,6 +234,22 @@ export class Experience implements Disposable {
       Math.min(settings.anisotropy, this.renderer.capabilities.getMaxAnisotropy()),
     );
     this.composer.configure(settings, this.width, this.height, this.pixelRatio);
+    this.configureReflection(settings.reflections);
+  }
+
+  private configureReflection(enabled: boolean): void {
+    if (enabled && !this.reflection) {
+      this.reflection = new PlanarReflection();
+    } else if (!enabled && this.reflection) {
+      this.reflection.dispose();
+      this.reflection = null;
+    }
+    this.reflection?.setSize(this.width * this.pixelRatio, this.height * this.pixelRatio);
+    this.world.sea.setReflection(
+      this.reflection
+        ? { texture: this.reflection.target.texture, matrix: this.reflection.textureMatrix }
+        : null,
+    );
   }
 
   private readonly onResize = (): void => {
@@ -188,6 +258,7 @@ export class Experience implements Disposable {
     this.renderer.setPixelRatio(this.pixelRatio);
     this.renderer.setSize(this.width, this.height, false);
     this.composer.setSize(this.width, this.height, this.pixelRatio);
+    this.reflection?.setSize(this.width * this.pixelRatio, this.height * this.pixelRatio);
     if (!this.running) this.renderFrame(0);
   };
 
@@ -207,9 +278,11 @@ export class Experience implements Disposable {
     this.resizeObserver.disconnect();
     document.removeEventListener('visibilitychange', this.onVisibilityChange);
     this.debug?.dispose();
+    this.map?.dispose();
     this.controls.dispose();
     this.world.dispose();
     this.composer.dispose();
+    this.reflection?.dispose();
     this.renderer.renderLists.dispose();
     this.renderer.dispose();
     // Release the context now rather than waiting for GC (browsers cap live contexts).

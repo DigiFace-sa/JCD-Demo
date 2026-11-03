@@ -52,7 +52,9 @@
     },
     "operaHouse": {
       "name": "Opera House",
-      "summary": "Saudi Arabia's first opera house, with three theatres totalling 2,400 seats."
+      "summary": "Saudi Arabia's first opera house, with three theatres totalling 2,400 seats.",
+      "facts": "Three theatres · 2,400 seats",
+      "factsDetail": "1,500-seat main theatre · 700-seat medium theatre · 200-seat training hall"
     },
     "oceanarium": {
       "name": "Oceanarium & Coral Farm",
@@ -107,5 +109,92 @@
   "status": {
     "inProgress": "[DRAFT — this page is built in a later phase]",
     "arDraftBadge": "Arabic draft"
+  },
+  "districts": {
+    "central": {
+      "name": "Central",
+      "summary": "The heart of the destination: a walkable mixed-use core of homes, workplaces and everyday life, framed by shaded streets and public spaces. [DRAFT — client to approve]"
+    },
+    "marina": {
+      "name": "Marina",
+      "summary": "A sheltered harbour where yachts, waterfront dining and the cruise terminal meet the city. [DRAFT — client to approve]"
+    },
+    "beach": {
+      "name": "Beach, Leisure & Lifestyle",
+      "summary": "A 2.1 km public beach lined with leisure, dining and family attractions along the Red Sea. [DRAFT — client to approve]"
+    },
+    "sportsPark": {
+      "name": "Sports Park",
+      "summary": "Home to the stadium, set within distinctive gardens and green open spaces for sport and play. [DRAFT — client to approve]"
+    },
+    "culture": {
+      "name": "Culture & Creativity",
+      "summary": "Anchored by the Opera House and the Museum: a district for performance, heritage and creative life. [DRAFT — client to approve]"
+    },
+    "wellness": {
+      "name": "Wellness",
+      "summary": "Calm, landscaped streets and spaces dedicated to health, rest and wellbeing. [DRAFT — client to approve]"
+    }
+  },
+  "attractions": {
+    "entertainmentPier": {
+      "name": "Entertainment Pier",
+      "summary": "A pier reaching out over the Red Sea, with entertainment and views back to the city. [DRAFT — client to approve]"
+    },
+    "publicBeach": {
+      "name": "Public Beach",
+      "summary": "2.1 km of public beach on the Red Sea, open to everyone. [DRAFT — client to approve]"
+    },
+    "cruiseTerminal": {
+      "name": "Cruise Terminal",
+      "summary": "A gateway for visitors arriving by sea, connected to the marina and the city. [DRAFT — client to approve]"
+    }
+  },
+  "stats": {
+    "area": {
+      "value": "5.7 million m²",
+      "label": "Destination area"
+    },
+    "shoreline": {
+      "value": "9.5 km",
+      "label": "Shoreline"
+    },
+    "beach": {
+      "value": "2.1 km",
+      "label": "Public beach"
+    },
+    "landmarks": {
+      "value": "4",
+      "label": "Landmarks"
+    },
+    "attractions": {
+      "value": "10",
+      "label": "Attractions"
+    },
+    "districts": {
+      "value": "6",
+      "label": "Districts"
+    },
+    "phase1": {
+      "value": "End of 2027",
+      "label": "Phase 1 completion target"
+    }
+  },
+  "map": {
+    "location": "A waterfront destination on the Red Sea in the heart of Jeddah.",
+    "glance": "At a glance",
+    "landmarksHeading": "Landmarks",
+    "districtsHeading": "Districts",
+    "attractionsHeading": "Key attractions",
+    "back": "Back to overview",
+    "hidePanel": "Hide panel",
+    "showPanel": "Show panel",
+    "previewNote": "Full experience coming in the complete build",
+    "kindLandmark": "Landmark",
+    "kindDistrict": "District",
+    "kindAttraction": "Attraction",
+    "select": "Show {name}",
+    "hint": "Drag to explore · Scroll to zoom",
+    "markersLabel": "Places on the map"
   }
 }

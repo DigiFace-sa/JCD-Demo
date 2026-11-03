@@ -34,6 +34,12 @@ so any static server works with no rewrite rules. Opening `index.html` straight 
 One-time preparation on the pitch machine: install [Node.js](https://nodejs.org) (LTS), copy this
 folder over, then run `npm install` and `npm run build:pitch` once.
 
+**Display:** the pitch runs on an Apple M1, which holds 60 fps at 1080p. When the Mac is connected
+to the TV, set System Settings › Displays › (the TV) › Resolution to **1920 × 1080**. The launcher
+also forces Chrome to render at 1× pixel density, so even a HiDPI "looks like 1080p" mode renders
+at 1080p (pass `--hidpi` to opt out on a stronger machine). TVs upscale 1080p cleanly; smooth
+motion matters more on a big screen than resolution. Adaptive quality stays on as a safety net.
+
 On the day, **double-click**:
 
 - macOS: `start-pitch.command` (the first time, right-click › Open to get past Gatekeeper)
@@ -51,6 +57,7 @@ node scripts/pitch.mjs              # kiosk, 3D Experience
 node scripts/pitch.mjs --tour       # kiosk, autostart the Guided Tour (Phase 6)
 node scripts/pitch.mjs --no-kiosk   # normal window
 node scripts/pitch.mjs --no-browser # serve only (open the printed address yourself)
+node scripts/pitch.mjs --hidpi      # full pixel density (stronger machines only)
 ```
 
 ## URL flags
@@ -74,18 +81,27 @@ src/
   i18n/                en.json, ar.json, i18n.ts (t(), setLang(), DOM binding)
   components/          AppShell, Header, Footer, LangToggle, icons
   pages/               routed pages (stub pages until Phase 2)
-  data/                content structure (ids, i18n keys, links); no copy lives here
+  data/                content structure: ids, i18n keys, links, map layout (no copy lives here)
+    landmarks.ts       positions, footprints, camera shots, fact keys
+    districts.ts       outlines, label positions, highlight colours
+    attractions.ts     positions (only the three named in the brief)
   styles/              tokens.css, base.css, layout.css, components/*.css
   assets/patterns/     original roshan-inspired lattice tile
   experience/          the 3D Experience (lazy-loaded; only the Experience route pays for it)
     Experience.ts      renderer, scene, camera, frame loop, resize, dispose
     config/scene.ts    ART DIRECTION: sun, sky, light, haze, sea, post, coast (all look values)
-    config/views.ts    camera limits and reference views
+    config/views.ts    camera limits, spawn map and reference views
+    config/masterplan.ts  land shape (waterfront, peninsula, marina) and building massing
     core/              Renderer, Composer (post chain), Quality (tiers + adaptive), Debug
-    world/             Environment (sky/sun/IBL), Atmosphere (haze), Sea, Terrain, ContextCity,
-                       Facade, ShoreField (shore distance field), Coastline (placeholder outline)
-    interaction/       Controls (orbit/pan/zoom with limits and damping)
-    shaders/           GLSL: sea, atmosphere, facade
+    world/             Environment (sky/sun/IBL), Atmosphere (haze), Sea, PlanarReflection,
+                       Terrain (natural coast), ContextCity, Facade, ShoreField
+      masterplan/      MasterplanShape (land SDF), ground, district buildings, landscape,
+                       breakwaters, pier + cruise terminal, district highlighting
+      landmarks/       LandmarkModel (contract + GLB adapter), Stadium, OperaHouse,
+                       Oceanarium, Museum, registry (Landmarks.ts)
+    interaction/       Controls, CameraDirector (flights), Markers (HTML), MapInteraction
+    shaders/           GLSL: sea, atmosphere, facade, district, lattice
+  pages/experience/ui/ SidePanel (overview, detail, lists)
 public/brand/          logo-en.svg, logo-ar.svg (placeholders: drop official files in)
 scripts/pitch.mjs      zero-dependency pitch launcher (see Pitch day)
 ```
@@ -94,11 +110,11 @@ scripts/pitch.mjs      zero-dependency pitch launcher (see Pitch day)
 
 Three tiers (`src/experience/core/Quality.ts`):
 
-| Tier   | Render cap         | Shadows | MSAA | Bloom      |
-| ------ | ------------------ | ------- | ---- | ---------- |
-| High   | 2560×1440 (≤2×DPR) | 4096    | 4×   | ½-res blur |
-| Medium | 1920×1080          | 2048    | 2×   | ⅓-res blur |
-| Low    | 1280×720           | off     | off  | off        |
+| Tier   | Render cap         | Shadows | MSAA | Bloom      | Water reflections |
+| ------ | ------------------ | ------- | ---- | ---------- | ----------------- |
+| High   | 2560×1440 (≤2×DPR) | 4096    | 4×   | ½-res blur | yes               |
+| Medium | 1920×1080          | 2048    | 2×   | ⅓-res blur | no                |
+| Low    | 1280×720           | off     | off  | off        | no                |
 
 The starting tier comes from the GPU name (software renderers → Low, integrated Intel → Medium,
 everything else → High). While running, if frames average slower than ~50 fps, render resolution
@@ -107,7 +123,15 @@ visible oscillation would be worse than a slightly softer image. `?quality=` or 
 locks a tier.
 
 Output is always the full display resolution; a 4K TV gets a 1440p render upscaled. Measured on
-an entry-level Apple M1 (the dev machine): High holds 60 fps at 1080p, about 48 fps at 1440p.
+the pitch M1 at 1080p, High holds 60 fps on the spawn map and during camera flights.
+
+Budget notes:
+
+- Sun shadows are fitted once around the masterplan in light space and never re-render during
+  camera moves (the sun and the world are static).
+- Experience UI uses opaque glass, not `backdrop-filter`: blurring over a canvas that redraws
+  every frame cost ~4 fps.
+- Reflections render only the waterfront layer (`config/layers.ts`) at half resolution.
 
 ## 3D art direction
 
@@ -139,6 +163,30 @@ Facts flagged in code rather than on screen:
 - Area: 5.7 million m² (some official pages say 5.6). `[TBC: confirm with JCDC]`
 - Stadium capacity: not displayed until confirmed.
 
+### Map content
+
+- **Landmarks, districts, attractions:** `src/data/*.ts` hold positions (world metres; the
+  waterfront runs along x ≈ −60, the sea is west), district outlines and colours, and camera
+  framing. Names and descriptions are i18n keys. District descriptions and attraction copy are
+  marked `[DRAFT — client to approve]`.
+- **Land shape and massing:** `src/experience/config/masterplan.ts` (peninsula, marina basin,
+  breakwaters, beach extent, parks, plazas, per-district building profiles). The layout is
+  stylised and plausible, not surveyed. Building massing is illustrative only.
+
+### Replacing a procedural landmark with a GLB model
+
+1. Put the file in `public/models/`, e.g. `public/models/opera-house.glb`. Model origin at
+   ground level in the centre of the site, metres as units, facing as on the site.
+2. In `src/experience/world/landmarks/Landmarks.ts`, change one line:
+
+   ```ts
+   'opera-house': gltfLandmark('opera-house', 'models/opera-house.glb', { height: 60 }),
+   ```
+
+   and import `gltfLandmark` from `./LandmarkModel`. The GLTF loader is fetched only when a GLB
+   is used. Materials get the shared haze automatically, and the picking proxy resizes to the
+   model.
+
 ## Brand tokens
 
 `src/styles/tokens.css` holds five brand colours (`--jcdc-primary`, `--jcdc-secondary`,
@@ -159,11 +207,14 @@ There is no native reviewer on the project yet, so **every Arabic string is a dr
 (`ar.json › _meta`). Review builds show an “AR DRAFT” badge while in Arabic. Phrases I am least
 sure of:
 
-| Key                         | Draft                               | Concern                                                       |
-| --------------------------- | ----------------------------------- | ------------------------------------------------------------- |
-| `nav.exploreIn3d`           | استكشف بتقنية ثلاثية الأبعاد        | Long for a button; “استكشف ثلاثياً” or “جولة ثلاثية الأبعاد”? |
-| `landmarks.oceanarium.name` | الأحياء المائية ومزرعة المرجان      | Check JCDC’s official Arabic name for the Oceanarium          |
-| `pages.invest.lead`         | …والعافية…                          | “العافية” vs “الصحة والعافية” for _wellness_                  |
-| `footer.pifCompany`         | إحدى شركات صندوق الاستثمارات العامة | Match PIF’s official lockup wording                           |
-| `meta.siteName`             | وسط جدة                             | Confirm brand name usage in Arabic                            |
-| (all)                       | Western digits (9.5, 2,400)         | Confirm JCDC’s numeral convention for Arabic copy             |
+| Key                         | Draft                                 | Concern                                                       |
+| --------------------------- | ------------------------------------- | ------------------------------------------------------------- |
+| `nav.exploreIn3d`           | استكشف بتقنية ثلاثية الأبعاد          | Long for a button; “استكشف ثلاثياً” or “جولة ثلاثية الأبعاد”? |
+| `landmarks.oceanarium.name` | الأحياء المائية ومزرعة المرجان        | Check JCDC’s official Arabic name for the Oceanarium          |
+| `pages.invest.lead`         | …والعافية…                            | “العافية” vs “الصحة والعافية” for _wellness_                  |
+| `footer.pifCompany`         | إحدى شركات صندوق الاستثمارات العامة   | Match PIF’s official lockup wording                           |
+| `meta.siteName`             | وسط جدة                               | Confirm brand name usage in Arabic                            |
+| (all)                       | Western digits (9.5, 2,400)           | Confirm JCDC’s numeral convention for Arabic copy             |
+| `districts.*.name`          | المنطقة المركزية، المرسى، …           | Official Arabic district names                                |
+| `stats.area.value`          | 5.7 مليون م²                          | “م²” vs “متر مربع”                                            |
+| `stats.phase1.label`        | الموعد المستهدف لإنجاز المرحلة الأولى | Long for a stat label                                         |

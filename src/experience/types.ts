@@ -7,3 +7,11 @@ export interface Updatable {
 export interface Disposable {
   dispose(): void;
 }
+
+export type FocusKind = 'landmark' | 'district' | 'attraction';
+
+/** Something on the map the camera can frame and the UI can describe. */
+export interface Focus {
+  readonly kind: FocusKind;
+  readonly id: string;
+}
