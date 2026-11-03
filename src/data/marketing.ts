@@ -1,23 +1,13 @@
+import { OFFICIAL_IMAGES, type OfficialImage } from './officialImages';
 import type { TranslationKey } from '../i18n/i18n';
 import type { LandmarkId } from './landmarks';
 
-/** Official imagery downloaded from JCDC; provenance and source sizes are in SOURCE_ASSETS.md. */
-export const MARKETING_IMAGES = {
-  masterplan: { width: 2000, height: 1125 },
-  waterfront: { width: 2400, height: 1348 },
-  stadium: { width: 2000, height: 1165 },
-  'opera-house': { width: 1440, height: 720 },
-  oceanarium: { width: 2000, height: 1198 },
-  museum: { width: 1440, height: 720 },
-  beach: { width: 1800, height: 1013 },
-  marina: { width: 1800, height: 883 },
-  coral: { width: 1600, height: 893 },
-  park: { width: 1600, height: 901 },
-  sustainability: { width: 2000, height: 1125 },
-  'entertainment-pier': { width: 1087, height: 618 },
-  'cruise-terminal': { width: 1600, height: 1270 },
-} as const;
-export type MarketingImage = keyof typeof MARKETING_IMAGES;
+/**
+ * Official JCDC renders (generated size table; provenance in assets/official-images.json and
+ * docs/SOURCE_ASSETS.md). Kept under its historical name for the marketing pages.
+ */
+export const MARKETING_IMAGES = OFFICIAL_IMAGES;
+export type MarketingImage = OfficialImage;
 
 export const LANDMARK_IMAGES: Readonly<Record<LandmarkId, MarketingImage>> = {
   stadium: 'stadium',

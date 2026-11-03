@@ -131,3 +131,8 @@ code {
 .icon-slot {
   display: contents;
 }
+
+/* <picture> wrappers lay out as if the <img> were placed directly (sizing, object-fit). */
+.official-picture {
+  display: contents;
+}

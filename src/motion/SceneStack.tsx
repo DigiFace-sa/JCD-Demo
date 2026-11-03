@@ -1,10 +1,11 @@
 import { useGSAP } from '@gsap/react';
 import { gsap } from 'gsap';
 import { ScrollTrigger } from 'gsap/ScrollTrigger';
-import { Children, isValidElement, useRef, type ReactElement, type ReactNode } from 'react';
+import { Children, cloneElement, isValidElement, useRef, type ReactElement, type ReactNode } from 'react';
 import { useI18n } from '../app/i18n';
 import { useReducedMotion } from '../app/useReducedMotion';
-import { MARKETING_IMAGES, type MarketingImage } from '../data/marketing';
+import { OfficialPicture } from '../app/OfficialPicture';
+import type { MarketingImage } from '../data/marketing';
 import { addIntro, addOutro, CHOREOGRAPHY, taggedElements } from './choreography';
 
 gsap.registerPlugin(ScrollTrigger, useGSAP);
@@ -30,6 +31,8 @@ const STACK = {
   scrub: 0.6,
   /** Real-time speed of the first scene's intro, which plays on load (not on scroll). */
   firstIntroTimeScale: 0.32,
+  /** How many upcoming scenes' renders are decoded ahead of time. */
+  decodeAhead: 2,
   dissolve: { outScale: 0.9, outShade: 0.72, inScale: 1.3 },
   zoom: { outScale: 2.6, inScale: 1.35 },
 } as const;
@@ -47,12 +50,13 @@ export interface SceneProps {
   /** Horizontal alignment of the copy. */
   readonly align?: 'start' | 'center' | 'end';
   readonly label: string;
+  /** Load at high priority (set by SceneStack on the opening scene). */
+  readonly priority?: boolean;
   readonly children?: ReactNode;
 }
 
 /** Declares one scene; rendered and choreographed by its parent `SceneStack`. */
 export function Scene(props: SceneProps): ReactNode {
-  const size = MARKETING_IMAGES[props.image];
   const focus = props.focus ?? { x: 0.5, y: 0.5 };
   return (
     <section
@@ -68,13 +72,7 @@ export function Scene(props: SceneProps): ReactNode {
       }
     >
       <div className="scene__media">
-        <img
-          src={`images/jcdc/${props.image}.webp`}
-          width={size.width}
-          height={size.height}
-          alt=""
-          decoding="async"
-        />
+        <OfficialPicture id={props.image} alt="" sizes="100vw" priority={props.priority ?? false} />
       </div>
       <div className="scene__shade" aria-hidden="true" />
       <div className="scene__dim" aria-hidden="true" />
@@ -269,11 +267,26 @@ export function SceneStack({ label, children }: { label: string; children: React
 
       // Every scene but the first starts hidden; keyboard focus only reaches the active one.
       gsap.set(sections.slice(1), { autoAlpha: 0 });
+      // Decode the renders just ahead of the active scene, so no transition waits on a
+      // first-time decode, without holding every full-screen bitmap in memory at once.
+      const decoded = new Set<number>();
+      const decodeAhead = (active: number): void => {
+        for (let index = active; index <= active + STACK.decodeAhead && index < count; index++) {
+          if (decoded.has(index)) continue;
+          decoded.add(index);
+          const image = sections[index]?.querySelector('img');
+          if (image) void image.decode().catch(() => undefined);
+        }
+      };
+      let lastActive = -1;
       const setActive = (progress: number): void => {
         const active = Math.min(count - 1, Math.floor(progress * count + STACK.transition * 0.5));
+        if (active === lastActive) return;
+        lastActive = active;
         sections.forEach((scene, index) => {
           scene.inert = index !== active;
         });
+        decodeAhead(active);
       };
       setActive(0);
       ScrollTrigger.create({
@@ -293,8 +306,6 @@ export function SceneStack({ label, children }: { label: string; children: React
         },
       });
       firstIntro.timeScale(STACK.firstIntroTimeScale).play();
-      // Decode every render up front so no transition ever waits on a first-time decode.
-      for (const image of stack.querySelectorAll('img')) void image.decode().catch(() => undefined);
       return () => {
         delete document.body.dataset.stage;
       };
@@ -312,7 +323,7 @@ export function SceneStack({ label, children }: { label: string; children: React
     >
       {/* Remount on language change: split text is rebuilt from fresh React-rendered copy. */}
       <div className="scene-stack__frame" key={lang}>
-        {scenes}
+        {scenes.map((scene, index) => (index === 0 ? cloneElement(scene, { priority: true }) : scene))}
         <span className="scene-stack__horizon" aria-hidden="true" />
         <span className="scene-stack__scan" aria-hidden="true" />
       </div>

@@ -4,3 +4,4 @@ dist-pitch
 .DS_Store
 *.local
 review
+.cache

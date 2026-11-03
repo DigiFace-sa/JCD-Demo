@@ -1,0 +1,474 @@
+{
+  "$comment": "Official JCDC concept renders. Run `npm run images` to regenerate public/images/jcdc and src/data/officialImages.ts.",
+  "retrieved": "2026-11-03",
+  "images": [
+    {
+      "id": "masterplan",
+      "use": "Destination aerial: Home opening, Invest",
+      "url": "https://mc-4e8d78e8-480b-4029-9ab7-7836-cdn-dxemgkanc0bef6c6.z01.azurefd.net/-/media/project/jcdc/homepage/mp-updated-angle-view-hero-homepage.ashx?rev=da02028d05164dcb80dc54d7f654708d",
+      "page": "https://www.jeddahcentral.com/en",
+      "original": {
+        "width": 2000,
+        "height": 1125,
+        "bytes": 4374672,
+        "format": "PNG"
+      }
+    },
+    {
+      "id": "waterfront",
+      "use": "Waterfront promenade and heritage buildings",
+      "url": "https://mc-4e8d78e8-480b-4029-9ab7-7836-cdn-dxemgkanc0bef6c6.z01.azurefd.net/-/media/project/jcdc/attraction/carousel/banner.ashx?rev=0048bcf2cf3c4f9e9b818e8c532e2648",
+      "page": "https://www.jeddahcentral.com/en/jeddah-central-destination",
+      "original": {
+        "width": 4096,
+        "height": 2301,
+        "bytes": 16875953,
+        "format": "PNG"
+      }
+    },
+    {
+      "id": "stadium",
+      "use": "Stadium aerial (day)",
+      "url": "https://mc-4e8d78e8-480b-4029-9ab7-7836-cdn-dxemgkanc0bef6c6.z01.azurefd.net/-/media/stadium/v7_birdview_day_mos_branding.ashx?rev=bbe0d83bda09439c81133c6dfe0eaab4",
+      "page": "https://www.jeddahcentral.com/en/jeddah-central-destination",
+      "original": {
+        "width": 6000,
+        "height": 3496,
+        "bytes": 18245703,
+        "format": "JPEG"
+      }
+    },
+    {
+      "id": "opera-house",
+      "use": "Opera House exterior",
+      "url": "https://mc-4e8d78e8-480b-4029-9ab7-7836-cdn-dxemgkanc0bef6c6.z01.azurefd.net/-/media/project/jcdc/jeddah-central-destination/map/opera-house.ashx?rev=4af05fafda0f4d6895a8e0e07eec3ce5",
+      "page": "https://www.jeddahcentral.com/en/jeddah-central-destination",
+      "original": {
+        "width": 4096,
+        "height": 2867,
+        "bytes": 12764752,
+        "format": "JPEG"
+      }
+    },
+    {
+      "id": "oceanarium",
+      "use": "Oceanarium aerial",
+      "url": "https://mc-4e8d78e8-480b-4029-9ab7-7836-cdn-dxemgkanc0bef6c6.z01.azurefd.net/-/media/project/jcdc/jeddah-central-destination/carousel/oceanarium.ashx?rev=6c706035426f4214847d0cf6e63c2b0c",
+      "page": "https://www.jeddahcentral.com/en/jeddah-central-destination",
+      "original": {
+        "width": 4720,
+        "height": 2828,
+        "bytes": 4310747,
+        "format": "JPEG"
+      }
+    },
+    {
+      "id": "museum",
+      "use": "Museum: transformed desalination plant",
+      "url": "https://mc-4e8d78e8-480b-4029-9ab7-7836-cdn-dxemgkanc0bef6c6.z01.azurefd.net/-/media/project/jcdc/jeddah-central-destination/map/museum.ashx?rev=f58eb2e5388f436aac3d6f173599c5dd",
+      "page": "https://www.jeddahcentral.com/en/jeddah-central-destination",
+      "original": {
+        "width": 4096,
+        "height": 2048,
+        "bytes": 1016003,
+        "format": "JPEG"
+      }
+    },
+    {
+      "id": "beach",
+      "use": "Public beach",
+      "url": "https://mc-4e8d78e8-480b-4029-9ab7-7836-cdn-dxemgkanc0bef6c6.z01.azurefd.net/-/media/project/jcdc/jeddah-central-destination/map/public-beach.ashx?rev=a96c39f5c2d948c797693e331b2ccab1",
+      "page": "https://www.jeddahcentral.com/en/jeddah-central-destination",
+      "original": {
+        "width": 1920,
+        "height": 1080,
+        "bytes": 451205,
+        "format": "JPEG"
+      }
+    },
+    {
+      "id": "marina",
+      "use": "Marina at sunset",
+      "url": "https://mc-4e8d78e8-480b-4029-9ab7-7836-cdn-dxemgkanc0bef6c6.z01.azurefd.net/-/media/project/jcdc/marina-district/banner/marina-district.ashx?rev=0462c0c37e1b470cbeb33eecef7d89bb",
+      "page": "https://www.jeddahcentral.com/en/jeddah-central-destination",
+      "original": {
+        "width": 1958,
+        "height": 960,
+        "bytes": 3829876,
+        "format": "JPEG"
+      }
+    },
+    {
+      "id": "coral",
+      "use": "Oceanarium coral exhibits (interior)",
+      "url": "https://mc-4e8d78e8-480b-4029-9ab7-7836-cdn-dxemgkanc0bef6c6.z01.azurefd.net/-/media/project/jcdc/oceanarium/coral-reef.ashx?rev=db021d2a266e44c3bc6f85ebbec61ba4",
+      "page": "https://www.jeddahcentral.com/en/projects/land-marks/oceanarium-and-coral-farm",
+      "original": {
+        "width": 5504,
+        "height": 3072,
+        "bytes": 9511817,
+        "format": "JPEG"
+      }
+    },
+    {
+      "id": "park",
+      "use": "Central Park gardens",
+      "url": "https://mc-4e8d78e8-480b-4029-9ab7-7836-cdn-dxemgkanc0bef6c6.z01.azurefd.net/-/media/project/jcdc/jeddah-central-destination/map/central-park.ashx?rev=ab7d4ccd8b9246768171d5438ac3a782",
+      "page": "https://www.jeddahcentral.com/en/jeddah-central-destination",
+      "original": {
+        "width": 4096,
+        "height": 2306,
+        "bytes": 14928382,
+        "format": "JPEG"
+      }
+    },
+    {
+      "id": "sustainability",
+      "use": "Shaded public realm",
+      "url": "https://mc-4e8d78e8-480b-4029-9ab7-7836-cdn-dxemgkanc0bef6c6.z01.azurefd.net/-/media/project/jcdc/sustainabiity/banner/sustainability-at-jeddah-central/sustainability-hero-banner2.ashx?rev=4a5d3da4515b4899ad24f6f657446842",
+      "page": "https://www.jeddahcentral.com/en/sustainability",
+      "original": {
+        "width": 5000,
+        "height": 2813,
+        "bytes": 27955424,
+        "format": "PNG"
+      }
+    },
+    {
+      "id": "entertainment-pier",
+      "use": "Entertainment Pier at night",
+      "url": "https://mc-4e8d78e8-480b-4029-9ab7-7836-cdn-dxemgkanc0bef6c6.z01.azurefd.net/-/media/project/jcdc/jeddah-central-destination/map/entertainment-pier.ashx?rev=2c85a9d4fb87440e96711372d59a27ea",
+      "page": "https://www.jeddahcentral.com/en/jeddah-central-destination",
+      "original": {
+        "width": 1087,
+        "height": 618,
+        "bytes": 1068786,
+        "format": "PNG"
+      }
+    },
+    {
+      "id": "cruise-terminal",
+      "use": "Cruise Terminal",
+      "url": "https://mc-4e8d78e8-480b-4029-9ab7-7836-cdn-dxemgkanc0bef6c6.z01.azurefd.net/-/media/project/jcdc/jeddah-central-destination/map/luxury-cruise-terminal.ashx?rev=99e66a59eb6f48e7958be559788b64ca",
+      "page": "https://www.jeddahcentral.com/en/jeddah-central-destination",
+      "original": {
+        "width": 1803,
+        "height": 1431,
+        "bytes": 1571712,
+        "format": "JPEG"
+      }
+    },
+    {
+      "id": "stadium-night",
+      "use": "Stadium aerial (night)",
+      "url": "https://mc-4e8d78e8-480b-4029-9ab7-7836-cdn-dxemgkanc0bef6c6.z01.azurefd.net/-/media/project/jcdc/stadium/v1_night-view_mos_branding.ashx?rev=3027fc9a0e924bd9a3b4a09e803fc169",
+      "page": "https://www.jeddahcentral.com/en/projects/land-marks/stadium",
+      "original": {
+        "width": 6000,
+        "height": 3539,
+        "bytes": 30274247,
+        "format": "PNG"
+      }
+    },
+    {
+      "id": "stadium-bowl",
+      "use": "Stadium bowl, roof closed",
+      "url": "https://mc-4e8d78e8-480b-4029-9ab7-7836-cdn-dxemgkanc0bef6c6.z01.azurefd.net/-/media/04b_mos_branding_bowl_roof_closed.ashx?rev=392c0099c4a04d0b97962e28e7fbb2bb",
+      "page": "https://www.jeddahcentral.com/en/projects/land-marks/stadium",
+      "original": {
+        "width": 6000,
+        "height": 3375,
+        "bytes": 20197261,
+        "format": "JPEG"
+      }
+    },
+    {
+      "id": "stadium-ceremony",
+      "use": "Stadium bowl, opening ceremony",
+      "url": "https://mc-4e8d78e8-480b-4029-9ab7-7836-cdn-dxemgkanc0bef6c6.z01.azurefd.net/-/media/project/jcdc/stadium/04c_mos_branding_bowl_coronation.ashx?rev=280d89de17f74b4aaaae98f430fca61f",
+      "page": "https://www.jeddahcentral.com/en/projects/land-marks/stadium",
+      "original": {
+        "width": 6000,
+        "height": 3375,
+        "bytes": 19271831,
+        "format": "JPEG"
+      }
+    },
+    {
+      "id": "stadium-concourse",
+      "use": "Stadium outer concourse",
+      "url": "https://mc-4e8d78e8-480b-4029-9ab7-7836-cdn-dxemgkanc0bef6c6.z01.azurefd.net/-/media/project/jcdc/stadium/outer_concourse_mos_branding.ashx?rev=ac69fb556e3a4b67a8f384ffc69b46e8",
+      "page": "https://www.jeddahcentral.com/en/projects/land-marks/stadium",
+      "original": {
+        "width": 6000,
+        "height": 3378,
+        "bytes": 15849955,
+        "format": "JPEG"
+      }
+    },
+    {
+      "id": "stadium-villages",
+      "use": "Integrated stadium villages",
+      "url": "https://mc-4e8d78e8-480b-4029-9ab7-7836-cdn-dxemgkanc0bef6c6.z01.azurefd.net/-/media/project/jcdc/stadium/integrated-stadium-villages.ashx?rev=6acfca98916f4d079af9ca3ce064d493",
+      "page": "https://www.jeddahcentral.com/en/projects/land-marks/stadium",
+      "original": {
+        "width": 1200,
+        "height": 656,
+        "bytes": 1399330,
+        "format": "PNG"
+      }
+    },
+    {
+      "id": "opera-lyrical",
+      "use": "Opera House: lyrical theatre foyer",
+      "url": "https://mc-4e8d78e8-480b-4029-9ab7-7836-cdn-dxemgkanc0bef6c6.z01.azurefd.net/-/media/project/jcdc/opera-house/lyrical-theater.ashx?rev=af7f9fdb77704133bbee2e6fa9ce1757",
+      "page": "https://www.jeddahcentral.com/en/projects/land-marks/opera-house",
+      "original": {
+        "width": 1200,
+        "height": 656,
+        "bytes": 1575966,
+        "format": "PNG"
+      }
+    },
+    {
+      "id": "opera-mid-scale",
+      "use": "Opera House: mid-scale theatre foyer",
+      "url": "https://mc-4e8d78e8-480b-4029-9ab7-7836-cdn-dxemgkanc0bef6c6.z01.azurefd.net/-/media/project/jcdc/opera-house/mid-scale-theater.ashx?rev=db0fbac383474a7caae512a7c913ca4e",
+      "page": "https://www.jeddahcentral.com/en/projects/land-marks/opera-house",
+      "original": {
+        "width": 1200,
+        "height": 656,
+        "bytes": 1291630,
+        "format": "PNG"
+      }
+    },
+    {
+      "id": "opera-rehearsal",
+      "use": "Opera House: rehearsal theatre",
+      "url": "https://mc-4e8d78e8-480b-4029-9ab7-7836-cdn-dxemgkanc0bef6c6.z01.azurefd.net/-/media/project/jcdc/opera-house/rehearsal-theater.ashx?rev=24646387e309443c9015466820b60f1c",
+      "page": "https://www.jeddahcentral.com/en/projects/land-marks/opera-house",
+      "original": {
+        "width": 1200,
+        "height": 656,
+        "bytes": 1234062,
+        "format": "PNG"
+      }
+    },
+    {
+      "id": "oceanarium-night",
+      "use": "Oceanarium at night",
+      "url": "https://mc-4e8d78e8-480b-4029-9ab7-7836-cdn-dxemgkanc0bef6c6.z01.azurefd.net/-/media/project/jcdc/homepage/jcdc-slider-image/jcdc-slider-01.ashx?rev=384c998c6e52427197dc223afe87e352",
+      "page": "https://www.jeddahcentral.com/en",
+      "original": {
+        "width": 4096,
+        "height": 2896,
+        "bytes": 8656970,
+        "format": "JPEG"
+      }
+    },
+    {
+      "id": "oceanarium-sunset",
+      "use": "Oceanarium at sunset",
+      "url": "https://mc-4e8d78e8-480b-4029-9ab7-7836-cdn-dxemgkanc0bef6c6.z01.azurefd.net/-/media/project/jcdc/jeddah-central-destination/map/oceanarium.ashx?rev=f3c9ff94e9f3493dbba26b960963b91c",
+      "page": "https://www.jeddahcentral.com/en/jeddah-central-destination",
+      "original": {
+        "width": 4000,
+        "height": 1813,
+        "bytes": 5534411,
+        "format": "JPEG"
+      }
+    },
+    {
+      "id": "oceanarium-coast",
+      "use": "Oceanarium: coast of Jeddah gallery",
+      "url": "https://mc-4e8d78e8-480b-4029-9ab7-7836-cdn-dxemgkanc0bef6c6.z01.azurefd.net/-/media/project/jcdc/oceanarium/coast-of-jeddah.ashx?rev=79b32c8aac6a4c2e9ebe0330e68836e0",
+      "page": "https://www.jeddahcentral.com/en/projects/land-marks/oceanarium-and-coral-farm",
+      "original": {
+        "width": 5504,
+        "height": 3072,
+        "bytes": 8674843,
+        "format": "JPEG"
+      }
+    },
+    {
+      "id": "oceanarium-depths",
+      "use": "Oceanarium: depths of the Red Sea",
+      "url": "https://mc-4e8d78e8-480b-4029-9ab7-7836-cdn-dxemgkanc0bef6c6.z01.azurefd.net/-/media/project/jcdc/oceanarium/depth-of-the-red-sea.ashx?rev=8c69646e46884a71a595fc1e03da1fe5",
+      "page": "https://www.jeddahcentral.com/en/projects/land-marks/oceanarium-and-coral-farm",
+      "original": {
+        "width": 5504,
+        "height": 3072,
+        "bytes": 9365538,
+        "format": "JPEG"
+      }
+    },
+    {
+      "id": "oceanarium-vortex",
+      "use": "Oceanarium: the vortex",
+      "url": "https://mc-4e8d78e8-480b-4029-9ab7-7836-cdn-dxemgkanc0bef6c6.z01.azurefd.net/-/media/project/jcdc/oceanarium/the-vortex.ashx?rev=73b2d2dee50643fdb7fe3cecad1e7982",
+      "page": "https://www.jeddahcentral.com/en/projects/land-marks/oceanarium-and-coral-farm",
+      "original": {
+        "width": 5504,
+        "height": 3072,
+        "bytes": 8741675,
+        "format": "JPEG"
+      }
+    },
+    {
+      "id": "oceanarium-research",
+      "use": "Oceanarium: research institute",
+      "url": "https://mc-4e8d78e8-480b-4029-9ab7-7836-cdn-dxemgkanc0bef6c6.z01.azurefd.net/-/media/project/jcdc/oceanarium/research-institute.ashx?rev=704a515d56424f62ac083cfde08448e1",
+      "page": "https://www.jeddahcentral.com/en/projects/land-marks/oceanarium-and-coral-farm",
+      "original": {
+        "width": 5504,
+        "height": 3072,
+        "bytes": 8756594,
+        "format": "JPEG"
+      }
+    },
+    {
+      "id": "oceanarium-shore",
+      "use": "Oceanarium: back to the shore",
+      "url": "https://mc-4e8d78e8-480b-4029-9ab7-7836-cdn-dxemgkanc0bef6c6.z01.azurefd.net/-/media/project/jcdc/oceanarium/back-to-the-shore.ashx?rev=2ab9917a412447169851975da22c2add",
+      "page": "https://www.jeddahcentral.com/en/projects/land-marks/oceanarium-and-coral-farm",
+      "original": {
+        "width": 5504,
+        "height": 3072,
+        "bytes": 7628927,
+        "format": "JPEG"
+      }
+    },
+    {
+      "id": "museum-galleries",
+      "use": "Museum galleries",
+      "url": "https://mc-4e8d78e8-480b-4029-9ab7-7836-cdn-dxemgkanc0bef6c6.z01.azurefd.net/-/media/project/jcdc/museum/multi-purpose-galleries.ashx?rev=9278389a58d54fba9ec6c220ba7c2704",
+      "page": "https://www.jeddahcentral.com/en/projects/land-marks/museum",
+      "original": {
+        "width": 1200,
+        "height": 656,
+        "bytes": 1544984,
+        "format": "PNG"
+      }
+    },
+    {
+      "id": "museum-outdoor",
+      "use": "Museum outdoor space",
+      "url": "https://mc-4e8d78e8-480b-4029-9ab7-7836-cdn-dxemgkanc0bef6c6.z01.azurefd.net/-/media/project/jcdc/museum/outdoor-space.ashx?rev=5bd5f58c2041404f98b09dd34421c2a0",
+      "page": "https://www.jeddahcentral.com/en/projects/land-marks/museum",
+      "original": {
+        "width": 1200,
+        "height": 656,
+        "bytes": 1606304,
+        "format": "PNG"
+      }
+    },
+    {
+      "id": "culture-forum",
+      "use": "Culture & Creativity: public forum",
+      "url": "https://mc-4e8d78e8-480b-4029-9ab7-7836-cdn-dxemgkanc0bef6c6.z01.azurefd.net/-/media/souk-public-forum.ashx?rev=3e69c0de54cc4367894c2a873794023a",
+      "page": "https://www.jeddahcentral.com/en/projects/land-marks/museum",
+      "original": {
+        "width": 5000,
+        "height": 2813,
+        "bytes": 13320184,
+        "format": "JPEG"
+      }
+    },
+    {
+      "id": "central-hub",
+      "use": "Central District at dusk",
+      "url": "https://mc-4e8d78e8-480b-4029-9ab7-7836-cdn-dxemgkanc0bef6c6.z01.azurefd.net/-/media/project/jcdc/central-district/a-vibrant-and-connected-hub.ashx?rev=21ec1124600c48728ef5de9580270ac9",
+      "page": "https://www.jeddahcentral.com/en/projects/districts/central-district",
+      "original": {
+        "width": 4096,
+        "height": 2318,
+        "bytes": 17855547,
+        "format": "PNG"
+      }
+    },
+    {
+      "id": "central-plaza",
+      "use": "Central Plaza",
+      "url": "https://mc-4e8d78e8-480b-4029-9ab7-7836-cdn-dxemgkanc0bef6c6.z01.azurefd.net/-/media/project/jcdc/jeddah-central-destination/map/central-district.ashx?rev=b5f32e0cd1f14160988a34580b10196b",
+      "page": "https://www.jeddahcentral.com/en/jeddah-central-destination",
+      "original": {
+        "width": 3004,
+        "height": 1706,
+        "bytes": 8429635,
+        "format": "PNG"
+      }
+    },
+    {
+      "id": "central-bazar",
+      "use": "Central District bazaar",
+      "url": "https://mc-4e8d78e8-480b-4029-9ab7-7836-cdn-dxemgkanc0bef6c6.z01.azurefd.net/-/media/project/jcdc/central-district/bazar.ashx?rev=c69ce01376374f968e7d93b2e4322bc8",
+      "page": "https://www.jeddahcentral.com/en/projects/districts/beach-district",
+      "original": {
+        "width": 1200,
+        "height": 656,
+        "bytes": 1735903,
+        "format": "PNG"
+      }
+    },
+    {
+      "id": "wellness-street",
+      "use": "Wellness District street",
+      "url": "https://mc-4e8d78e8-480b-4029-9ab7-7836-cdn-dxemgkanc0bef6c6.z01.azurefd.net/-/media/project/jcdc/homepage/jcdc-slider-image/jcdc-slider-02.ashx?rev=6244be0ff90a454db877fe2aae5efcab",
+      "page": "https://www.jeddahcentral.com/en",
+      "original": {
+        "width": 4096,
+        "height": 2342,
+        "bytes": 12568801,
+        "format": "JPEG"
+      }
+    },
+    {
+      "id": "beach-loungers",
+      "use": "Beach, Leisure & Lifestyle",
+      "url": "https://mc-4e8d78e8-480b-4029-9ab7-7836-cdn-dxemgkanc0bef6c6.z01.azurefd.net/-/media/project/jcdc/jeddah-central-destination/map/beach.ashx?rev=861de81d2210487a85983b0b3123fb92",
+      "page": "https://www.jeddahcentral.com/en/jeddah-central-destination",
+      "original": {
+        "width": 1637,
+        "height": 1040,
+        "bytes": 1684848,
+        "format": "PNG"
+      }
+    },
+    {
+      "id": "coral-cove",
+      "use": "Coral Cove boulevard",
+      "url": "https://mc-4e8d78e8-480b-4029-9ab7-7836-cdn-dxemgkanc0bef6c6.z01.azurefd.net/-/media/project/jcdc/jeddah-central-destination/map/coral-cove.ashx?rev=0104306018ed4cc3bdb4dc888c4e1548",
+      "page": "https://www.jeddahcentral.com/en/jeddah-central-destination",
+      "original": {
+        "width": 1200,
+        "height": 656,
+        "bytes": 926164,
+        "format": "JPEG"
+      }
+    },
+    {
+      "id": "ribbon-park",
+      "use": "Ribbon Park",
+      "url": "https://mc-4e8d78e8-480b-4029-9ab7-7836-cdn-dxemgkanc0bef6c6.z01.azurefd.net/-/media/project/jcdc/jeddah-central-destination/map/ribbon-park.ashx?rev=a22168616de84a70a3f95d540f90807c",
+      "page": "https://www.jeddahcentral.com/en/jeddah-central-destination",
+      "original": {
+        "width": 1200,
+        "height": 656,
+        "bytes": 1786734,
+        "format": "PNG"
+      }
+    },
+    {
+      "id": "ribbon-park-tall",
+      "use": "Ribbon Park (portrait)",
+      "url": "https://mc-4e8d78e8-480b-4029-9ab7-7836-cdn-dxemgkanc0bef6c6.z01.azurefd.net/-/media/project/jcdc/sustainabiity/our-approach-to-sustainability/ribbon-park.ashx?rev=c1deaea30fc745fc9abd6a73f2bd2721",
+      "page": "https://www.jeddahcentral.com/en/sustainability",
+      "original": {
+        "width": 6636,
+        "height": 8000,
+        "bytes": 19413909,
+        "format": "JPEG"
+      }
+    }
+  ]
+}
