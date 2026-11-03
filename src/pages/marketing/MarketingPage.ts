@@ -10,6 +10,7 @@ import { contentTemplate } from './Content';
 import { bindDistrictMap } from './DistrictMap';
 import { homeTemplate } from './Home';
 import { bindInterestForm } from './InterestForm';
+import { bindTextReveal } from './motion/TextReveal';
 import { bindHomeJourney } from './scroll/HomeJourney';
 
 gsap.registerPlugin(ScrollTrigger);
@@ -176,6 +177,7 @@ const createMarketingPage: PageFactory = (initialContext) => {
     const mounted = root;
     const counters = bindCounters(mounted);
     cleanups.push(counters.dispose);
+    cleanups.push(bindTextReveal(mounted));
     if (context.path === '/destination')
       cleanups.push(
         bindDistrictMap(mounted, context.query.get('district'), () => {

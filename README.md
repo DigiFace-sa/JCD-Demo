@@ -268,6 +268,20 @@ page’s headline and breakdown conflict, so obtain client confirmation before c
 News is a dated local snapshot rather than a live feed. See [PHASE_2_REVIEW.md](docs/PHASE_2_REVIEW.md)
 for verification results, limitations and every review screenshot path.
 
+### Editorial reveals (all marketing pages)
+
+`src/pages/marketing/motion/TextReveal.ts` adds masked reveals using GSAP's bundled SplitText (no new
+dependency). Studied from the Masar reference's motion style and implemented independently:
+
+- `.editorial-title` headings rise out of per-line masks: **letter by letter in English, word by
+  word in Arabic** (letter-splitting would break Arabic's joined script).
+- `.section-lead` / `.page-hero__lead` paragraphs unveil line by line.
+- Landmark, news and form images open from a clipped frame while settling from a slight zoom.
+
+Splits run after web fonts load and revert to plain text once revealed. A language switch rebuilds
+any not-yet-revealed split from the new copy. Reduced motion skips all of it. Tune timings in the
+`REVEAL` constants.
+
 ### Home scroll experience
 
 Home follows one continuous Red Sea atmosphere rather than alternating section backgrounds.
