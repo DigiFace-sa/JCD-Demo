@@ -71,6 +71,40 @@ Flags work in the query string or after the hash: `?debug#/experience` or `#/exp
 | `?quality=high\|medium\|low` | Lock the 3D quality tier (disables adaptive quality)      |
 | `?tour=1`                    | Autostart the Guided Tour (Phase 6)                       |
 
+## App architecture (React)
+
+The app is React 19, migrating page by page under the cinematic rebuild
+(`docs/CINEMATIC_REBUILD_PLAN.md`).
+
+- `src/main.tsx`, `src/app/App.tsx`: HashRouter, shell (header, footer, skip link, AR draft badge)
+  and document titles.
+- `src/app/RouteView.tsx`: resolves the hash against `src/router/routes.ts` (same validation and
+  titles as before) and crossfades between pages.
+  - A newer navigation cancels a pending one.
+  - A route with `view` is a React page.
+  - A route with `load` is a not-yet-migrated imperative page, hosted unchanged by `LegacyPage`
+    (mount, `update` for in-place deep links, unmount).
+  - The 3D Experience runs through this adapter.
+- `src/app/SmoothScroll.tsx`: Lenis smooth scroll on GSAP's ticker, synced with ScrollTrigger.
+  It's off under reduced motion and on the immersive 3D route.
+- `src/app/i18n.tsx`: `useI18n()` re-renders on language change; `t()` and the JSON copy are
+  unchanged.
+
+### Motion system (`src/motion/`)
+
+- `choreography.ts`: the one motion language. Every animated element is tagged
+  `data-motion="heading | lines | rise | fade | image"`. Headings rise letter by letter (EN) or
+  word by word (AR) from line masks. Every element gets an intro and an outro.
+- `SceneStack.tsx` / `<Scene>`: a pinned film strip of full-screen official renders, driven by
+  one scrubbed timeline.
+  - Each scene pushes in slowly, and its copy enters, holds and leaves.
+  - Scenes arrive via `dissolve` (horizon-line opening), `zoom` (fly into the previous render's
+    `focus` point) or `wipe` (gold scan line, in reading direction).
+  - Scenes that aren't active are `inert`.
+  - Reduced motion stacks the scenes in normal flow.
+- `Reveal.tsx`: the same intro/outro language for normal-flow sections.
+- `#/lab`: a hidden route proving the primitives (absent from pitch builds).
+
 ## Project structure
 
 ```

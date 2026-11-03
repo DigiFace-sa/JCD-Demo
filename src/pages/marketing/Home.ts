@@ -20,7 +20,6 @@ export function homeTemplate(): string {
   return `
     <div class="home-journey">
     <div class="journey-atmosphere" aria-hidden="true"><div class="journey-atmosphere__blue"></div><div class="journey-atmosphere__gold"></div><div class="journey-atmosphere__horizon"></div><div class="journey-atmosphere__pattern pattern-roshan"></div></div>
-    <div class="home-sculptures" aria-hidden="true"><div class="home-sculptures__fallback"><span></span><span></span><span></span></div></div>
     <div class="journey-intro" aria-hidden="true"><div class="journey-intro__orbit"></div><div class="journey-intro__line"></div><img src="brand/official-logo-light.svg" alt="" width="104" height="56" /></div>
     <nav class="journey-progress" data-i18n-attr="aria-label:marketing.scroll.navigation"><span class="journey-progress__line" aria-hidden="true"><span></span></span><div class="journey-progress__steps">${HOME_CHAPTERS.map((chapter) => `<button type="button" data-scroll-to="home-${chapter.id}" data-chapter-link="${chapter.id}" data-i18n-attr="aria-label:${chapter.label}"><span></span></button>`).join('')}</div><span class="journey-progress__label" data-i18n="marketing.scroll.chapters.intro"></span></nav>
     <div class="journey-hero-track" id="home-hero" data-scroll-chapter="hero"><section class="home-hero">

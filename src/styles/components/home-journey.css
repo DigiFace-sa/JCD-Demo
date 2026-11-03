@@ -198,60 +198,6 @@
 .journey-hero-track {
   min-block-size: 160svh;
 }
-.home-sculptures {
-  position: fixed;
-  inset-block-start: 50%;
-  left: 50%;
-  inline-size: min(54vw, 65rem);
-  block-size: 78svh;
-  z-index: 3;
-  pointer-events: none;
-  opacity: 0;
-  will-change: transform;
-}
-.home-sculptures__canvas {
-  display: block;
-  inline-size: 100%;
-  block-size: 100%;
-  /* The renderer starts after the intro; crossfade from the CSS ornament instead of popping in. */
-  opacity: 0;
-  transition: opacity var(--duration-slow) var(--ease-out);
-}
-.home-sculptures[data-state='ready'] .home-sculptures__canvas {
-  opacity: 1;
-}
-.home-sculptures__fallback {
-  position: absolute;
-  inset: 18%;
-  perspective: 50rem;
-  transform: rotate(-16deg);
-  opacity: 0.38;
-}
-.home-sculptures__fallback > span {
-  position: absolute;
-  inset: 0;
-  border: 2px solid var(--jcdc-secondary);
-  border-radius: 48% 52% 50% 50%;
-  transform: rotateX(52deg) rotateY(-20deg);
-  box-shadow: 0 0 3rem color-mix(in srgb, var(--jcdc-secondary) 8%, transparent);
-}
-.home-sculptures__fallback > span:nth-child(2) {
-  inset: 10%;
-  transform: rotateX(52deg) rotateY(20deg) rotateZ(12deg);
-}
-.home-sculptures__fallback > span:nth-child(3) {
-  inset: 22%;
-  transform: rotateX(52deg) rotateY(-20deg) rotateZ(-18deg);
-}
-.home-sculptures__fallback {
-  transition:
-    opacity var(--duration-slow) var(--ease-out),
-    visibility 0s linear var(--duration-slow);
-}
-.home-sculptures[data-state='ready'] .home-sculptures__fallback {
-  opacity: 0;
-  visibility: hidden;
-}
 .journey-intro {
   position: fixed;
   inset: 0;
@@ -472,12 +418,6 @@ body[data-home-journey='true'] .site-footer::before {
   .home-journey .district-teaser__list {
     padding: 1.5rem;
   }
-  /* Narrow screens have no free column, so the sculptures pass behind copy and images. */
-  .home-sculptures {
-    inline-size: 90vw;
-    block-size: 65svh;
-    z-index: 0;
-  }
   .home-journey [data-scroll-chapter] {
     position: relative;
     z-index: 1;
@@ -505,9 +445,5 @@ body[data-home-journey='true'] .site-footer::before {
   }
   .journey-intro {
     display: none;
-  }
-  .home-sculptures {
-    opacity: 0.35;
-    will-change: auto;
   }
 }

@@ -1,0 +1,134 @@
+/* ── Cinematic scene stack (src/motion/SceneStack.tsx) ─────────────────────────── */
+.scene-stack {
+  position: relative;
+  background: var(--jcdc-ink);
+  color: var(--jcdc-sand);
+}
+.scene-stack__frame {
+  position: relative;
+  block-size: 100svh;
+  overflow: hidden;
+  /* Promote once: the pinned frame composites every scene. */
+  isolation: isolate;
+}
+.scene {
+  position: absolute;
+  inset: 0;
+  display: grid;
+  align-items: end;
+  overflow: hidden;
+  background: var(--jcdc-ink);
+  will-change: clip-path, opacity;
+}
+.scene__media {
+  position: absolute;
+  inset: 0;
+  will-change: transform;
+}
+.scene__media img {
+  inline-size: 100%;
+  block-size: 100%;
+  object-fit: cover;
+  transform-origin: var(--focus-x) var(--focus-y);
+  will-change: transform;
+}
+/* Legibility: a cinematic grade from the bottom (copy) and a soft top for the header. */
+.scene__shade {
+  position: absolute;
+  inset: 0;
+  background:
+    linear-gradient(to top, rgb(9 18 24 / 0.86), rgb(9 18 24 / 0.2) 48%, transparent 70%),
+    linear-gradient(to bottom, rgb(9 18 24 / 0.55), transparent 22%);
+  pointer-events: none;
+}
+.scene__dim {
+  position: absolute;
+  inset: 0;
+  background: var(--jcdc-ink);
+  opacity: 0;
+  pointer-events: none;
+}
+.scene__content {
+  position: relative;
+  display: grid;
+  gap: var(--space-m);
+  justify-items: start;
+  padding-block: 0 clamp(3rem, 9svh, 7rem);
+}
+.scene[data-align='center'] {
+  align-items: center;
+}
+.scene[data-align='center'] .scene__content {
+  justify-items: center;
+  text-align: center;
+}
+.scene[data-align='end'] .scene__content {
+  justify-items: end;
+  text-align: end;
+}
+.scene .eyebrow {
+  color: var(--jcdc-secondary);
+}
+.scene__title {
+  max-inline-size: 16ch;
+  font-size: var(--step-6);
+  font-weight: var(--weight-light);
+  line-height: var(--leading-tight);
+  letter-spacing: var(--tracking-display);
+}
+.scene__lead {
+  max-inline-size: 36rem;
+  font-size: var(--step-1);
+  font-weight: var(--weight-light);
+  line-height: var(--leading-snug);
+  color: color-mix(in srgb, var(--jcdc-sand) 82%, transparent);
+}
+/* Transition accents. */
+.scene-stack__horizon {
+  position: absolute;
+  inset-inline: 0;
+  inset-block-start: 50%;
+  z-index: 50;
+  block-size: 1px;
+  background: linear-gradient(90deg, transparent, var(--jcdc-secondary), transparent);
+  box-shadow: 0 0 18px color-mix(in srgb, var(--jcdc-secondary) 70%, transparent);
+  visibility: hidden;
+  pointer-events: none;
+}
+.scene-stack__scan {
+  position: absolute;
+  inset-block: 0;
+  left: 0;
+  z-index: 50;
+  inline-size: 2px;
+  background: var(--jcdc-secondary);
+  box-shadow:
+    0 0 24px 4px color-mix(in srgb, var(--jcdc-secondary) 55%, transparent),
+    0 0 80px 18px color-mix(in srgb, var(--jcdc-primary) 30%, transparent);
+  visibility: hidden;
+  pointer-events: none;
+}
+/* Reduced motion: an ordinary sequence of full-screen pictures with their copy. */
+.scene-stack[data-motion='reduced'] .scene-stack__frame {
+  block-size: auto;
+  overflow: visible;
+}
+.scene-stack[data-motion='reduced'] .scene {
+  position: relative;
+  min-block-size: 100svh;
+}
+
+/* Motion lab only. */
+.lab__flow {
+  display: grid;
+  gap: var(--space-l);
+  padding-block: var(--space-3xl);
+}
+.lab__figure {
+  overflow: hidden;
+  border-radius: 2px;
+}
+.lab__figure img {
+  inline-size: 100%;
+  block-size: auto;
+}

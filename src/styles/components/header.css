@@ -165,3 +165,20 @@ body[data-hero='true'] .site-header[data-scrolled='false'][data-menu-open='false
     gap: 0.7rem;
   }
 }
+
+/* Over a cinematic scene stack the header stays transparent and light at any scroll depth. */
+body[data-stage='cinema'] .site-header[data-menu-open='false'] {
+  background: linear-gradient(to bottom, rgb(9 18 24 / 0.45), transparent);
+  color: white;
+  border-block-end-color: transparent;
+}
+body[data-stage='cinema'] .site-header[data-menu-open='false'] .site-header__logo--dark {
+  opacity: 0;
+}
+body[data-stage='cinema'] .site-header[data-menu-open='false'] .site-header__logo--light {
+  opacity: 1;
+}
+body[data-stage='cinema'] .site-header[data-menu-open='false'] .lang-toggle {
+  color: white;
+  border-color: rgb(255 255 255 / 0.4);
+}

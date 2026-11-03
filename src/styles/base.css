@@ -126,3 +126,8 @@ code {
 .site-footer__pif:empty {
   display: none;
 }
+
+/* React icon wrapper: the SVG lays out as if it were inline. */
+.icon-slot {
+  display: contents;
+}

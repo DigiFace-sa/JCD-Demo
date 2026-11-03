@@ -3,6 +3,7 @@ import { isLegalDoc } from '../data/site';
 import { isStadiumViewId } from '../data/stadium';
 import { NEWS, isNewsId } from '../data/marketing';
 import type { TranslationKey } from '../i18n/i18n';
+import type { ComponentType } from 'react';
 import type { PageContext, PageModule } from './Page';
 
 /** `site` shows header + footer; `immersive` is full-bleed (the 3D Experience). */
@@ -20,7 +21,14 @@ export interface RouteDef {
   readonly title: (params: Params) => TranslationKey | null;
   /** Reject unknown params (e.g. a non-existent landmark) so they fall through to 404. */
   readonly validate?: (params: Params) => boolean;
-  readonly load: () => Promise<PageModule>;
+  /** Legacy imperative page (mount/update/unmount), adapted into React by RouteView. */
+  readonly load?: () => Promise<PageModule>;
+  /** React page. Takes precedence over `load` once a page is migrated. */
+  readonly view?: () => Promise<{ readonly default: ComponentType<ViewProps> }>;
+}
+
+export interface ViewProps {
+  readonly context: PageContext;
 }
 
 const marketing: RouteDef['load'] = () => import('../pages/marketing/MarketingPage');
@@ -97,6 +105,18 @@ export const routes: readonly RouteDef[] = [
     validate: (params) => isLegalDoc(params.doc),
     load: marketing,
   },
+  // Motion lab: proves the cinematic primitives. Hidden from navigation and pitch builds.
+  ...(import.meta.env.VITE_ALLOW_DEBUG === 'false'
+    ? []
+    : [
+        {
+          pattern: '/lab',
+          pageId: 'lab',
+          layout: 'site',
+          title: () => null,
+          view: () => import('../pages/lab/Lab'),
+        } satisfies RouteDef,
+      ]),
   experienceRoute('/experience'),
   experienceRoute('/experience/:landmark'),
   experienceRoute('/experience/:landmark/:hotspot'),

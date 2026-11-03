@@ -1,3 +1,4 @@
+import react from '@vitejs/plugin-react';
 import { defineConfig } from 'vite';
 
 // `pitch` mode (npm run build:pitch) writes to its own folder so a pitch build
@@ -7,6 +8,7 @@ export default defineConfig(({ mode }) => {
   return {
     // Relative base so dist/ can be served from any folder or static host.
     base: './',
+    plugins: [react()],
     build: {
       target: 'es2022',
       outDir: isPitch ? 'dist-pitch' : 'dist',
