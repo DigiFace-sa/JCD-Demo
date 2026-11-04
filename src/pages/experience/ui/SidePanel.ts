@@ -3,6 +3,7 @@ import { icons } from '../../../components/icons';
 import { ATTRACTION_IDS, ATTRACTIONS, type AttractionId } from '../../../data/attractions';
 import { DISTRICT_IDS, DISTRICTS, isDistrictId } from '../../../data/districts';
 import { isLandmarkId, LANDMARK_IDS, LANDMARKS } from '../../../data/landmarks';
+import { PLACE_IDS, PLACES, isPlaceId } from '../../../data/places';
 import { DESTINATION_STATS } from '../../../data/site';
 import {
   STADIUM_HOTSPOTS,
@@ -35,6 +36,17 @@ interface DetailContent {
 const SWITCH_OFFSET = 14;
 
 function detailFor(focus: Focus): DetailContent | null {
+  if (focus.kind === 'place' && isPlaceId(focus.id)) {
+    const place = PLACES[focus.id];
+    return {
+      kindKey: 'places.kind',
+      nameKey: place.titleKey,
+      summaryKey: place.bodyKey,
+      factKeys: [],
+      noteKey: 'places.controls',
+      color: DISTRICTS[place.district].color,
+    };
+  }
   if (focus.kind === 'hotspot' && isStadiumViewId(focus.id)) {
     const hotspot = isStadiumHotspotId(focus.id) ? STADIUM_HOTSPOTS[focus.id] : null;
     return {
@@ -129,6 +141,8 @@ export class SidePanel {
             <ul class="map-list">${landmarks}</ul>
             <h3 class="map-panel__heading" data-i18n="map.districtsHeading"></h3>
             <ul class="map-list">${districts}</ul>
+            <h3 class="map-panel__heading" data-i18n="places.heading"></h3>
+            <ul class="map-list">${PLACE_IDS.map((id) => listItem({ kind: 'place', id }, PLACES[id].titleKey)).join('')}</ul>
             <h3 class="map-panel__heading" data-i18n="map.attractionsHeading"></h3>
             <ul class="map-list">${attractions}</ul>
           </section>
@@ -142,6 +156,7 @@ export class SidePanel {
             <ul class="map-panel__facts"></ul>
             <p class="map-panel__note"></p>
             <a class="btn btn--primary map-panel__enter" href="#/experience/stadium/inside" data-i18n="stadium.enter" hidden></a>
+            <a class="btn btn--primary map-panel__closer" data-i18n="places.closer" hidden></a>
             <div class="map-panel__hotspots" hidden>
               <h3 class="map-panel__heading" data-i18n="stadium.explore"></h3>
               <ul class="map-list">${STADIUM_HOTSPOT_IDS.map((id) => listItem({ kind: 'hotspot', id }, STADIUM_HOTSPOTS[id].titleKey)).join('')}</ul>
@@ -171,6 +186,18 @@ export class SidePanel {
   show(focus: Focus | null, moveFocus = false): void {
     if (focus?.kind === this.showing?.kind && focus?.id === this.showing?.id) return;
     this.showing = focus;
+    const closePlace = PLACE_IDS.find(
+      (id) =>
+        PLACES[id].district ===
+        (focus?.kind === 'district'
+          ? focus.id
+          : focus?.kind === 'attraction' && focus.id === 'public-beach'
+            ? 'beach'
+            : null),
+    );
+    const closer = requireElement(this.detail, '.map-panel__closer', HTMLAnchorElement);
+    closer.hidden = !closePlace;
+    if (closePlace) closer.href = `#/experience/places/${closePlace}`;
     requireElement(this.detail, '.map-panel__enter', HTMLAnchorElement).hidden = !(
       focus?.kind === 'landmark' && focus.id === 'stadium'
     );
@@ -178,7 +205,11 @@ export class SidePanel {
       focus?.kind !== 'hotspot';
     requireElement(this.detail, '.map-panel__back span[data-i18n]', HTMLSpanElement).setAttribute(
       'data-i18n',
-      focus?.kind === 'hotspot' ? 'stadium.back' : 'map.back',
+      focus?.kind === 'hotspot'
+        ? 'stadium.back'
+        : focus?.kind === 'place'
+          ? 'places.backDistrict'
+          : 'map.back',
     );
     const content = focus ? detailFor(focus) : null;
     if (content) this.fillDetail(content);
@@ -265,7 +296,11 @@ export class SidePanel {
     const id = item?.dataset.id;
     if (
       !id ||
-      (kind !== 'landmark' && kind !== 'district' && kind !== 'attraction' && kind !== 'hotspot')
+      (kind !== 'landmark' &&
+        kind !== 'district' &&
+        kind !== 'attraction' &&
+        kind !== 'hotspot' &&
+        kind !== 'place')
     )
       return null;
     return { kind, id };

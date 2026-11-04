@@ -63,6 +63,7 @@
 
 /* Landmark: brass dot with a slow halo, label in a glass pill. */
 .marker--landmark .marker__label,
+.marker--place .marker__label,
 .marker--hotspot .marker__label {
   padding: 0.4rem 0.8rem;
   border: 1px solid var(--glass-line);
@@ -72,12 +73,14 @@
 }
 
 .marker--landmark .marker__dot,
+.marker--place .marker__dot,
 .marker--hotspot .marker__dot {
   background: var(--jcdc-secondary);
   box-shadow: 0 0 0 2px var(--color-inverse-text);
 }
 
 .marker--landmark .marker__dot::after,
+.marker--place .marker__dot::after,
 .marker--hotspot .marker__dot::after {
   content: '';
   position: absolute;
@@ -475,4 +478,8 @@
   .map-hint {
     display: none;
   }
+}
+
+.map-panel__closer[hidden] {
+  display: none;
 }

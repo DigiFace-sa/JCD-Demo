@@ -3,7 +3,7 @@ import { Vector3 } from 'three';
 import { onLangChange, translateDom, type TranslationKey } from '../../i18n/i18n';
 import type { Disposable } from '../types';
 
-export type MarkerKind = 'landmark' | 'district' | 'attraction' | 'hotspot';
+export type MarkerKind = 'landmark' | 'district' | 'attraction' | 'hotspot' | 'place';
 
 export interface MarkerSpec {
   readonly kind: MarkerKind;
@@ -24,6 +24,7 @@ const KIND_RULES: Readonly<
   landmark: { priority: 3, near: 120, far: 11_000 },
   district: { priority: 2, near: 600, far: 9_000 },
   attraction: { priority: 1, near: 80, far: 4_500 },
+  place: { priority: 3, near: 35, far: 3500, fade: 60 },
   hotspot: { priority: 4, near: 0, far: 700, fade: 12 },
 };
 /** Distance (m) over which markers fade in/out at the ends of their band. */

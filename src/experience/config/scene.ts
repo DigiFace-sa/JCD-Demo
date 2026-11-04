@@ -45,6 +45,8 @@ export const ATMOSPHERE = {
 export const SEA = {
   /** Far beyond the horizon so the quad's edge never shows (the far plane clips it). */
   size: 200_000,
+  /** Subdivide the huge surface to keep clipping stable on Metal after very close camera views. */
+  gridSegments: 32,
   deepColor: '#16475a',
   /** Day sky light is far stronger than the dusk it was graded for. */
   dayBodyGain: 0.62,

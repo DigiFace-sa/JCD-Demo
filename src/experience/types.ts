@@ -8,7 +8,7 @@ export interface Disposable {
   dispose(): void;
 }
 
-export type FocusKind = 'landmark' | 'district' | 'attraction' | 'hotspot';
+export type FocusKind = 'landmark' | 'district' | 'attraction' | 'hotspot' | 'place';
 
 /** Something on the map the camera can frame and the UI can describe. */
 export interface Focus {

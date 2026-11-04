@@ -95,6 +95,8 @@ export class Environment implements Updatable, Disposable {
   /** Static map and stadium fits keep separate baked targets, avoiding a shadow draw on return. */
   private readonly mapShadow = this.sun.shadow;
   private readonly stadiumShadow = this.sun.shadow.clone();
+  /** Separate close-view target so sharpening public spaces cannot overwrite the map bake. */
+  private readonly publicShadow = this.sun.shadow.clone();
   readonly hemisphere = new HemisphereLight();
   /** Unit vector toward the key light. */
   readonly sunDirection = new Vector3();
@@ -149,6 +151,7 @@ export class Environment implements Updatable, Disposable {
     this.sun.shadow.bias = -0.0003;
     this.sun.shadow.normalBias = 0.8;
     this.stadiumShadow.copy(this.mapShadow);
+    this.publicShadow.copy(this.mapShadow);
     const region = LIGHT.shadowRegion;
     this.fitShadow(
       new Vector3(region.minX, 0, region.minZ),
@@ -206,7 +209,7 @@ export class Environment implements Updatable, Disposable {
     this.applyPreset();
     this.bake(this.renderer);
     // Both static shadow maps were rendered for the old key light.
-    for (const shadow of [this.mapShadow, this.stadiumShadow]) {
+    for (const shadow of [this.mapShadow, this.stadiumShadow, this.publicShadow]) {
       shadow.map?.dispose();
       shadow.map = null;
       shadow.mapPass = null;
@@ -343,10 +346,18 @@ export class Environment implements Updatable, Disposable {
     this.renderer.shadowMap.needsUpdate = !baked;
   }
 
+  /** Refit once on arrival in a public space, never while the user orbits. */
+  usePublicShadow(min: Vector3, max: Vector3): void {
+    this.sun.shadow = this.publicShadow;
+    this.fitShadow(min, max);
+    this.sun.shadow.updateMatrices(this.sun);
+    this.renderer.shadowMap.needsUpdate = true;
+  }
+
   setShadows(enabled: boolean, mapSize: number): void {
     this.sun.castShadow = enabled;
     this.renderer.shadowMap.needsUpdate = true;
-    for (const shadow of [this.mapShadow, this.stadiumShadow]) {
+    for (const shadow of [this.mapShadow, this.stadiumShadow, this.publicShadow]) {
       if (shadow.mapSize.x === mapSize) continue;
       shadow.mapSize.set(mapSize, mapSize);
       shadow.dispose();
@@ -368,6 +379,7 @@ export class Environment implements Updatable, Disposable {
     this.environmentMap?.dispose();
     this.mapShadow.dispose();
     this.stadiumShadow.dispose();
+    this.publicShadow.dispose();
     this.sun.dispose();
     this.hemisphere.dispose();
   }

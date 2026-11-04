@@ -1,16 +1,26 @@
-import { MathUtils, Plane, Raycaster, Vector2, Vector3, type PerspectiveCamera } from 'three';
+import {
+  CubicBezierCurve3,
+  MathUtils,
+  Plane,
+  Raycaster,
+  Vector2,
+  Vector3,
+  type PerspectiveCamera,
+} from 'three';
 import { ATTRACTION_IDS, ATTRACTIONS, type AttractionId } from '../../data/attractions';
 import { DISTRICT_IDS, DISTRICTS, isDistrictId, type DistrictId } from '../../data/districts';
 import type { CameraShot } from '../../data/geo';
 import { isLandmarkId, LANDMARK_IDS, LANDMARKS } from '../../data/landmarks';
 import { isStadiumViewId } from '../../data/stadium';
-import { COAST, RENDER } from '../config/scene';
-import { VIEWS } from '../config/views';
+import { PLACE_IDS, PLACES, isPlaceId, type PlaceId } from '../../data/places';
+import { PUBLIC_REALM } from '../config/publicRealm';
+import { COAST, LIGHT, RENDER } from '../config/scene';
+import { MAP_LIMITS, VIEWS } from '../config/views';
 import type { Disposable, Focus, FocusKind } from '../types';
 import { pointInPolygon, polygonBounds } from '../utils/polygon';
 import type { World } from '../world/World';
 import { CameraDirector } from './CameraDirector';
-import type { Controls, OrbitView } from './Controls';
+import type { Controls, ControlLimits, OrbitView } from './Controls';
 import { Markers, type MarkerSpec } from './Markers';
 import { StadiumNavigation } from './StadiumNavigation';
 
@@ -19,6 +29,8 @@ const CLICK_SLOP = 6;
 const CLICK_MAX_MS = 450;
 /** Framing for districts and attractions (landmarks carry their own shots in data). */
 const DISTRICT_SHOT = { polarDeg: 56, azimuthDeg: -72, padding: 1.15, minRadius: 1400 } as const;
+/** Aerial close-view arc: seconds, altitude clearance (m), travel-dependent lift and samples. */
+const PUBLIC_FLIGHT = { duration: 3.8, clearance: 240, lift: 0.5, samples: 24 } as const;
 const ATTRACTION_SHOT: CameraShot = { radius: 480, polarDeg: 68, azimuthDeg: -62 };
 
 type SelectListener = (focus: Focus) => void;
@@ -53,6 +65,7 @@ export class MapInteraction implements Disposable {
   private externalHover: DistrictId | null = null;
   /** Screen pixels covered by the side panel: positive = right edge, negative = left (RTL). */
   private panelInset = 0;
+  private focusedPlace: PlaceId | null = null;
 
   constructor(
     host: HTMLElement,
@@ -108,6 +121,12 @@ export class MapInteraction implements Disposable {
           position: at(label.x, label.z, 4),
         };
       }),
+      ...PLACE_IDS.map((id) => ({
+        kind: 'place' as const,
+        id,
+        labelKey: PLACES[id].titleKey,
+        position: at(PLACES[id].position.x, PLACES[id].position.z, 4),
+      })),
       ...ATTRACTION_IDS.map((id) => {
         const { position, markerHeight, nameKey } = ATTRACTIONS[id];
         return {
@@ -137,7 +156,22 @@ export class MapInteraction implements Disposable {
   }
 
   setPanelInset(pixels: number): void {
+    const changed = this.panelInset !== pixels;
+    const current = this.controls.getView();
+    const before = this.offsetForPanel(current);
     this.panelInset = pixels;
+    if (changed && this.focusedPlace && !this.director.flying) {
+      const after = this.offsetForPanel(current);
+      // Reframe only the covered screen area: retain the user's zoom, orbit and pan.
+      this.controls.setView({
+        ...current,
+        target: {
+          x: current.target.x + after.target.x - before.target.x,
+          y: current.target.y,
+          z: current.target.z + after.target.z - before.target.z,
+        },
+      });
+    }
     this.stadium.setPanelInset(pixels);
     this.markers.invalidateAvoidAreas();
     this.stadium.invalidateAvoidAreas();
@@ -160,6 +194,18 @@ export class MapInteraction implements Disposable {
   /** Frame `focus` (or the whole map for null): highlight, then fly. */
   async focus(focus: Focus | null, immediate = false): Promise<void> {
     const request = ++this.request;
+    const fromPlace = this.focusedPlace;
+    this.focusedPlace = null;
+    if (focus?.kind === 'place') {
+      this.pointerHover = null;
+      this.markerHover = null;
+      this.externalHover = null;
+      this.world.masterplan.setHovered(null);
+      this.canvas.style.cursor = '';
+    }
+    // Preserve a close starting radius during the flight; restore map limits on arrival.
+    this.controls.setLimits({ ...MAP_LIMITS, minRadius: PUBLIC_REALM.camera.minRadius });
+    if (!this.stadium.active) this.restoreMapShadow();
     this.world.masterplan.setSelected(
       focus?.kind === 'district' && isDistrictId(focus.id) ? focus.id : null,
     );
@@ -168,23 +214,46 @@ export class MapInteraction implements Disposable {
     this.flightListeners.forEach((listener) => {
       listener(!immediate);
     });
+    if (fromPlace && focus?.kind === 'hotspot' && !immediate) {
+      await this.flyPublic(this.offsetForPanel(this.viewFor({ kind: 'landmark', id: 'stadium' })));
+      if (request !== this.request) return;
+    }
     if (focus?.kind === 'hotspot' && isStadiumViewId(focus.id)) {
       this.canvas.style.cursor = '';
       this.pointerHover = null;
       this.world.masterplan.setHovered(null);
       await this.stadium.focus(focus.id, immediate);
     } else {
-      const view = this.offsetForPanel(this.viewFor(focus));
+      let view = this.offsetForPanel(this.viewFor(focus));
+      if (focus?.kind === 'place' && isPlaceId(focus.id)) view = this.safePlaceView(focus.id, view);
+      const isPlace = focus?.kind === 'place' && isPlaceId(focus.id);
       if (this.stadium.active) {
-        await this.stadium.exit(view, immediate);
+        const exit =
+          isPlace && !immediate ? { ...view, radius: 600, polar: MathUtils.degToRad(18) } : view;
+        await this.stadium.exit(exit, immediate);
+        if (request !== this.request) return;
+        if (isPlace && !immediate) await this.flyPublic(view);
       } else if (immediate) {
         this.director.cancel();
         this.controls.setView(view, true);
+      } else if (isPlace || fromPlace) {
+        await this.flyPublic(view);
       } else {
         await this.director.flyTo(view);
       }
     }
     if (request !== this.request) return;
+    if (focus?.kind === 'place' && isPlaceId(focus.id)) {
+      this.focusedPlace = focus.id;
+      this.controls.setLimits(this.placeLimits(focus.id));
+      const { position } = PLACES[focus.id];
+      // The framing has arrived before this one-time static shadow bake.
+      this.world.environment.usePublicShadow(
+        new Vector3(position.x - 260, 0, position.z - 300),
+        new Vector3(position.x + 260, 180, position.z + 300),
+      );
+    }
+    if (focus?.kind !== 'place' && !this.stadium.active) this.controls.setLimits(MAP_LIMITS);
     this.markers.setVisible(!this.stadium.active);
     this.flightListeners.forEach((listener) => {
       listener(false);
@@ -193,6 +262,17 @@ export class MapInteraction implements Disposable {
 
   private viewFor(focus: Focus | null): OrbitView {
     if (!focus) return VIEWS.map;
+    if (focus.kind === 'place' && isPlaceId(focus.id)) {
+      const { position, shot } = PLACES[focus.id];
+      return toView(
+        { x: position.x, y: COAST.landHeight + 2, z: position.z },
+        {
+          ...shot,
+          radius: shot.radius * (this.camera.aspect < 1 ? 1.2 : 1),
+          polarDeg: this.camera.aspect < 1 && focus.id === 'central-square' ? 35 : shot.polarDeg,
+        },
+      );
+    }
     if (focus.kind === 'landmark' && isLandmarkId(focus.id)) {
       const { position, shot, markerHeight } = LANDMARKS[focus.id];
       return toView(
@@ -219,6 +299,95 @@ export class MapInteraction implements Disposable {
       { x: attraction.position.x, y: COAST.landHeight, z: attraction.position.z },
       ATTRACTION_SHOT,
     );
+  }
+
+  /** A convex aerial arc avoids cutting through nearby roofs on close-view transitions. */
+  private flyPublic(view: OrbitView): Promise<void> {
+    const position = this.positionFor(view);
+    const from = this.camera.position.clone();
+    const travel = Math.hypot(position.x - from.x, position.z - from.z);
+    const height = Math.max(
+      from.y,
+      position.y,
+      PUBLIC_FLIGHT.clearance + travel * PUBLIC_FLIGHT.lift,
+    );
+    const curve = new CubicBezierCurve3(
+      from,
+      new Vector3(from.x, height, from.z),
+      new Vector3(position.x, height, position.z),
+      position,
+    );
+    const target = new Vector3(view.target.x, view.target.y, view.target.z);
+    const current = this.controls.target.clone();
+    const positions: Vector3[] = [],
+      targets: Vector3[] = [];
+    const samples = PUBLIC_FLIGHT.samples;
+    for (let i = 0; i <= samples; i++) {
+      const t = i / samples;
+      positions.push(curve.getPoint(t));
+      targets.push(current.clone().lerp(target, t));
+    }
+    return this.director.flyAlong({ positions, targets }, { duration: PUBLIC_FLIGHT.duration });
+  }
+
+  private positionFor(view: OrbitView): Vector3 {
+    return new Vector3(
+      view.target.x + view.radius * Math.sin(view.polar) * Math.sin(view.azimuth),
+      view.target.y + view.radius * Math.cos(view.polar),
+      view.target.z + view.radius * Math.sin(view.polar) * Math.cos(view.azimuth),
+    );
+  }
+
+  private safePlaceView(id: PlaceId, view: OrbitView): OrbitView {
+    const position = this.positionFor(view);
+    this.placeLimits(id).constrainPosition?.(position);
+    position.sub(new Vector3(view.target.x, view.target.y, view.target.z));
+    const radius = position.length();
+    return {
+      ...view,
+      radius,
+      polar: Math.acos(position.y / radius),
+      azimuth: Math.atan2(position.x, position.z),
+    };
+  }
+
+  private restoreMapShadow(): void {
+    const region = LIGHT.shadowRegion;
+    this.world.environment.useShadowRegion(
+      'map',
+      new Vector3(region.minX, 0, region.minZ),
+      new Vector3(region.maxX, region.maxHeight, region.maxZ),
+    );
+  }
+
+  private placeLimits(id: keyof typeof PLACES): ControlLimits {
+    const { position } = PLACES[id];
+    const { camera } = PUBLIC_REALM;
+    return {
+      ...MAP_LIMITS,
+      minRadius: camera.minRadius,
+      maxRadius: camera.maxRadius,
+      minHeight: camera.minHeight,
+      minPolar: MathUtils.degToRad(35),
+      maxPolar: MathUtils.degToRad(78),
+      bounds: {
+        minX: position.x - camera.targetTravel,
+        maxX: position.x + camera.targetTravel,
+        minZ: position.z - camera.targetTravel,
+        maxZ: position.z + camera.targetTravel,
+      },
+      constrainPosition: (p) => {
+        // Keep the eye within the reserved square: merely lifting it above a neighbouring
+        // tower still lets that tower's roof occlude the line of sight to the square.
+        const { central, beach } = PUBLIC_REALM;
+        if (id === 'central-square') {
+          const half = central.halfSize - camera.clearance;
+          p.x = MathUtils.clamp(p.x, central.x - half, central.x + half);
+          p.z = MathUtils.clamp(p.z, central.z - half, central.z + half);
+        } else p.x = Math.min(p.x, beach.x + beach.reserveHalfWidth - camera.clearance);
+        p.y = Math.max(p.y, camera.minHeight);
+      },
+    };
   }
 
   /** Shift the target sideways so the subject sits in the part of the screen the panel leaves free. */
@@ -281,7 +450,14 @@ export class MapInteraction implements Disposable {
   private readonly onPointerUp = (event: PointerEvent): void => {
     const press = this.press;
     this.press = null;
-    if (!press || this.director.flying || !this.controls.enabled || this.stadium.active) return;
+    if (
+      !press ||
+      this.director.flying ||
+      !this.controls.enabled ||
+      this.stadium.active ||
+      this.focusedPlace
+    )
+      return;
     const moved = Math.hypot(event.clientX - press.x, event.clientY - press.y);
     if (moved > CLICK_SLOP || performance.now() - press.time > CLICK_MAX_MS) return;
     const hit = this.pick(event);
@@ -296,7 +472,14 @@ export class MapInteraction implements Disposable {
     requestAnimationFrame(() => {
       this.hoverQueued = false;
       const pointer = this.lastPointer;
-      if (!pointer || this.press || this.director.flying || this.stadium.active) return;
+      if (
+        !pointer ||
+        this.press ||
+        this.director.flying ||
+        this.stadium.active ||
+        this.focusedPlace
+      )
+        return;
       const hit = this.pick(pointer);
       this.canvas.style.cursor = hit ? 'pointer' : '';
       this.pointerHover = hit?.kind === 'district' && isDistrictId(hit.id) ? hit.id : null;

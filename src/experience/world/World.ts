@@ -71,9 +71,11 @@ export class World implements Disposable {
 
   /** Resolves when every asynchronously loaded model (landmarks, vegetation) is in the scene. */
   ready(): Promise<void> {
-    return Promise.all([this.landmarks.ready(), this.masterplan.landscape.loaded]).then(
-      () => undefined,
-    );
+    return Promise.all([
+      this.landmarks.ready(),
+      this.masterplan.landscape.loaded,
+      this.masterplan.publicRealm.loaded,
+    ]).then(() => undefined);
   }
 
   update(delta: number, elapsed: number, camera: PerspectiveCamera): void {
@@ -84,6 +86,7 @@ export class World implements Disposable {
     );
     this.environment.update(delta, elapsed);
     this.masterplan.landscape.updateView(camera);
+    this.masterplan.publicRealm.update(delta, camera);
     this.sea.follow(camera);
     this.sea.update(delta, elapsed);
     this.landmarks.update(delta, elapsed, camera);

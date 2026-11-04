@@ -495,6 +495,12 @@ sure of:
 | `stadium.enter`, `stadium.back`, `stadium.inside*`, `stadium.explore`, `stadium.markersLabel` | ادخل إلى الملعب، العودة إلى الخريطة، … | Native review of navigation and arrival copy                  |
 | `stadium.hotspots.*.body`                                                                     | جميع النصوص الوصفية لنقاط الاهتمام     | Review every narrative draft with a native Arabic reviewer    |
 
+Additional 3D close-view copy requiring native Arabic review: `places.*`, especially
+`places.beach.body`, `places.central.body`, `places.backDistrict` and `places.controls`.
+The spaces and furniture are illustrative; review the draft tone without implying approved
+amenities or public access. Close-view links are `#/experience/places/beach-promenade` and
+`#/experience/places/central-square`.
+
 Additional marketing copy requiring Arabic review:
 
 | Key                                                                     | Review needed                                                                                                   |

@@ -24,6 +24,7 @@ import {
 import { ATTRACTIONS } from '../../../data/attractions';
 import { LANDMARK_IDS, LANDMARKS, type LandmarkId } from '../../../data/landmarks';
 import { MASTERPLAN } from '../../config/masterplan';
+import { isRealmReserved, PUBLIC_REALM } from '../../config/publicRealm';
 import { STADIUM } from '../../config/stadium';
 import { COAST } from '../../config/scene';
 import type { Disposable } from '../../types';
@@ -145,6 +146,7 @@ const LANDMARK_CLEARANCE: Partial<
 };
 
 function isClearOfStructures(x: number, z: number, margin: number): boolean {
+  if (isRealmReserved(x, z, margin)) return false;
   for (const id of LANDMARK_IDS) {
     const { position, footprint } = LANDMARKS[id];
     const dx = x - position.x;
@@ -445,6 +447,11 @@ export class Landscape implements Disposable {
   private palmPositions(random: () => number): Vector3[] {
     const { exclusion, ground, landscape } = MASTERPLAN;
     const positions: Vector3[] = [];
+    const beach = PUBLIC_REALM.beach;
+    for (let z = beach.z - beach.halfLength; z < beach.z + beach.halfLength; z += 22) {
+      // Formal palms between the timber promenade and inland shade pavilions.
+      positions.push(new Vector3(beach.x + 15, COAST.landHeight + 0.72, z + 6));
+    }
     const step = landscape.palmSpacing / 2;
     for (let z: number = exclusion.minZ; z < exclusion.maxZ; z += step) {
       for (let x: number = ground.minX; x < exclusion.maxX; x += step) {
@@ -586,6 +593,15 @@ export class Landscape implements Disposable {
 
   private treePositions(random: () => number): Vector3[] {
     const positions: Vector3[] = this.stadiumGrove(random);
+    const beach = PUBLIC_REALM.beach;
+    for (let z = beach.z - beach.halfLength + 20; z < beach.z + beach.halfLength; z += 42) {
+      positions.push(new Vector3(beach.x + 52, COAST.landHeight, z));
+    }
+    const central = PUBLIC_REALM.central;
+    for (const dx of [-34, 34])
+      for (const dz of [-34, 34]) {
+        positions.push(new Vector3(central.x + dx, COAST.landHeight + 0.74, central.z + dz));
+      }
     for (const park of MASTERPLAN.parks) {
       const count = Math.min(
         MAX_TREES_PER_PARK,

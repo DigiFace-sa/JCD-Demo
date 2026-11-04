@@ -13,6 +13,7 @@ import { ATTRACTIONS } from '../../../data/attractions';
 import { DISTRICT_IDS, DISTRICTS, type DistrictId } from '../../../data/districts';
 import { LANDMARK_IDS, LANDMARKS } from '../../../data/landmarks';
 import { MASTERPLAN, type BuildingProfile } from '../../config/masterplan';
+import { isRealmReserved } from '../../config/publicRealm';
 import { COAST } from '../../config/scene';
 import type { Disposable } from '../../types';
 import { createRandom } from '../../utils/random';
@@ -38,6 +39,7 @@ export interface Plot {
 
 /** True where the masterplan keeps ground open (water edge, parks, plazas, landmarks). */
 function isReserved(x: number, z: number, margin: number): boolean {
+  if (isRealmReserved(x, z, margin)) return true;
   const distance = landDistance(x, z);
   const setback = beachWeight(z) > 0.5 ? MASTERPLAN.beachSetback : MASTERPLAN.promenade;
   if (distance < setback + margin) return true;

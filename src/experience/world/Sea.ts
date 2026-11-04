@@ -11,7 +11,7 @@ import { createWaveNormalMap } from './waveNormals';
 /**
  * Animated Red Sea surface: sky reflection with Fresnel, sun glitter path (HDR, feeds bloom),
  * shallow turquoise and foam along the shore, shared aerial perspective.
- * One huge quad that follows the camera; all shading uses world coordinates, so it never swims.
+ * A lightly subdivided surface that follows the camera; all shading uses world coordinates, so it never swims.
  */
 export class Sea implements Updatable, Disposable {
   readonly object: Mesh<PlaneGeometry, ShaderMaterial>;
@@ -56,7 +56,12 @@ export class Sea implements Updatable, Disposable {
       },
     });
 
-    const geometry = new PlaneGeometry(SEA.size, SEA.size).rotateX(-Math.PI / 2);
+    const geometry = new PlaneGeometry(
+      SEA.size,
+      SEA.size,
+      SEA.gridSegments,
+      SEA.gridSegments,
+    ).rotateX(-Math.PI / 2);
     this.object = new Mesh(geometry, material);
     this.object.name = 'sea';
     this.object.frustumCulled = false;
@@ -77,7 +82,7 @@ export class Sea implements Updatable, Disposable {
     this.waveNormals.needsUpdate = true;
   }
 
-  /** Keep the quad centred under the camera so the horizon is always covered. */
+  /** Keep the surface centred under the camera so the horizon is always covered. */
   follow(camera: Camera): void {
     this.object.position.x = camera.position.x;
     this.object.position.z = camera.position.z;

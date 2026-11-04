@@ -1,5 +1,6 @@
 import { LANDMARKS, isLandmarkId } from '../data/landmarks';
 import { isLegalDoc } from '../data/site';
+import { isPlaceId } from '../data/places';
 import { isStadiumViewId } from '../data/stadium';
 import { NEWS, isNewsId } from '../data/marketing';
 import type { TranslationKey } from '../i18n/i18n';
@@ -115,6 +116,10 @@ export const routes: readonly RouteDef[] = [
           view: () => import('../pages/lab/Lab'),
         } satisfies RouteDef,
       ]),
+  {
+    ...experienceRoute('/experience/places/:place'),
+    validate: (params) => isPlaceId(params.place),
+  },
   experienceRoute('/experience'),
   experienceRoute('/experience/:landmark'),
   experienceRoute('/experience/:landmark/:hotspot'),

@@ -9,6 +9,7 @@ import { Landscape } from './Landscape';
 import { MasterplanBuildings } from './MasterplanBuildings';
 import { MasterplanGround } from './MasterplanGround';
 import { OpenSpace } from './OpenSpace';
+import { PublicRealm } from './PublicRealm';
 import { Waterfront } from './Waterfront';
 
 /** Highlight levels per state: outline strength, fill strength, building glow. */
@@ -26,6 +27,7 @@ const OVERLAY_FADE = { near: 900, far: 2400, intensity: 1.3 } as const;
 /** The masterplan: ground, district buildings, landscape, waterfront, district highlighting. */
 export class Masterplan implements Disposable {
   readonly object = new Group();
+  readonly publicRealm: PublicRealm;
   readonly ground: MasterplanGround;
   readonly buildings: MasterplanBuildings;
   readonly landscape: Landscape;
@@ -41,6 +43,7 @@ export class Masterplan implements Disposable {
     this.ground = new MasterplanGround(atmosphere, openSpace);
     this.landscape = new Landscape(atmosphere, openSpace);
     this.waterfront = new Waterfront(atmosphere);
+    this.publicRealm = new PublicRealm(atmosphere);
     this.breakwaters = new Breakwaters(atmosphere);
     this.object.name = 'masterplan';
     this.object.add(
@@ -48,6 +51,7 @@ export class Masterplan implements Disposable {
       this.buildings.object,
       this.landscape.object,
       this.waterfront.object,
+      this.publicRealm.object,
       this.breakwaters.object,
     );
     this.applyHighlight(true);
@@ -123,6 +127,7 @@ export class Masterplan implements Disposable {
       lineB.value,
       ...this.buildings.highlight.values(),
     ]);
+    this.publicRealm.dispose();
     this.ground.dispose();
     this.buildings.dispose();
     this.landscape.dispose();

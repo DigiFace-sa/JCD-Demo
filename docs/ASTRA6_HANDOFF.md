@@ -380,3 +380,35 @@ unchanged by the 3D work. Nothing is pushed.
 
 **Next step:** client visual review of §9's screenshots. Native Arabic, Safari/Edge, real touch
 and connected-TV checks remain open; the Guided Tour follows as its own phase.
+
+## 11. Beach and Central life — 5 November 2026
+
+After approving the previous 3D refinement, the client requested more life and detail in Beach
+and Central, with the ability to look closer. This continuation adds two illustrative public-space
+pockets, not official amenities or new attractions. The full phase report, measurements, remaining
+review items and every screenshot path are in [3D_PUBLIC_REALM_REVIEW.md](3D_PUBLIC_REALM_REVIEW.md).
+
+- Beach: timber promenade, shade umbrellas and loungers, benches, palms, inland gardens,
+  timber pavilions, lamps and walking pedestrians.
+- Central: paved square, planted seating, slatted arcades, glazed frontage, café furniture,
+  a shallow reflective rill, lamps and walking pedestrians.
+- Choose Beach or Central in the district panel, then **Take a closer look**. The overview also
+  lists both close views. Links are `#/experience/places/beach-promenade` and
+  `#/experience/places/central-square`.
+- Close views have zoom/orbit/pan limits, a static close shadow fit, bilingual panels and return
+  controls. Camera transitions rise above the surrounding buildings before descending. Crowds
+  freeze with reduced motion; furniture and people use instancing and distance culling.
+- Main edit points: `src/data/places.ts`, `src/experience/config/publicRealm.ts`,
+  `src/experience/world/masterplan/PublicRealm.ts` and `places.*` in both translation files.
+  Building and planting reservations share the configured pockets.
+- QA found and corrected an occluded Central camera, a tower-crossing transition and a Metal
+  sea clipping artifact. The sea now has a small grid while retaining one draw call.
+- Evidence and runnable scripts are in `review/phase-3d-life/qa/`. The existing Blender models
+  were reused. Simplified pedestrians and city massing remain visible at close range.
+- Desktop night measurements varied in the final runs, including when testing the previous
+  committed build in the same session. The report retains the slower samples and the A/B
+  comparison; do not claim sustained 60 fps from the faster close-view/flight samples alone.
+
+The phase is ready for client visual review. Native Arabic, Safari/Edge, physical touch devices
+and the connected TV remain open checks. Guided Tour remains a separate phase. Never push;
+the four protected marketing diffs named in §1 remain outside this phase's local commit.

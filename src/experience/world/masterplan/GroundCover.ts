@@ -9,6 +9,7 @@ import {
 } from 'three';
 import { LANDMARKS } from '../../../data/landmarks';
 import { MASTERPLAN } from '../../config/masterplan';
+import { PUBLIC_REALM, isRealmReserved } from '../../config/publicRealm';
 import { STADIUM } from '../../config/stadium';
 import type { Disposable } from '../../types';
 import type { OpenSpace } from './OpenSpace';
@@ -137,6 +138,21 @@ export class GroundCover implements Disposable {
           paved *= 1 - bed;
         }
         if (openSpace.distanceToBuilding(x, z) < 4) lawn = 0;
+        if (isRealmReserved(x, z)) {
+          const beach = PUBLIC_REALM.beach;
+          lawn = x > beach.x + 22 && x < beach.x + 65 ? 1 : 0;
+          if (Math.abs(z - (beach.z - 110)) < 13 || Math.abs(z - (beach.z + 88)) < 13) {
+            if (Math.abs(x - (beach.x + 35)) < 11) {
+              lawn = 0;
+              paved = 1;
+            }
+          }
+          if (
+            Math.abs(x - PUBLIC_REALM.central.x) < PUBLIC_REALM.central.halfSize &&
+            Math.abs(z - PUBLIC_REALM.central.z) < PUBLIC_REALM.central.halfSize
+          )
+            paved = 1;
+        }
         data[index] = Math.round(lawn * (1 - paved) * 255);
         data[index + 1] = Math.round(paved * 255);
         data[index + 3] = 255;

@@ -187,6 +187,21 @@
       "label": "Phase 1 completion target"
     }
   },
+  "places": {
+    "controls": "Drag to look around · Scroll or pinch to move closer",
+    "kind": "A closer look",
+    "heading": "Explore up close",
+    "closer": "Take a closer look",
+    "backDistrict": "Back to district",
+    "beach": {
+      "title": "Along the beach",
+      "body": "Shade, timber and soft sand frame a slower rhythm by the water. Explore this illustrative promenade and the spaces to pause along it. [DRAFT — client to approve]"
+    },
+    "central": {
+      "title": "Life in Central",
+      "body": "A shaded square brings together planted seating, sheltered arcades and the movement of daily life. Explore an illustrative view of the district at a more personal scale. [DRAFT — client to approve]"
+    }
+  },
   "map": {
     "location": "A waterfront destination on the Red Sea in the heart of Jeddah.",
     "glance": "At a glance",
