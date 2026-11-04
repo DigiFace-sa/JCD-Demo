@@ -7,7 +7,6 @@
 /* Release the source height attribute so each editorial crop can use its own aspect ratio. */
 .sustainability-section__image > img,
 .news-card__image > img,
-.attraction-grid img,
 .form-section__image {
   block-size: auto;
 }
@@ -780,108 +779,6 @@
   max-inline-size: 32rem;
   opacity: 0.8;
 }
-.attraction-grid {
-  display: grid;
-  grid-template-columns: repeat(3, minmax(0, 1fr));
-  gap: 2rem;
-}
-.attraction-grid img {
-  inline-size: 100%;
-  aspect-ratio: 1.2;
-  object-fit: cover;
-}
-.attraction-grid h3 {
-  margin-block: 1.4rem 0.7rem;
-  font-size: var(--step-2);
-  font-weight: 300;
-}
-.attraction-grid p {
-  font-size: 0.87rem;
-}
-.district-explorer {
-  display: grid;
-  grid-template-columns: 1.6fr 1fr;
-  gap: 4vw;
-  align-items: center;
-}
-.district-explorer__map {
-  min-inline-size: 0;
-  background: color-mix(in oklab, var(--jcdc-primary) 8%, white);
-  padding: 1rem;
-}
-.district-explorer__map svg {
-  inline-size: 100%;
-  block-size: auto;
-  color: var(--jcdc-primary);
-  direction: ltr;
-}
-.district-shape {
-  cursor: pointer;
-}
-.district-shape polygon {
-  fill: color-mix(in oklab, var(--jcdc-sand) 75%, white);
-  stroke: white;
-  stroke-width: 5;
-  transition: fill var(--duration-base) var(--ease-out);
-}
-.district-shape[aria-pressed='true'] polygon,
-.district-shape:hover polygon {
-  fill: var(--jcdc-secondary);
-}
-.district-shape text {
-  font-size: 12px;
-  fill: var(--jcdc-ink);
-  pointer-events: none;
-  font-family: var(--font-body);
-}
-.district-shape:focus-visible {
-  outline: none;
-}
-.district-shape:focus-visible polygon {
-  stroke: var(--jcdc-primary);
-  stroke-width: 7;
-}
-.district-explorer__shore {
-  fill: none;
-  stroke: var(--jcdc-primary);
-  stroke-width: 2;
-  opacity: 0.2;
-}
-.district-explorer__caption {
-  font-size: 0.65rem;
-  color: var(--color-text-muted);
-  padding: 0.5rem;
-}
-.district-tabs {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 0.5rem;
-  margin-block: 1.5rem;
-}
-.district-tabs button {
-  border: 1px solid var(--color-line);
-  border-radius: 3rem;
-  padding: 0.6rem 0.9rem;
-  background: transparent;
-  cursor: pointer;
-  font-size: 0.72rem;
-}
-.district-tabs button[aria-pressed='true'] {
-  border-color: var(--color-brand);
-  background: var(--color-brand);
-  color: white;
-}
-.district-detail {
-  min-block-size: 10rem;
-}
-.district-detail h3 {
-  font-size: var(--step-2);
-  font-weight: 300;
-  margin-block: 1.5rem 1rem;
-}
-.district-detail p {
-  font-size: 0.9rem;
-}
 .sector-list > article {
   display: grid;
   grid-template-columns: 3rem 1fr 1.2fr 3rem;
@@ -1150,13 +1047,6 @@
   .why-grid {
     grid-template-columns: repeat(2, minmax(0, 1fr));
   }
-  .district-explorer {
-    grid-template-columns: 1.2fr 1fr;
-    gap: 2rem;
-  }
-  .district-shape text {
-    font-size: 11px;
-  }
 }
 @media (max-width: 48rem) {
   .section {
@@ -1221,7 +1111,6 @@
   .district-teaser__grid,
   .landmark-story,
   .form-section__grid,
-  .district-explorer,
   .article-body {
     grid-template-columns: 1fr;
     gap: 2.5rem;
@@ -1313,8 +1202,7 @@
   .invest-band {
     min-block-size: 0;
   }
-  .news-grid,
-  .attraction-grid {
+  .news-grid {
     grid-template-columns: 1fr;
     gap: 3rem;
   }
@@ -1373,15 +1261,6 @@
   .form-field > label {
     flex-wrap: wrap;
   }
-  .district-explorer__map {
-    padding: 0.2rem;
-  }
-  .district-explorer__content {
-    padding-inline: 1rem;
-  }
-  .district-detail {
-    min-block-size: 0;
-  }
   .legal-page {
     padding-block-start: 8rem;
   }
@@ -1401,54 +1280,6 @@
   .home-hero__image {
     animation: none;
   }
-}
-/* Raised district plates and abstract massing keep the map clearly diagrammatic. */
-.district-shape {
-  transition: transform var(--duration-base) var(--ease-out);
-}
-.district-shape[aria-pressed='true'] {
-  transform: translateY(-5px);
-}
-.district-shape .diagram-base {
-  fill: color-mix(in oklab, var(--jcdc-sand) 70%, var(--jcdc-ink));
-  stroke: none;
-}
-.district-shape[aria-pressed='true'] .diagram-base {
-  fill: color-mix(in oklab, var(--jcdc-secondary) 70%, var(--jcdc-ink));
-}
-.diagram-block-side {
-  fill: color-mix(in oklab, var(--jcdc-sand) 80%, var(--jcdc-ink));
-  pointer-events: none;
-}
-.diagram-block-roof {
-  fill: var(--paper);
-  stroke: color-mix(in oklab, var(--jcdc-sand) 85%, var(--jcdc-ink));
-  stroke-width: 0.5;
-  pointer-events: none;
-}
-.district-shape text {
-  font-weight: 500;
-  paint-order: stroke;
-  stroke: var(--paper);
-  stroke-width: 4px;
-  stroke-linejoin: round;
-}
-.diagram-landmarks {
-  fill: var(--paper);
-  stroke: var(--jcdc-primary);
-  stroke-width: 1;
-  pointer-events: none;
-}
-.diagram-landmarks .diagram-garden {
-  fill: color-mix(in oklab, var(--jcdc-primary) 15%, var(--jcdc-sand));
-  stroke: none;
-}
-.diagram-landmarks .diagram-opening {
-  fill: var(--jcdc-primary);
-}
-[lang='ar'] .district-shape text {
-  direction: rtl;
-  unicode-bidi: plaintext;
 }
 
 /* TextReveal line masks: a little breathing room so descenders and Arabic marks aren't clipped. */

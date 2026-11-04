@@ -16,18 +16,20 @@ export function Copy({
   className,
   motion,
   vars,
+  id,
 }: {
   k: TranslationKey;
   as?: Tag;
   className?: string;
   motion?: MotionKind;
   vars?: Readonly<Record<string, string | number>>;
+  id?: string;
 }): ReactNode {
   const { t } = useI18n();
   const { text, markers } = splitMarkers(t(k, vars));
   return (
     <>
-      <Element className={className} data-motion={motion}>
+      <Element id={id} className={className} data-motion={motion}>
         {text}
       </Element>
       {markers.map((marker) => (

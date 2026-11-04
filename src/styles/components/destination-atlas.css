@@ -1,0 +1,182 @@
+/* The district atlas is a schematic instrument, paired with official imagery in its panel. */
+.destination-atlas {
+  margin: 0;
+  min-inline-size: 0;
+  color: var(--jcdc-sand);
+  --atlas-line: color-mix(in srgb, var(--jcdc-primary) 34%, var(--jcdc-sand));
+}
+.destination-atlas__svg {
+  display: block;
+  inline-size: 100%;
+  block-size: auto;
+  overflow: visible;
+}
+.destination-atlas__land-start {
+  stop-color: color-mix(in srgb, var(--jcdc-primary) 26%, var(--jcdc-ink));
+}
+.destination-atlas__land-end {
+  stop-color: color-mix(in srgb, var(--jcdc-primary) 8%, var(--jcdc-ink));
+}
+.destination-atlas__selected-start {
+  stop-color: color-mix(in srgb, var(--jcdc-primary) 70%, var(--jcdc-ink));
+}
+.destination-atlas__selected-end {
+  stop-color: color-mix(in srgb, var(--jcdc-primary) 30%, var(--jcdc-ink));
+}
+.destination-atlas__grid {
+  fill: none;
+  stroke: var(--jcdc-sand);
+  stroke-opacity: 0.045;
+  stroke-width: 0.7;
+}
+.destination-atlas__grid-point {
+  fill: var(--jcdc-sand);
+  opacity: 0.12;
+}
+.destination-atlas__hatch {
+  fill: none;
+  stroke: var(--jcdc-sand);
+  stroke-opacity: 0.055;
+  stroke-width: 0.6;
+}
+.destination-atlas__context > path {
+  fill: none;
+  stroke: var(--jcdc-primary);
+  stroke-opacity: 0.22;
+  stroke-width: 0.8;
+}
+.destination-atlas__context .destination-atlas__inland-line {
+  stroke: var(--jcdc-sand);
+  stroke-opacity: 0.14;
+}
+.destination-atlas__context .destination-atlas__corner {
+  stroke: var(--jcdc-secondary);
+  stroke-opacity: 0.5;
+}
+.destination-atlas__district {
+  cursor: pointer;
+  outline: none;
+}
+.destination-atlas__wall {
+  fill: color-mix(in srgb, var(--jcdc-primary) 12%, var(--jcdc-ink));
+  stroke: color-mix(in srgb, var(--jcdc-primary) 30%, var(--jcdc-ink));
+  stroke-width: 1;
+}
+.destination-atlas__surface {
+  stroke: var(--atlas-line);
+  stroke-opacity: 0.4;
+  stroke-width: 1;
+}
+.destination-atlas__edge {
+  fill: none;
+  stroke: var(--jcdc-sand);
+  stroke-opacity: 0.2;
+  stroke-width: 1;
+  transition: stroke-opacity var(--duration-base) var(--ease-out);
+}
+.destination-atlas__district:hover .destination-atlas__edge {
+  stroke-opacity: 0.75;
+}
+.destination-atlas__district[data-active='true'] .destination-atlas__edge {
+  stroke: var(--jcdc-secondary);
+  stroke-width: 1.5;
+  stroke-opacity: 1;
+}
+.destination-atlas__district:focus-visible .destination-atlas__edge {
+  stroke: var(--jcdc-sand);
+  stroke-width: 3;
+  stroke-opacity: 1;
+  stroke-dasharray: 7 4;
+}
+.destination-atlas__node {
+  fill: var(--jcdc-ink);
+  stroke: var(--atlas-line);
+  stroke-width: 1;
+}
+.destination-atlas__district[data-active='true'] .destination-atlas__node {
+  fill: var(--jcdc-secondary);
+  stroke: var(--jcdc-secondary);
+}
+.destination-atlas__number {
+  fill: var(--jcdc-sand);
+  font-family: var(--font-mono);
+  font-size: 11px;
+  letter-spacing: 0;
+  direction: ltr;
+  unicode-bidi: isolate;
+}
+.destination-atlas__district[data-active='true'] .destination-atlas__number {
+  fill: var(--jcdc-ink);
+}
+.destination-atlas__name {
+  fill: var(--jcdc-sand);
+  font-size: 14px;
+  font-weight: var(--weight-regular);
+  paint-order: stroke fill;
+  stroke: var(--jcdc-ink);
+  stroke-width: 3px;
+  stroke-linejoin: round;
+}
+.destination-atlas__halo {
+  fill: none;
+  stroke: var(--jcdc-secondary);
+  stroke-width: 1;
+  opacity: 0;
+}
+.destination-atlas__district[data-active='true'] .destination-atlas__halo {
+  transform-box: fill-box;
+  transform-origin: center;
+  animation: destination-atlas-pulse 3.4s var(--ease-out) infinite;
+}
+.destination-atlas__caption {
+  display: flex;
+  align-items: start;
+  gap: var(--space-s);
+  padding-block: var(--space-s);
+  border-block-start: 1px solid var(--color-inverse-line);
+  color: var(--color-inverse-muted);
+  font-size: var(--step--1);
+}
+.destination-atlas__caption .copy-marker {
+  display: block;
+  margin-block-start: var(--space-3xs);
+}
+.destination-atlas__key {
+  flex: none;
+  inline-size: 0.5rem;
+  block-size: 0.5rem;
+  margin-block-start: 0.5em;
+  border: 1px solid var(--jcdc-secondary);
+  rotate: 45deg;
+}
+@keyframes destination-atlas-pulse {
+  0% {
+    opacity: 0.55;
+    scale: 0.85;
+  }
+  85%,
+  100% {
+    opacity: 0;
+    scale: 1.55;
+  }
+}
+@media (max-width: 40rem) {
+  .destination-atlas__name {
+    display: none;
+  }
+  .destination-atlas__number {
+    font-size: 28px;
+  }
+  .destination-atlas__node {
+    r: 30px;
+  }
+  .destination-atlas__caption {
+    font-size: 0.75rem;
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .destination-atlas__district[data-active='true'] .destination-atlas__halo {
+    animation: none;
+    opacity: 0.5;
+  }
+}

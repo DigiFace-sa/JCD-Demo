@@ -122,7 +122,7 @@
     },
     "beach": {
       "name": "Beach, Leisure & Lifestyle",
-      "summary": "A 2.1 km public beach lined with leisure, dining and family attractions along the Red Sea. [DRAFT — client to approve]"
+      "summary": "A coastal district shaped around beach life, leisure and time by the Red Sea. [DRAFT — client to approve]"
     },
     "sportsPark": {
       "name": "Sports Park",
@@ -130,7 +130,7 @@
     },
     "culture": {
       "name": "Culture & Creativity",
-      "summary": "Anchored by the Opera House and the Museum: a district for performance, heritage and creative life. [DRAFT — client to approve]"
+      "summary": "A place for performance, heritage and creative life. [DRAFT — client to approve]"
     },
     "wellness": {
       "name": "Wellness",
@@ -144,11 +144,11 @@
     },
     "publicBeach": {
       "name": "Public Beach",
-      "summary": "2.1 km of public beach on the Red Sea, open to everyone. [DRAFT — client to approve]"
+      "summary": "A place to slow down by the Red Sea, where the waterfront meets beach and promenade. [DRAFT — client to approve]"
     },
     "cruiseTerminal": {
       "name": "Cruise Terminal",
-      "summary": "A gateway for visitors arriving by sea, connected to the marina and the city. [DRAFT — client to approve]"
+      "summary": "An arrival by sea, with a new perspective on Jeddah’s waterfront. [DRAFT — client to approve]"
     }
   },
   "stats": {
@@ -347,7 +347,18 @@
       "mapNote": "Illustrative district diagram; not a surveyed masterplan. [DRAFT — client to approve]",
       "attractionsEye": "Along the waterfront",
       "attractionsTitle": "Open to discovery. [DRAFT — client to approve]",
-      "sustainTitle": "Sustainability,\npart of everyday life. [DRAFT — client to approve]"
+      "sustainTitle": "Sustainability,\npart of everyday life. [DRAFT — client to approve]",
+      "atlasLabel": "District atlas",
+      "districtNavigation": "Choose a district",
+      "selectionStatus": "{name} district selected",
+      "shoreEye": "Life along the Red Sea",
+      "shoreLead": "From the waterfront to the city, discover places for culture, leisure and time outdoors. [DRAFT — client to approve]",
+      "sustainLead": "Landscape, shade and marine conservation are woven into the destination’s vision. [DRAFT — client to approve]",
+      "continueEye": "Keep exploring",
+      "continueTitle": "A different view.\nA closer connection. [DRAFT — client to approve]",
+      "continueBody": "Step into our illustrative destination experience, or discover the architecture behind its landmarks. [DRAFT — client to approve]",
+      "pillarNavigation": "Sustainability themes",
+      "skipToAtlas": "Explore the districts"
     },
     "landmarks": {
       "title": "Places that\nbring us together. [DRAFT — client to approve]",

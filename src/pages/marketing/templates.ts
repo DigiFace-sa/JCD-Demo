@@ -5,7 +5,6 @@ import {
   MARKETING_IMAGES,
   NEWS,
   NEWS_IDS,
-  SUSTAINABILITY_ITEMS,
   type MarketingImage,
 } from '../../data/marketing';
 import type { TranslationKey } from '../../i18n/i18n';
@@ -57,9 +56,6 @@ export const landmarkCards = (exclude?: LandmarkId): string => `
     )
     .join('')}
   </div>`;
-
-export const sustainability = (): string => `
-  <div class="sustainability-grid">${SUSTAINABILITY_ITEMS.map((id) => `<article data-reveal><span class="line-icon" aria-hidden="true">${icons[id === 'coral' ? 'waves' : id === 'realm' ? 'leaf' : id === 'shade' ? 'sun' : 'connections']}</span>${copy(`marketing.sustainability.${id}.title`, 'h3')}${copy(`marketing.sustainability.${id}.body`, 'p', 'muted')}</article>`).join('')}</div>`;
 
 export const investBand = (): string => `
   <section class="invest-band">${photo('marina', 'invest-band__image')}<div class="invest-band__shade"></div><div class="container invest-band__inner" data-reveal><div>${copy('marketing.home.investEye', 'p', 'eyebrow')}${copy('marketing.home.investTitle', 'h2', 'editorial-title')}${copy('marketing.home.investBody', 'p', 'section-lead')}</div>${link('marketing.actions.register', '/invest', 'btn btn--sand btn--large')}</div></section>`;

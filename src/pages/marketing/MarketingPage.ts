@@ -5,7 +5,6 @@ import type { PageContext, PageFactory } from '../../router/Page';
 import { fragmentFromHtml, requireElement } from '../../utils/dom';
 import { EASE_OUT, prefersReducedMotion } from '../../utils/motion';
 import { contentTemplate } from './Content';
-import { bindDistrictMap } from './DistrictMap';
 import { bindInterestForm } from './InterestForm';
 import { bindTextReveal } from './motion/TextReveal';
 
@@ -122,12 +121,6 @@ const createMarketingPage: PageFactory = (initialContext) => {
     const counters = bindCounters(mounted);
     cleanups.push(counters.dispose);
     cleanups.push(bindTextReveal(mounted));
-    if (context.path === '/destination')
-      cleanups.push(
-        bindDistrictMap(mounted, context.query.get('district'), () => {
-          enhanceCopy(mounted);
-        }),
-      );
     if (context.path === '/invest') cleanups.push(bindInterestForm(mounted));
     cleanups.push(
       onLangChange(() => {

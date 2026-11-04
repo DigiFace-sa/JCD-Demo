@@ -122,6 +122,9 @@ export function RouteView({ main, onShown }: RouteViewProps): ReactNode {
           : Promise.resolve();
       const [loaded] = await Promise.all([load(match.route), leaving]);
       if (cancelled) return;
+      // Imperative pages create ScrollTriggers in their child layout effect. Reset before
+      // mounting them, so their one-shot reveals are not initialised at the departing scroll.
+      if (!samePage) scrollToTop(lenis);
       // A cancelled navigation may have faded the outlet before we landed back on this page.
       if (samePage && outlet)
         gsap.to(outlet, {

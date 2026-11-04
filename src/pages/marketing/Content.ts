@@ -11,13 +11,10 @@ import {
   photo,
   recognition,
   sectionHeading,
-  sustainability,
 } from './templates';
-import { districtMapTemplate } from './DistrictMap';
 import { interestFormTemplate } from './InterestForm';
 
 export function contentTemplate(context: PageContext): string {
-  if (context.path === '/destination') return destinationTemplate();
   if (context.path === '/landmarks')
     return `${pageHero('opera-house', 'nav.landmarks', 'marketing.landmarks.title', 'marketing.landmarks.lead')}<section class="section container">${landmarkCards()}</section>${investBand()}`;
   if (isLandmarkId(context.params.id)) return landmarkTemplate(context.params.id);
@@ -31,24 +28,6 @@ export function contentTemplate(context: PageContext): string {
   const doc = context.params.doc;
   const legal = doc === 'terms' ? 'terms' : doc === 'cookies' ? 'cookies' : 'privacy';
   return `<section class="legal-page section container">${copy('marketing.legal.eye', 'p', 'eyebrow')}${copy(`legal.${legal}`, 'h1', 'editorial-title')}${copy('marketing.legal.body', 'p', 'section-lead')}${copy(`marketing.legal.${legal}Body`, 'p', 'section-lead')}${link('marketing.actions.backHome', '/')}</section>`;
-}
-
-function destinationTemplate(): string {
-  return `${pageHero('waterfront', 'nav.destination', 'marketing.destination.title', 'marketing.destination.lead')}
-    <section class="section container">${sectionHeading('marketing.destination.mapEye', 'marketing.destination.mapTitle')}${districtMapTemplate()}</section>
-    <section class="section section--paper"><div class="container">${sectionHeading('marketing.destination.attractionsEye', 'marketing.destination.attractionsTitle')}<div class="attraction-grid">${(
-      [
-        ['entertainment-pier', 'entertainmentPier'],
-        ['beach', 'publicBeach'],
-        ['cruise-terminal', 'cruiseTerminal'],
-      ] as const
-    )
-      .map(
-        ([image, key]) =>
-          `<article data-reveal>${photo(image)}${copy(`attractions.${key}.name`, 'h3')}${copy(`attractions.${key}.summary`, 'p', 'muted')}</article>`,
-      )
-      .join('')}</div></div></section>
-    <section class="section container">${sectionHeading('marketing.home.sustainEye', 'marketing.destination.sustainTitle')}${sustainability()}</section>${investBand()}`;
 }
 
 function landmarkTemplate(id: keyof typeof LANDMARKS): string {

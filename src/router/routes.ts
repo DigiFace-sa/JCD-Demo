@@ -58,7 +58,7 @@ export const routes: readonly RouteDef[] = [
     pageId: 'destination',
     layout: 'site',
     title: () => 'pages.destination.title',
-    load: marketing,
+    view: () => import('../pages/destination/Destination'),
   },
   {
     pattern: '/landmarks',

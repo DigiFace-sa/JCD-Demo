@@ -1,14 +1,17 @@
 # Jeddah Central cinematic rebuild — current takeover state
 
-> **Updated 4 November 2026: R2 Home is complete and awaiting the user's visual review.** The earlier
+> **Updated 4 November 2026: Home approved; R3–Destination implementation complete, awaiting user visual review.** The earlier
 > pre-React handoff is archived below an explicit superseded heading. Do not follow its native-only,
 > sculpture, missing-report, process-ID, or old uncommitted-baseline instructions. They describe
 > an earlier design that was subsequently committed and then replaced at the user's request.
 
 ## Current state and approval
 
-The existing repository is `/Users/trqorganji/Desktop/JCD`. R2 is complete; do not restart Home
-or begin another phase before the user's go-ahead. The latest approved direction is React,
+The existing repository is `/Users/trqorganji/Desktop/JCD`. The user approved R2 Home on
+4 November 2026 and authorised Destination next. Preserve the approved Home in `3ffa2ee`.
+R3 now proceeds page by page; **R3–Destination implementation is complete and awaits visual review**.
+The local phase commit records completion. Landmarks, Invest, News and Legal React migrations
+are future parts of R3 and require the user's next go-ahead. The direction is React,
 Lenis smooth scrolling and GSAP intro/hold/outro
 choreography, using official JCDC architectural concept renders. The user rejected floating
 decorative objects. Preserve the separate original 3D Experience and its stadium deep links.
@@ -28,10 +31,13 @@ renders show proposed architecture; never describe them as photographs of comple
 | `32e3fad` | Earlier masked editorial reveals                                      |
 | `e057133` | R0: React/Lenis foundation, routing/i18n adapters and motion system   |
 | `764fa6d` | R1: 39 official renders, responsive AVIF/WebP pipeline and provenance |
+| `3ffa2ee` | R2: cinematic Home, approved by the user on 4 November 2026           |
 
-**R2 implementation and checks are complete; user visual review is pending.** The local phase
-commit records this completion; use `git log` for its hash. The old vanilla Home journey files were intentionally deleted; do not
-restore them. Historically, Claude stopped after language-switch investigation and mobile spacing changes. His last
+**R2 is approved; R3–Destination implementation is complete and awaits user visual review.**
+Focused validation passes. The canonical R3 report supplies the latest complete-regression
+results and metrics; do not borrow Home results as Destination evidence. The old vanilla Home journey files were intentionally
+deleted and must not be restored. Historically, Claude stopped after Home language-switch
+investigation and mobile spacing changes. His last
 language-position fix remeasures Lenis with `lenis.resize()` before restoring the saved scroll
 position after the scene pin is rebuilt. Do not remove that fix without reproducing the issue.
 
@@ -48,7 +54,7 @@ The [R2 Home review](R2_HOME_REVIEW.md) is the canonical evidence record for ver
 measured performance, screenshots and remaining issues. Validation covers bilingual scenes,
 language changes, keyboard controls/cards, live reduced motion, mobile, lifecycle, retained
 stadium/form behavior, intro/session behavior, pitch/offline assets and WebGL-disabled fallback.
-Use that report for actual measurements and limits. User visual sign-off is still pending.
+Use that report for actual Home measurements and limits; user approval followed on 4 November 2026.
 The completed
 [HOME_SCROLL_REVIEW.md](HOME_SCROLL_REVIEW.md) is historical evidence for the earlier vanilla
 Home, not a missing task or proof of the React Home's behavior.
@@ -56,16 +62,18 @@ Home, not a missing task or proof of the React Home's behavior.
 ## Current architecture and reading order
 
 1. `README.md` and `docs/CINEMATIC_REBUILD_PLAN.md` for current setup, migration and storyboard.
-2. `src/pages/home/Home.tsx`, `Opening.tsx`: React Home, scene declarations, session opening.
-3. `src/motion/SceneStack.tsx`, `Reveal.tsx`, `choreography.ts`: shared transitions, text/counter
+2. `src/pages/destination/Destination.tsx`, `DistrictAtlas.tsx`, `src/data/destination.ts` and
+   `src/styles/components/destination*.css`: the current authorised page and its data/layout.
+3. `src/pages/home/Home.tsx`, `Opening.tsx`: approved Home baseline; preserve its behavior.
+4. `src/motion/SceneStack.tsx`, `Reveal.tsx`, `choreography.ts`: shared transitions, text/counter
    motion, pinning and cleanup. Arabic headings split by word, English headings by character.
-4. `src/app/SmoothScroll.tsx`, `Copy.tsx`, `OfficialPicture.tsx`, `i18n.tsx`: Lenis on GSAP's
+5. `src/app/SmoothScroll.tsx`, `Copy.tsx`, `OfficialPicture.tsx`, `i18n.tsx`: Lenis on GSAP's
    ticker, review-marker presentation, responsive imagery and reactive translations.
-5. `src/app/RouteView.tsx`, `App.tsx`, `src/router/routes.ts`: React HashRouter and the
-   `LegacyPage` adapter. Home uses a React `view`; other marketing pages remain imperative
-   `load` routes until R3. The 3D Experience stays on the same adapter and updates deep links
+6. `src/app/RouteView.tsx`, `App.tsx`, `src/router/routes.ts`: React HashRouter and the
+   `LegacyPage` adapter. Home and the Destination migration use React `view` routes; remaining
+   marketing pages stay imperative until their future R3 parts. The 3D Experience stays on the same adapter and updates deep links
    in place. Lenis is disabled on immersive routes and under reduced motion.
-6. `assets/official-images.json`, `docs/SOURCE_ASSETS.md`, `scripts/images.mjs`,
+7. `assets/official-images.json`, `docs/SOURCE_ASSETS.md`, `scripts/images.mjs`,
    `src/data/officialImages.ts`: 39 self-hosted official renders. `npm run images` creates
    responsive AVIF variants and WebP fallbacks, preserving composition without upscaling.
 
@@ -80,13 +88,36 @@ chapter holds; Tab focus reveals each district card at its matching position. Na
 and reduced-motion layouts show the full cards and copy in normal flow. Controls and spoken
 status use the bilingual `marketing.cinema.*` keys, which require native Arabic review.
 
-## Completed phase and next authorised work
+## Completed implementation: R3–Destination
 
-R2 implementation and checks are complete. Its local phase commit records this completion, and the
-user reviews the final screenshots before authorising another phase. Do not restart completed
-QA or redesign the page without a new issue or user request. The next planned phase is R3,
-migrating remaining marketing pages to React, **only after the user's go-ahead**. Keep all actual
-verification, measurements, limitations and screenshot paths in `docs/R2_HOME_REVIEW.md`.
+The new React Destination opens with the official `central-plaza` render, then introduces the
+shared area, shoreline and public-beach facts. `DistrictAtlas.tsx` projects the existing district
+polygons into an interactive SVG atlas beside official detail renders. The map remains
+explicitly illustrative. `#/destination?district=<id>` selects the six existing district IDs;
+invalid values use Central. Retain those links from the approved Home.
+
+The page continues through the three named attractions, layered Ribbon Park/coral imagery with
+four sustainability accordion themes, and closing Experience/landmark CTAs. Selection, image
+mapping and fact references live in `src/data/destination.ts`; text remains in both dictionaries.
+The new `marketing.destination.*` UI/prose and four revised beach/culture/attraction summaries
+require native Arabic review. Approved numbers are separate facts rather than draft copy.
+
+Focused validation passes for real hero/atlas/lower-story EN↔AR text and scroll continuity,
+keyboard CTA arrival focus, cold district queries in production and dev StrictMode, and lower
+CTA navigation to Landmarks. The [R3 Destination review](R3_DESTINATION_REVIEW.md) is canonical
+for the latest full-regression result, actual metrics, EN/AR screenshots and limitations.
+The local phase commit records completion; stop for the user's visual review. Do not migrate
+Landmarks, Invest, News or Legal automatically; these future page scopes require the next go-ahead.
+Keep the completed R2 review as Home's historical evidence.
+
+Two lifecycle fixes matter for future pages. `onBeforeLangChange()` captures layout/scroll before
+the document language, direction and font swap; its subscription is cleaned up. Destination
+restores scroll after two animation frames, disables browser scroll anchoring, and remounts
+hero split text with a language key. Capturing after the HTML/font change was too late.
+`RouteView` now resets scroll before mounting a different page, so legacy ScrollTriggers are
+not initialised at the outgoing page's lower scroll position. This fixed the keyboard path
+from the closing Destination CTA to Landmarks. In-place district queries retain viewport/focus.
+No 3D-engine or dependency change accompanies these fixes; preserve the approved Home.
 
 Use external Playwright rather than adding a project QA dependency. Previous tools were under
 `/tmp/jcd-claude-qa/` and `/tmp/jcd-phase5-qa/`; verify paths and current server processes before
@@ -99,7 +130,8 @@ Rules still in force:
 
 - Finish authorised work without requesting approval again for routine fixes.
 - Commit locally only when the phase is complete, report honestly, and stop for user review.
-  **Never push or publish.** Do not start R3, R4 or the Guided Tour automatically.
+  **Never push or publish.** R3–Destination awaits visual review; later R3 parts, R4 and the
+  Guided Tour require their own go-ahead.
 - Keep every visible string in the EN/AR dictionaries and preserve review/pitch marker behavior.
   All Arabic remains draft; maintain the README review list.
 - Keep the approved 5.7 million m² figure, omit stadium capacity, and retain the supplied Opera
@@ -109,7 +141,9 @@ Rules still in force:
   report, and inspect the renders before claiming their appearance is correct.
 - `npm run lint`, `npm run build` and `npm run build:pitch` must be clean at phase completion.
 
-R3 will migrate the remaining marketing pages to React. R4 covers wider hardening and legacy
+R3 is split by page, with Destination implementation complete, visual review pending, and
+the other marketing migrations awaiting the user's next go-ahead.
+R4 covers wider hardening and legacy
 cleanup. Guided Tour Phase 6 follows that rebuild; the older phase order is superseded.
 
 ---

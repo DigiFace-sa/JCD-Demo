@@ -1,17 +1,36 @@
 # Jeddah Central Interactive Demo: Handoff Prompt for Codex
 
-> **Current state, 4 November 2026: R2 Home complete; awaiting the user's visual review.**
+> **Current state, 4 November 2026: Home approved; R3–Destination implementation complete, awaiting user visual review.**
 > Claude completed R0 (`e057133`, React/Lenis foundation) and R1 (`764fa6d`, 39 official renders
 > and responsive AVIF/WebP pipeline), then stopped during React Home refinement. Codex completed
-> R2; the former vanilla Home journey files were intentionally deleted and must not be restored. Read
+> R2 in `3ffa2ee`; the user approved Home and authorised Destination next on 4 November 2026.
+> The former vanilla Home journey files were intentionally deleted and must not be restored. Read
 > [CLAUDE_HANDOFF.md](CLAUDE_HANDOFF.md) for takeover details and
 > [CINEMATIC_REBUILD_PLAN.md](CINEMATIC_REBUILD_PLAN.md) for the approved direction.
 >
 > The user rejected floating decorative sculptures and approved React, Lenis, GSAP and official
 > JCDC architectural concept renders, self-hosted for the offline pitch. This supersedes the
 > old no-client-imagery, native-only and no-new-dependency instructions. The separate original
-> 3D Experience is retained through `LegacyPage`; other marketing pages remain imperative until
-> R3. Masar remains a design/motion reference only; copy none of its assets or code.
+> 3D Experience is retained through `LegacyPage`. Home and the current Destination migration
+> use React; Landmarks, Invest, News and Legal remain legacy until their future R3 page scopes.
+> Masar remains a design/motion reference only; copy none of its assets or code.
+>
+> R3 now proceeds **page by page**. The new `Destination.tsx` and `DistrictAtlas.tsx` use an
+> official `central-plaza` hero, shared illustrative SVG district polygons and six official-render
+> district details, three attraction stories, layered sustainability with four accordion themes,
+> and closing CTAs. District selection uses `#/destination?district=<id>` for the six existing
+> IDs, preserving Home's links. Data is in `src/data/destination.ts`; new UI and safer revised
+> district/attraction drafts are in both dictionaries and the README Arabic review list.
+> Focused language, production/dev-StrictMode cold-query and keyboard CTA checks pass.
+> The canonical [R3 Destination review](R3_DESTINATION_REVIEW.md) supplies the latest full-run
+> evidence, metrics and limitations. The local phase commit records completion; user visual
+> review remains pending. Preserve the approved Home; no R2 result establishes R3 QA.
+>
+> Destination snapshots scroll with `onBeforeLangChange()` before document language/font/dir
+> changes, cleans up the subscription, restores after two animation frames and keys hero split
+> copy by language. `RouteView` resets scroll before mounting a different page so legacy
+> ScrollTriggers start at the correct coordinates. This fixes the lower CTA's keyboard path to
+> Landmarks; no 3D-engine or dependency change was required.
 >
 > Current Home has **14 scenes across 16 timeline units**, plus a session opening and normal-flow
 > News/footer reveals. Previous/Next controls provide keyboard chapter navigation and spoken
@@ -25,7 +44,7 @@
 >
 > The [R2 Home review](R2_HOME_REVIEW.md) is the canonical record for verified checks,
 > measurements, screenshot paths and remaining issues. Implementation and checks are complete;
-> visual sign-off is pending and the local phase commit records this completion.
+> the user approved that implementation on 4 November 2026, commit `3ffa2ee`.
 > [HOME_SCROLL_REVIEW.md](HOME_SCROLL_REVIEW.md) exists as a historical report of the
 > superseded native-scroll Home; its measurements are not R2 verification.
 >
@@ -33,8 +52,9 @@
 > in [PHASE_5_REVIEW.md](PHASE_5_REVIEW.md), [PHASE_2_REVIEW.md](PHASE_2_REVIEW.md) and
 > [SOURCE_ASSETS.md](SOURCE_ASSETS.md). All Arabic remains draft. Keep the approved area,
 > stadium-capacity restrictions, offline behavior, M1 1080p budget, EN/AR review captures and
-> local-commit/no-push rules. Stop for visual review; R3 begins only after the user's go-ahead.
-> R4 and Guided Tour remain pending. See the current report for actual measurements and limits.
+> local-commit/no-push rules. Stop for user visual review. Landmarks, Invest, News and Legal
+> migrations require the next user go-ahead; R4 and Guided Tour remain pending. Each phase's
+> report owns its actual measurements and limits.
 
 ## Historical Phase 4 handoff and original brief — superseded where noted above
 

@@ -38,6 +38,7 @@ type Listener = (lang: Lang) => void;
 
 let currentLang: Lang = 'en';
 const listeners = new Set<Listener>();
+const beforeListeners = new Set<Listener>();
 
 export function isLang(value: string | null): value is Lang {
   return LANGUAGES.some((lang) => lang === value);
@@ -140,6 +141,9 @@ function applyDocumentLang(lang: Lang): void {
 /** Switch language: updates <html lang/dir>, persists, re-translates the DOM, notifies listeners. */
 export function setLang(lang: Lang): void {
   if (lang === currentLang) return;
+  beforeListeners.forEach((listener) => {
+    listener(lang);
+  });
   currentLang = lang;
   applyDocumentLang(lang);
   writeStorage(STORAGE_KEY, lang);
@@ -153,6 +157,12 @@ export function setLang(lang: Lang): void {
 export function onLangChange(listener: Listener): () => void {
   listeners.add(listener);
   return () => listeners.delete(listener);
+}
+
+/** Capture layout state before changing the document's language, direction and font. */
+export function onBeforeLangChange(listener: Listener): () => void {
+  beforeListeners.add(listener);
+  return () => beforeListeners.delete(listener);
 }
 
 /** Resolve the initial language: `?lang=` → stored preference → English. */

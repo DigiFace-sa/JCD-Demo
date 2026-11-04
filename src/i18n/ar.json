@@ -125,7 +125,7 @@
     },
     "beach": {
       "name": "الشاطئ والترفيه ونمط الحياة",
-      "summary": "شاطئ عام بطول 2.1 كم تصطف على امتداده وجهات الترفيه والمطاعم والأنشطة العائلية على البحر الأحمر. [DRAFT — client to approve]"
+      "summary": "منطقة ساحلية تتمحور حول الحياة على الشاطئ والترفيه وقضاء الوقت على البحر الأحمر. [DRAFT — client to approve]"
     },
     "sportsPark": {
       "name": "المنتزه الرياضي",
@@ -133,7 +133,7 @@
     },
     "culture": {
       "name": "الثقافة والإبداع",
-      "summary": "تحتضن دار الأوبرا والمتحف: منطقة للفنون الأدائية والتراث والحياة الإبداعية. [DRAFT — client to approve]"
+      "summary": "مساحة للفنون الأدائية والتراث والحياة الإبداعية. [DRAFT — client to approve]"
     },
     "wellness": {
       "name": "العافية",
@@ -147,11 +147,11 @@
     },
     "publicBeach": {
       "name": "الشاطئ العام",
-      "summary": "شاطئ عام بطول 2.1 كم على البحر الأحمر، مفتوح للجميع. [DRAFT — client to approve]"
+      "summary": "مكان للاسترخاء على البحر الأحمر، حيث تلتقي الواجهة البحرية بالشاطئ والممشى. [DRAFT — client to approve]"
     },
     "cruiseTerminal": {
       "name": "محطة الرحلات البحرية",
-      "summary": "بوابة للزوار القادمين بحرًا، متصلة بالمرسى والمدينة. [DRAFT — client to approve]"
+      "summary": "وصول من البحر، يتيح منظوراً جديداً لواجهة جدة البحرية. [DRAFT — client to approve]"
     }
   },
   "stats": {
@@ -350,7 +350,18 @@
       "mapNote": "مخطط توضيحي للمناطق، وليس مخططاً مساحياً معتمداً. [DRAFT — client to approve]",
       "attractionsEye": "على الواجهة البحرية",
       "attractionsTitle": "مساحات للاكتشاف. [DRAFT — client to approve]",
-      "sustainTitle": "الاستدامة،\nجزء من الحياة اليومية. [DRAFT — client to approve]"
+      "sustainTitle": "الاستدامة،\nجزء من الحياة اليومية. [DRAFT — client to approve]",
+      "atlasLabel": "أطلس المناطق",
+      "districtNavigation": "اختر منطقة",
+      "selectionStatus": "تم اختيار {name}",
+      "shoreEye": "الحياة على البحر الأحمر",
+      "shoreLead": "من الواجهة البحرية إلى المدينة، اكتشف أماكن للثقافة والترفيه وقضاء الوقت في الهواء الطلق. [DRAFT — client to approve]",
+      "sustainLead": "يشكّل المشهد الطبيعي والتظليل وحماية البيئة البحرية جزءاً من رؤية الوجهة. [DRAFT — client to approve]",
+      "continueEye": "واصل الاكتشاف",
+      "continueTitle": "منظور مختلف.\nوتواصل أعمق. [DRAFT — client to approve]",
+      "continueBody": "ادخل إلى تجربتنا التفاعلية التوضيحية للوجهة، أو اكتشف العمارة التي تشكّل معالمها. [DRAFT — client to approve]",
+      "pillarNavigation": "محاور الاستدامة",
+      "skipToAtlas": "استكشف المناطق"
     },
     "landmarks": {
       "title": "أماكن\nتجمعنا. [DRAFT — client to approve]",

@@ -4,14 +4,16 @@ Bilingual (EN/AR) pitch demo for Jeddah Central Development Company: a marketing
 cinematic 3D Experience of the masterplan. React 19, Vite, TypeScript (strict), Three.js, GSAP,
 Lenis and plain CSS.
 
-> **Cinematic rebuild R2 Home is complete and awaiting the user's visual review.** Claude completed R0
-> (`e057133`, React/Lenis foundation) and R1 (`764fa6d`, 39 official renders and responsive image
-> pipeline), then stopped during Home refinement. The approved direction uses official JCDC
-> architectural concept renders and removes floating decorative sculptures. The latest
-> [handoff](docs/CLAUDE_HANDOFF.md) and [rebuild plan](docs/CINEMATIC_REBUILD_PLAN.md) supersede
-> earlier Home instructions. The [R2 Home review](docs/R2_HOME_REVIEW.md) is the evidence record
-> for verified checks, measurements, screenshot paths and remaining issues. The local phase
-> commit records this completion; visual sign-off remains with the user. R3 waits for their go-ahead.
+> **R3–Destination implementation is complete and awaiting user visual review.** The user approved R2 Home on 4 November 2026
+> (`3ffa2ee`) and authorised a futuristic Destination redesign next. R3 is delivered page by
+> page; the remaining Landmarks, Invest, News and Legal migrations await their later scope.
+> Preserve the approved Home. The canonical
+> [R3 Destination review](docs/R3_DESTINATION_REVIEW.md) records actual checks, measurements,
+> screenshots and remaining issues; its latest main-run results govern technical closeout.
+> The local phase commit records this completion. Later R3 pages require the user's go-ahead. Home's completed
+> evidence remains in [R2_HOME_REVIEW.md](docs/R2_HOME_REVIEW.md). The latest
+> [handoff](docs/CLAUDE_HANDOFF.md) and [rebuild plan](docs/CINEMATIC_REBUILD_PLAN.md) describe the
+> current React/Lenis direction with official JCDC architecture and no floating decorative objects.
 
 ## Setup
 
@@ -91,14 +93,21 @@ The app is React 19, migrating page by page under the cinematic rebuild
 - `src/app/RouteView.tsx`: resolves the hash against `src/router/routes.ts` (same validation and
   titles as before) and crossfades between pages.
   - A newer navigation cancels a pending one.
+  - A page change resets scroll before the new page mounts, so legacy ScrollTriggers initialise
+    at the arriving page's coordinates; in-place query updates preserve the viewport.
   - A route with `view` is a React page.
   - A route with `load` is a not-yet-migrated imperative page, hosted unchanged by `LegacyPage`
     (mount, `update` for in-place deep links, unmount).
   - The 3D Experience runs through this adapter.
+  - Home is approved React; Destination is the current React migration. Other marketing pages
+    retain the legacy adapter until their own R3 parts.
 - `src/app/SmoothScroll.tsx`: Lenis smooth scroll on GSAP's ticker, synced with ScrollTrigger.
   It's off under reduced motion and on the immersive 3D route.
-- `src/app/i18n.tsx`: `useI18n()` re-renders on language change; `t()` and the JSON copy are
-  unchanged.
+- `src/app/i18n.tsx`: `useI18n()` re-renders on language change; typed `t()` and declarative
+  DOM bindings remain available to legacy pages.
+  - `onBeforeLangChange()` captures scroll/layout before the document's language, direction and
+    font change. Destination restores scroll after two animation frames and unsubscribes on
+    cleanup; its translated hero copy remounts with the language key.
 
 ### Motion system (`src/motion/`)
 
@@ -135,11 +144,13 @@ src/
   i18n/                en.json, ar.json, i18n.ts (t(), setLang(), DOM binding)
   components/          retained imperative UI components used by the legacy pages
   pages/home/          React cinematic Home and session opening (R2)
-  pages/marketing/     legacy Destination, landmark pages, Invest, News and legal pages (R3)
+  pages/destination/   React Destination and shared-polygon district atlas (R3–Destination)
+  pages/marketing/     legacy landmark pages, Invest, News and legal pages (future R3 parts)
   pages/experience/    immersive map and stadium UI
   data/                content structure: ids, i18n keys, links, map layout (no copy lives here)
     landmarks.ts       positions, footprints, camera shots, fact keys
     districts.ts       outlines, label positions, highlight colours
+    destination.ts     official district/attraction image IDs and approved fact selection
     attractions.ts     positions (only the three named in the brief)
   styles/              tokens.css, base.css, layout.css, components/*.css
   assets/patterns/     original roshan-inspired lattice tile
@@ -291,10 +302,11 @@ of the proposed architecture, not photographs of completed buildings. The origin
 
 - `#/` — React cinematic Home: 14 scenes covering the destination, landmark exteriors and
   interiors, district links, sustainability, a 3D Experience CTA, recognition and investment;
-  News follows in normal flow. R2 is complete and awaiting user visual review.
-- `#/destination` — keyboard-accessible district explorer, attractions and sustainability.
-  `#/destination?district=marina` preselects a district. The SVG projects the same illustrative
-  polygons as the 3D scene; its raised plates and abstract blocks are not surveyed geometry.
+  News follows in normal flow. The user approved R2 on 4 November 2026, commit `3ffa2ee`.
+- `#/destination` — current React redesign: official `central-plaza` hero, district atlas and
+  official detail photos, three attraction stories, layered sustainability and closing CTAs.
+  `#/destination?district=marina` preselects a district. The atlas uses the same illustrative
+  polygons as the 3D scene; it is not a surveyed map. Implementation is complete; visual review is pending.
 - `#/landmarks` and `#/landmarks/{stadium,opera-house,oceanarium,museum}` — shared templates.
   The stadium CTA opens `#/experience/stadium/inside` directly.
 - `#/invest` — sector selection, destination rationale, recognition and the demonstration form.
@@ -303,9 +315,10 @@ of the proposed architecture, not photographs of completed buildings. The origin
 
 Edit marketing text in `marketing.*` in both dictionaries. `src/data/marketing.ts` defines image
 IDs, sector/type IDs and dated news metadata; `src/data/officialImages.ts` is the generated size
-table. `src/pages/home/` holds the new React Home; `src/pages/marketing/` retains the other
-imperative templates until R3. Their responsive styling is in `marketing.css`; Home uses
-`home.css` and the shared `motion.css`.
+table. `src/pages/home/` holds the approved React Home; `src/pages/destination/` holds the current
+Destination migration. `src/pages/marketing/` retains the remaining imperative templates until
+their respective R3 parts. Legacy styling stays in `marketing.css`; Home uses `home.css` and
+shared `motion.css`, while Destination uses `destination.css` and `destination-atlas.css`.
 `data-copy` bindings render review markers in a separate small line while keeping them in the
 same translation string; the pitch build strips them as usual. Language changes preserve map
 selection and form values. New reveals and counters respect reduced motion.
@@ -344,7 +357,7 @@ Splits run after web fonts load and revert to plain text once revealed. A langua
 any not-yet-revealed split from the new copy. Reduced motion skips all of it. Tune timings in the
 `REVEAL` constants.
 
-### Cinematic Home (R2 complete; awaiting visual review)
+### Cinematic Home (R2 approved, `3ffa2ee`)
 
 `src/pages/home/Home.tsx` declares 14 scenes across 16 timeline units: the district chapter spans
 three units while the other scenes use one each. `Opening.tsx` provides the first-visit brand
@@ -373,6 +386,35 @@ Home WebGL preview are superseded. Their completed historical report is
 describe that earlier implementation. [R2_HOME_REVIEW.md](docs/R2_HOME_REVIEW.md) is the canonical
 review record for this completed phase. Preserve the historical reports without
 treating them as R2 QA evidence.
+
+### Cinematic Destination (R3–Destination complete; awaiting visual review)
+
+`src/pages/destination/Destination.tsx` builds a normal-flow React story using GSAP, Lenis and
+the shared reveal system. Its official `central-plaza` opening differs from Home's aerial.
+Approved area, shoreline and public-beach facts come from the shared destination statistics.
+
+`DistrictAtlas.tsx` projects the existing district polygons into an interactive SVG atlas.
+The six districts have keyboard controls and official detail renders selected in
+`src/data/destination.ts`. The `district` query stays inside the hash, for example
+`#/destination?district=marina`; supported values are `central`, `marina`, `beach`, `sports-park`,
+`culture` and `wellness`. Unknown values use Central. Keep the illustrative-map qualification.
+
+The waterfront story presents Entertainment Pier, Public Beach and Cruise Terminal with their
+official concept images. Sustainability pairs Ribbon Park and coral-exhibit imagery with four
+accordion themes. Closing CTAs continue to the retained 3D Experience and the landmark pages.
+New prose and revised beach/culture/attraction summaries remain drafts; the approved beach
+length is displayed as a separate fact rather than embedded in draft copy.
+
+Focused validation passes for actual EN/AR hero/atlas/lower-story translation and scroll
+preservation, keyboard CTA focus, cold district links in production and development StrictMode,
+and the lower landmark CTA. Language snapshots now run before the document font/dir swap;
+scroll restoration waits for layout. The router also resets scroll before mounting a different
+page, fixing legacy reveal initialisation when leaving the lower Destination CTA.
+
+[R3 Destination review](docs/R3_DESTINATION_REVIEW.md) is canonical for the latest main-run
+verification, performance, screenshots and limits. No R2 result establishes Destination QA.
+The local phase commit records completion; stop for user visual review. Landmarks, Invest,
+News and Legal migrations require the next go-ahead. The approved Home remains unchanged.
 
 ## Brand tokens
 
@@ -417,14 +459,17 @@ sure of:
 
 Additional marketing copy requiring Arabic review:
 
-| Key                                                          | Review needed                                                                               |
-| ------------------------------------------------------------ | ------------------------------------------------------------------------------------------- |
-| `marketing.home.*`, `marketing.destination.*`                | Headlines, tone and natural line breaks; all creative copy remains draft.                   |
-| `marketing.landmarks.*`                                      | Official landmark/district names, theatre terminology and industrial heritage wording.      |
-| `marketing.invest.*`, `marketing.form.*`                     | Sector and investor classifications; validation, consent, privacy and demo success wording. |
-| `marketing.news.*`                                           | All paraphrased story titles, body text, categories and Gregorian date presentation.        |
-| `marketing.sustainability.*`                                 | Coral restoration, public realm, cooling and mobility terminology.                          |
-| `marketing.common.imageAlt.*`                                | Accurate Arabic descriptions of concept renders, including aquarium interiors.              |
-| `marketing.legal.*`                                          | All placeholder policy language must be replaced with client-approved Arabic legal text.    |
-| `marketing.scroll.navigation`, `marketing.scroll.chapters.*` | Native review of cinematic chapter labels and keyboard navigation wording.                  |
-| `marketing.cinema.*`                                         | Previous/Next scene controls, navigation label, spoken scene status and position wording.   |
+| Key                                                                     | Review needed                                                                                                   |
+| ----------------------------------------------------------------------- | --------------------------------------------------------------------------------------------------------------- |
+| `marketing.home.*`, `marketing.destination.*`                           | Headlines, tone and natural line breaks; all creative copy remains draft.                                       |
+| `marketing.landmarks.*`                                                 | Official landmark/district names, theatre terminology and industrial heritage wording.                          |
+| `marketing.invest.*`, `marketing.form.*`                                | Sector and investor classifications; validation, consent, privacy and demo success wording.                     |
+| `marketing.news.*`                                                      | All paraphrased story titles, body text, categories and Gregorian date presentation.                            |
+| `marketing.sustainability.*`                                            | Coral restoration, public realm, cooling and mobility terminology.                                              |
+| `marketing.common.imageAlt.*`                                           | Accurate Arabic descriptions of concept renders, including aquarium interiors.                                  |
+| `marketing.legal.*`                                                     | All placeholder policy language must be replaced with client-approved Arabic legal text.                        |
+| `marketing.scroll.navigation`, `marketing.scroll.chapters.*`            | Native review of cinematic chapter labels and keyboard navigation wording.                                      |
+| `marketing.cinema.*`                                                    | Previous/Next scene controls, navigation label, spoken scene status and position wording.                       |
+| `marketing.destination.*` (R3 additions)                                | Atlas/navigation labels, selected-district status and index, waterfront/sustainability prose, and closing CTAs. |
+| `districts.beach.summary`, `districts.culture.summary`                  | Revised descriptions without a number in draft prose or unverified landmark-location claims.                    |
+| `attractions.publicBeach.summary`, `attractions.cruiseTerminal.summary` | Revised tone without current-access or marina-connection promises.                                              |

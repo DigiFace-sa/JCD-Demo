@@ -1,12 +1,17 @@
 # Cinematic rebuild: plan
 
-Status: **R0, R1 and R2 complete. R2 awaits the user's visual review; the local phase commit records this completion.**
+Status: **R0/R1 complete; R2 Home approved. R3–Destination implementation complete, awaiting user visual review.**
 
 Claude completed R0 in `e057133` and R1 in `764fa6d`, then stopped while refining the React Home.
-Codex completed the implementation refinements and validation. The canonical
+Codex completed R2 in `3ffa2ee`; the user approved Home on 4 November 2026 and authorised the
+Destination redesign next. The canonical
 [R2_HOME_REVIEW.md](R2_HOME_REVIEW.md) supplies verified checks, performance measurements,
-screenshots and remaining issues. Visual sign-off belongs to the user; R3 starts only after
-their go-ahead. Performance numbers belong in that evidence report rather than this plan.
+screenshots and remaining Home issues. Preserve that approved implementation. R3 is split by
+page; Destination implementation is complete, with canonical evidence in
+[R3_DESTINATION_REVIEW.md](R3_DESTINATION_REVIEW.md). Focused validation passes; use that report
+for the latest main-run results, measurements and limits. The local phase commit records
+completion. Other R3 pages await the user's next go-ahead. Do not infer
+Destination checks or performance from the R2 report.
 `HOME_SCROLL_REVIEW.md` is a completed historical report for the superseded vanilla Home with
 sculptures; it is not the current Home report.
 
@@ -131,18 +136,43 @@ the later News/footer and other routes on their normal header treatment.
     provenance in `docs/SOURCE_ASSETS.md`.
   - Responsive AVIF sizes (1280 / 1920 / 2560 where the source supports them), native-width
     variants and a WebP fallback; `npm run images` regenerates the library without upscaling.
-- **R2 Home — complete; awaiting user visual review.** Implementation and validation cover
+- **R2 Home — approved on 4 November 2026, `3ffa2ee`.** Implementation and validation cover
   EN/AR scenes, keyboard navigation, language changes, live reduced motion, mobile content,
   routing/lifecycle, pitch/offline behavior and fallback. `R2_HOME_REVIEW.md` is the canonical
-  evidence record; the local phase commit records this completion. R3 requires the user's go-ahead.
-- **R3 Other pages — pending.** Destination (with the district map), the four landmark pages, Invest
-  (with the form), News, and Legal, on the same system.
+  evidence record. Keep Home as the approved regression baseline.
+- **R3 — delivered page by page.**
+  - **Destination — implementation complete; awaiting user visual review.** React cinematic story, interactive SVG atlas
+    sharing the illustrative district polygons, six official-render district details, three
+    attraction stories, layered sustainability with four accordion themes, and closing CTAs.
+    `R3_DESTINATION_REVIEW.md` supplies actual main-run checks and measurements. Focused
+    language, cold-query and keyboard navigation checks pass. The local phase commit records
+    completion; stop for the user's visual review before starting another page scope.
+  - **Landmarks index/four detail pages, Invest, News and Legal — future R3 parts.** Their
+    existing legacy routes remain in place until their respective migration scope.
 - **R4 Hardening — pending.**
   - Performance (fps traces of every transition), accessibility, keyboard and focus inside
     pinned scenes, reduced motion, RTL, mobile and the pitch build.
   - Delete the legacy vanilla marketing code.
 
 The Guided Tour (Phase 6) follows after R4.
+
+## Current R3–Destination structure
+
+`src/pages/destination/Destination.tsx` uses the official `central-plaza` render as a different
+opening from Home. `DistrictAtlas.tsx` supplies the shared-polygon SVG atlas, while
+`src/data/destination.ts` keeps image selection and approved fact references separate from UI.
+District selection uses `#/destination?district=<id>` for the six existing IDs; unsupported
+values fall back to Central. Official images are architectural concept renders, and the
+atlas remains explicitly illustrative.
+
+The sequence continues through Entertainment Pier, Public Beach and Cruise Terminal, then
+Ribbon Park/coral imagery with sustainability's four existing themes. Closing CTAs connect to
+the 3D Experience and landmark pages. New `marketing.destination.*` controls and prose, plus
+the revised beach/culture and public-beach/cruise summaries, require native Arabic review.
+Language state is captured through `onBeforeLangChange()` before the document font/direction
+switch, then restored after layout. A pre-mount router scroll reset keeps legacy ScrollTriggers
+from initialising at the departing page's scroll. The canonical report owns verification of
+the final implementation; these fixes add no 3D-engine or dependency change.
 
 Keep the existing phase rules: local commit only when a phase is complete, never push or
 publish, save relevant 1920×1080 UI stills in both English and Arabic under the phase review
