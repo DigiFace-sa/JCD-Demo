@@ -161,14 +161,26 @@
 }
 .invest-page .invest-reason {
   display: grid;
-  align-content: start;
-  gap: var(--space-s);
+  grid-row: span 4;
+  grid-template-rows: subgrid;
+  row-gap: var(--space-s);
+  align-items: start;
   min-inline-size: 0;
 }
+.invest-page .invest-reason__metric {
+  /* Keep size containment inside the row, so the article can share its parent's tracks. */
+  container-type: inline-size;
+}
 .invest-page .invest-reason__figure {
-  font-size: var(--step-4);
+  /* Keep the longest translated figure on one line at the same scale as its neighbours. */
+  font-size: min(var(--step-4), 13cqi);
   font-weight: var(--weight-light);
   line-height: var(--leading-tight);
+  white-space: nowrap;
+}
+.invest-page .invest-reason__body {
+  display: grid;
+  gap: var(--space-s);
 }
 .invest-page .invest-reason h3 {
   margin-block-start: var(--space-l);

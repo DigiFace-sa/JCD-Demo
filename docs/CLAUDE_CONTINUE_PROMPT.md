@@ -37,6 +37,12 @@ file is the requested detailed continuation prompt.
 
 ## Snapshot and evidence
 
+Latest refinement, 4 November 2026: the Invest rationale/stat blocks now use equal columns and
+four shared subgrid rows. Metric text stays on one line at a uniform size. Size containment
+belongs on `.invest-reason__metric`, not the subgrid article. The completed EN/AR responsive
+checks and eight current stills are recorded in `docs/R3_STAT_ALIGNMENT_REVIEW.md`. The main
+R3 completion commit is `cd173a6`; the latest local commit adds this scoped alignment fix.
+
 Snapshot date: **4 November 2026**. R3 covers Destination's simple projector map plus the
 remaining marketing pages. Source, production builds and technical checks are complete. User visual approval of these
 new pages has not been inferred; only Home is already approved.

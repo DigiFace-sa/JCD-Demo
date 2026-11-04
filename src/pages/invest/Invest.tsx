@@ -161,18 +161,22 @@ export default function Invest(): ReactNode {
                   : DESTINATION_STATS.find((item) => item.valueKey === WHY_STATS[reason]);
               return (
                 <Reveal as="article" className="invest-reason" key={reason}>
-                  <p className="invest-reason__figure" data-motion="counter" data-count="">
-                    {t(stat?.valueKey ?? 'marketing.home.publicRealmValue')}
-                  </p>
+                  <div className="invest-reason__metric">
+                    <p className="invest-reason__figure" data-motion="counter" data-count="">
+                      {t(stat?.valueKey ?? 'marketing.home.publicRealmValue')}
+                    </p>
+                  </div>
                   <p className="invest-eyebrow" data-motion="fade">
                     {t(stat?.labelKey ?? 'marketing.home.publicRealm')}
                   </p>
                   <h3 data-motion="rise">{t(`marketing.invest.${reason}Title`)}</h3>
-                  <Copy
-                    k={`marketing.invest.${reason}Body`}
-                    className="invest-body"
-                    motion="lines"
-                  />
+                  <div className="invest-reason__body">
+                    <Copy
+                      k={`marketing.invest.${reason}Body`}
+                      className="invest-body"
+                      motion="lines"
+                    />
+                  </div>
                 </Reveal>
               );
             })}
