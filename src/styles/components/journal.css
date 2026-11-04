@@ -1,0 +1,124 @@
+.journal-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: var(--space-2xl) var(--space-xl);
+  margin-block-start: var(--space-xl);
+}
+.journal-card {
+  display: grid;
+  gap: var(--space-m);
+  align-content: start;
+  min-inline-size: 0;
+}
+.journal-card:first-child:last-child {
+  grid-column: 1 / -1;
+}
+.journal-card__image {
+  display: block;
+  aspect-ratio: 1.55;
+  overflow: hidden;
+}
+.journal-card__image img {
+  inline-size: 100%;
+  block-size: 100%;
+  object-fit: cover;
+  transition: scale 1s var(--ease-out);
+}
+.journal-card__image:hover img {
+  scale: 1.04;
+}
+.journal-card__meta {
+  display: flex;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: var(--space-xs);
+  color: var(--editorial-muted);
+  font-size: var(--step--1);
+}
+.journal-card h3 {
+  font-size: var(--step-3);
+  font-weight: var(--weight-light);
+  line-height: var(--leading-snug);
+  max-inline-size: 25ch;
+}
+.journal-card .editorial-action {
+  justify-self: start;
+}
+.journal-article {
+  display: grid;
+  justify-items: start;
+  gap: var(--space-xl);
+  padding-block: var(--space-2xl);
+}
+.journal-article__text {
+  font-size: var(--step-2);
+  font-weight: var(--weight-light);
+  line-height: var(--leading-body);
+  max-inline-size: 45rem;
+  margin-inline: auto;
+  padding-block: var(--space-l);
+}
+.policy-page {
+  padding-block: 12rem var(--space-3xl);
+  min-block-size: 90svh;
+}
+.policy-page__head {
+  display: grid;
+  gap: var(--space-l);
+  margin-block-end: var(--space-2xl);
+}
+.policy-page__layout {
+  display: grid;
+  grid-template-columns: 1fr 2fr;
+  gap: var(--space-2xl);
+  border-block-start: 1px solid var(--editorial-line);
+  padding-block-start: var(--space-xl);
+}
+.policy-page nav {
+  display: grid;
+  align-content: start;
+  gap: var(--space-s);
+}
+.policy-page nav a {
+  padding-block: var(--space-s);
+  color: var(--editorial-muted);
+  border-block-end: 1px solid var(--editorial-line);
+}
+.policy-page nav a[aria-current='page'] {
+  color: var(--jcdc-secondary);
+  border-color: var(--jcdc-secondary);
+}
+.policy-page__text {
+  display: grid;
+  gap: var(--space-xl);
+  justify-items: start;
+}
+@media (max-width: 48rem) {
+  .journal-grid,
+  .policy-page__layout {
+    grid-template-columns: 1fr;
+  }
+  .journal-card__meta {
+    font-size: 0.8rem;
+  }
+  .policy-page {
+    padding-block-start: 9rem;
+  }
+}
+/* Focus reveals the whole card even while its shared scroll outro is fading. */
+.journal-card:focus-within {
+  opacity: 1 !important;
+  transform: none !important;
+}
+.policy-page__text,
+.policy-page__layout > nav {
+  min-inline-size: 0;
+}
+@media (prefers-reduced-motion: reduce) {
+  .journal-card__image img {
+    transition: none;
+  }
+  .journal-card__image:hover img {
+    scale: 1;
+  }
+}

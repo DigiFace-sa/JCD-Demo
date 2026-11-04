@@ -168,6 +168,10 @@ export function RouteView({ main, onShown }: RouteViewProps): ReactNode {
         duration: motionDuration(DURATION.slow),
         ease: EASE_OUT,
         clearProps: 'transform',
+        onComplete: () => {
+          // Scene bounds become final only after the outlet's entrance transform clears.
+          ScrollTrigger.refresh();
+        },
       },
     );
     firstPaint.current = false;

@@ -208,6 +208,7 @@ export function SceneStack({
           end: 'bottom top',
           onUpdate: updateStage,
           onToggle: updateStage,
+          onRefresh: updateStage,
         });
       };
       const restoreScroll = (): void => {

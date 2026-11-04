@@ -31,8 +31,6 @@ export interface ViewProps {
   readonly context: PageContext;
 }
 
-const marketing: RouteDef['load'] = () => import('../pages/marketing/MarketingPage');
-
 const experienceRoute = (pattern: string): RouteDef => ({
   pattern,
   pageId: 'experience',
@@ -65,7 +63,7 @@ export const routes: readonly RouteDef[] = [
     pageId: 'landmarks',
     layout: 'site',
     title: () => 'pages.landmarks.title',
-    load: marketing,
+    view: () => import('../pages/landmarks/Landmarks'),
   },
   {
     pattern: '/landmarks/:id',
@@ -73,21 +71,21 @@ export const routes: readonly RouteDef[] = [
     layout: 'site',
     title: (params) => (isLandmarkId(params.id) ? LANDMARKS[params.id].nameKey : null),
     validate: (params) => isLandmarkId(params.id),
-    load: marketing,
+    view: () => import('../pages/landmarks/Landmark'),
   },
   {
     pattern: '/invest',
     pageId: 'invest',
     layout: 'site',
     title: () => 'pages.invest.title',
-    load: marketing,
+    view: () => import('../pages/invest/Invest'),
   },
   {
     pattern: '/news',
     pageId: 'news',
     layout: 'site',
     title: () => 'marketing.common.news',
-    load: marketing,
+    view: () => import('../pages/news/News'),
   },
   {
     pattern: '/news/:story',
@@ -95,7 +93,7 @@ export const routes: readonly RouteDef[] = [
     layout: 'site',
     title: (params) => (isNewsId(params.story) ? NEWS[params.story].titleKey : null),
     validate: (params) => isNewsId(params.story),
-    load: marketing,
+    view: () => import('../pages/news/NewsStory'),
   },
   {
     pattern: '/legal/:doc',
@@ -103,7 +101,7 @@ export const routes: readonly RouteDef[] = [
     layout: 'site',
     title: (params) => (isLegalDoc(params.doc) ? `legal.${params.doc}` : null),
     validate: (params) => isLegalDoc(params.doc),
-    load: marketing,
+    view: () => import('../pages/legal/Legal'),
   },
   // Motion lab: proves the cinematic primitives. Hidden from navigation and pitch builds.
   ...(import.meta.env.VITE_ALLOW_DEBUG === 'false'

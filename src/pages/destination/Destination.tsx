@@ -21,7 +21,7 @@ import { onBeforeLangChange } from '../../i18n/i18n';
 import { Reveal } from '../../motion/Reveal';
 import { addIntro, cascadeStep, taggedElements } from '../../motion/choreography';
 import type { ViewProps } from '../../router/routes';
-import { DistrictAtlas } from './DistrictAtlas';
+import { ProjectorMap } from './ProjectorMap';
 
 gsap.registerPlugin(useGSAP, ScrollTrigger);
 
@@ -32,7 +32,6 @@ const MOTION = {
   scrub: 0.6,
   detail: { y: 18, duration: 0.65, stagger: 0.06 },
   section: { y: 32, duration: 1 },
-  traceDuration: 1.6,
   headerInset: 135,
   scrollDuration: 1.2,
 } as const;
@@ -183,6 +182,7 @@ export default function Destination({ context }: ViewProps): ReactNode {
   const selected = isDistrictId(requested ?? undefined) ? (requested as DistrictId) : 'central';
   const deepLink = useRef(requested !== null);
   const savedScroll = useRef<number | null>(null);
+  const [projectionReplay, setProjectionReplay] = useState(0);
 
   useEffect(() => {
     lenisRef.current = lenis;
@@ -331,28 +331,13 @@ export default function Destination({ context }: ViewProps): ReactNode {
             },
           },
         );
-        for (const edge of root.current?.querySelectorAll<SVGGeometryElement>(
-          '.destination-atlas__edge',
-        ) ?? []) {
-          const length = edge.getTotalLength();
-          gsap.fromTo(
-            edge,
-            { strokeDasharray: length, strokeDashoffset: length },
-            {
-              strokeDashoffset: 0,
-              duration: MOTION.traceDuration,
-              ease: 'power2.inOut',
-              clearProps: 'strokeDasharray,strokeDashoffset',
-              scrollTrigger: { trigger: '.destination-atlas', start: 'top 80%', once: true },
-            },
-          );
-        }
       }
     },
     { scope: root, dependencies: [lang, reduced], revertOnUpdate: true },
   );
 
   const choose = (id: DistrictId): void => {
+    setProjectionReplay((value) => value + 1);
     if (id === selected) return;
     const query = new URLSearchParams(context.query);
     query.set('district', id);
@@ -431,7 +416,7 @@ export default function Destination({ context }: ViewProps): ReactNode {
             {t('marketing.destination.mapLead')}
           </p>
         </Reveal>
-        <div className="destination-explorer__stage">
+        <div className="destination-explorer__stage destination-explorer__stage--projector">
           <div className="destination-explorer__cartography">
             <div className="destination-explorer__label">
               <span className="destination__eyebrow">{t('marketing.destination.atlasLabel')}</span>
@@ -439,7 +424,11 @@ export default function Destination({ context }: ViewProps): ReactNode {
                 {t('stats.districts.value')} / {t('stats.districts.label')}
               </span>
             </div>
-            <DistrictAtlas selected={selected} onSelect={choose} />
+            <ProjectorMap selected={selected} onSelect={choose} replay={projectionReplay}>
+              <div id={panelId}>
+                <DistrictDetail selected={selected} />
+              </div>
+            </ProjectorMap>
             <div
               className="destination-districts"
               role="group"
@@ -464,9 +453,6 @@ export default function Destination({ context }: ViewProps): ReactNode {
                 </button>
               ))}
             </div>
-          </div>
-          <div id={panelId} className="destination-explorer__detail">
-            <DistrictDetail selected={selected} />
           </div>
         </div>
         <p className="visually-hidden" role="status" aria-live="polite" aria-atomic="true">

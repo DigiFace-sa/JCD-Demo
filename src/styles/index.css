@@ -8,8 +8,12 @@
 @import './components/marketing.css';
 @import './components/motion.css';
 @import './components/home.css';
-@import './components/destination-atlas.css';
 @import './components/destination.css';
+@import './components/destination-projector.css';
+@import './components/editorial.css';
+@import './components/landmarks.css';
+@import './components/invest.css';
+@import './components/journal.css';
 @import './components/experience.css';
 @import './components/map.css';
 @import './components/ar-draft-badge.css';

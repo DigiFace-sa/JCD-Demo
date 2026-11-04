@@ -1,30 +1,46 @@
 # Jeddah Central Interactive Demo: Handoff Prompt for Codex
 
-> **Current state, 4 November 2026: Home approved; R3–Destination implementation complete, awaiting user visual review.**
+> **Current state, 4 November 2026: Home approved; R3 technically complete and awaiting user visual review.**
 > Claude completed R0 (`e057133`, React/Lenis foundation) and R1 (`764fa6d`, 39 official renders
 > and responsive AVIF/WebP pipeline), then stopped during React Home refinement. Codex completed
 > R2 in `3ffa2ee`; the user approved Home and authorised Destination next on 4 November 2026.
-> The former vanilla Home journey files were intentionally deleted and must not be restored. Read
+> Destination's cinematic baseline is committed as `69486cd`. The latest user clarification is
+> a simple district click → lifted map piece → projected image/content card. This supersedes
+> both the original flat diagram and the abandoned orbitable-city prototype.
+> The user subsequently authorised the remaining pages: “when you're done do the other pages
+> as well.” All 13 remaining Landmarks, Invest, News and Legal routes are implemented in React
+> and their runtime checks passed. No marketing migrations remain to redo. R3 has not received
+> the user's visual approval. The former vanilla Home
+> journey files were intentionally deleted and must not be restored. Read
 > [CLAUDE_HANDOFF.md](CLAUDE_HANDOFF.md) for takeover details and
 > [CINEMATIC_REBUILD_PLAN.md](CINEMATIC_REBUILD_PLAN.md) for the approved direction.
+> [CLAUDE_CONTINUE_PROMPT.md](CLAUDE_CONTINUE_PROMPT.md) is the full continuation prompt.
 >
 > The user rejected floating decorative sculptures and approved React, Lenis, GSAP and official
 > JCDC architectural concept renders, self-hosted for the offline pitch. This supersedes the
 > old no-client-imagery, native-only and no-new-dependency instructions. The separate original
-> 3D Experience is retained through `LegacyPage`. Home and the current Destination migration
-> use React; Landmarks, Invest, News and Legal remain legacy until their future R3 page scopes.
+> 3D Experience is retained through `LegacyPage`. All marketing pages now use React `view`
+> routes. Unreferenced imperative marketing modules and the flat DistrictAtlas source/style
+> were removed; the legacy adapter remains for Experience/404 and `marketing.css` for needed
+> shared/404 styling.
 > Masar remains a design/motion reference only; copy none of its assets or code.
 >
-> R3 now proceeds **page by page**. The new `Destination.tsx` and `DistrictAtlas.tsx` use an
-> official `central-plaza` hero, shared illustrative SVG district polygons and six official-render
-> district details, three attraction stories, layered sustainability with four accordion themes,
-> and closing CTAs. District selection uses `#/destination?district=<id>` for the six existing
-> IDs, preserving Home's links. Data is in `src/data/destination.ts`; new UI and safer revised
-> district/attraction drafts are in both dictionaries and the README Arabic review list.
-> Focused language, production/dev-StrictMode cold-query and keyboard CTA checks pass.
-> The canonical [R3 Destination review](R3_DESTINATION_REVIEW.md) supplies the latest full-run
-> evidence, metrics and limitations. The local phase commit records completion; user visual
-> review remains pending. Preserve the approved Home; no R2 result establishes R3 QA.
+> `ProjectorMap.tsx`, `destination-projector.css` and `src/data/projectorMap.ts` implement the
+> short original SVG/GSAP lift/card/beam interaction. Matched official map images are local in
+> `public/images/jcdc-map/`; `assets/destination-map.json` records official image and geographic
+> boundary provenance. No website JavaScript is copied. Keep the concept-map qualification.
+> The former flat diagram source/style files were removed, and uncommitted heavy 3D prototypes were moved outside
+> the repo to `/tmp/jcd-projector-qa/abandoned-3d/`; do not resume them or add orbit controls.
+>
+> The `central-plaza` hero, facts, three attraction stories, layered sustainability/four themes,
+> closing CTAs, district query routes and EN/AR behavior are retained. Updated `mapLabel`,
+> `mapLead`, `mapNote` and `atlasLabel` copy requires native Arabic review. Exact current stop:
+> implementation and technical verification are complete; the user's visual review is next.
+> `npm run lint`, `npm run build` and `npm run build:pitch` passed. The canonical
+> [R3 projector review](R3_PROJECTOR_REVIEW.md) and [R3 pages review](R3_PAGES_REVIEW.md) own
+> current checks, measured production timings, screenshots and limits. The completed local R3 commit
+> follows baseline `69486cd`; read `git log -3` for its hash. Never push.
+> [R3_DESTINATION_REVIEW.md](R3_DESTINATION_REVIEW.md) describes the earlier baseline only.
 >
 > Destination snapshots scroll with `onBeforeLangChange()` before document language/font/dir
 > changes, cleans up the subscription, restores after two animation frames and keys hero split
@@ -52,10 +68,11 @@
 > in [PHASE_5_REVIEW.md](PHASE_5_REVIEW.md), [PHASE_2_REVIEW.md](PHASE_2_REVIEW.md) and
 > [SOURCE_ASSETS.md](SOURCE_ASSETS.md). All Arabic remains draft. Keep the approved area,
 > stadium-capacity restrictions, offline behavior, M1 1080p budget, EN/AR review captures and
-> local-commit/no-push rules. Stop for user visual review. Landmarks, Invest, News and Legal
-> migrations require the next user go-ahead; R4 and Guided Tour remain pending. Each phase's
-> report owns its actual measurements and limits.
-
+> local-commit/no-push rules. The simple projector and all 13 other marketing routes are technically
+> complete. Next is user visual review, then R4 hardening (Safari/Edge, real TV, touch, native
+> Arabic and wider accessibility/performance), then Guided Tour. Preserve approved Home and the
+> original 3D Experience; do not redo the completed marketing migrations. Each phase's report owns
+> its actual measurements and limits.
 ## Historical Phase 4 handoff and original brief — superseded where noted above
 
 You are taking over a project that is partly built. Phases 1, 3 and 4 are finished, and the
