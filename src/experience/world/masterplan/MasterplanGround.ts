@@ -14,13 +14,9 @@ import districtGlsl from '../../shaders/district.glsl?raw';
 import type { Disposable } from '../../types';
 import { distanceToEdges, pointInPolygon } from '../../utils/polygon';
 import type { Atmosphere, MaterialExtension } from '../Atmosphere';
-import {
-  beachWeight,
-  groundHeightAt,
-  isInsideMasterplan,
-  landDistance,
-  parkWeight,
-} from './MasterplanShape';
+import { beachWeight, groundHeightAt, isInsideMasterplan, landDistance } from './MasterplanShape';
+import type { OpenSpace } from './OpenSpace';
+import { GroundCover } from './GroundCover';
 
 /** Ground palette (dusk-friendly, slightly desaturated). */
 const PALETTE = {
@@ -28,10 +24,7 @@ const PALETTE = {
   wetSand: COAST.wetSandColor,
   sand: COAST.sandColor,
   promenade: '#ddd2c2',
-  plaza: '#d3c6b2',
   urban: '#c7b8a2',
-  grass: '#5f7d45',
-  grassLight: '#7a9653',
   context: COAST.groundColor,
 } as const;
 
@@ -49,12 +42,6 @@ const smooth = (edge0: number, edge1: number, x: number): number => {
   const t = Math.min(1, Math.max(0, (x - edge0) / (edge1 - edge0)));
   return t * t * (3 - 2 * t);
 };
-
-/** Cheap deterministic value noise for grass variation. */
-function noise2(x: number, z: number): number {
-  const s = Math.sin(x * 0.031 + z * 0.017) * Math.sin(x * 0.013 - z * 0.029);
-  return 0.5 + 0.5 * s;
-}
 
 /** Vertices closer than this fraction of a cell to the waterline are moved onto it. */
 const SNAP_RANGE = 0.5;
@@ -88,10 +75,11 @@ function columnPositions(): number[] {
 
 /**
  * Detailed ground over the masterplan: beach slopes, quay edges, promenades, plazas and
- * gardens as vertex colours, plus per-vertex district data for the highlight shader.
+ * gardens from a filtered ground-cover field, plus per-vertex district highlights.
  */
 export class MasterplanGround implements Disposable {
   readonly object: Mesh<BufferGeometry, MeshStandardMaterial>;
+  private readonly cover: GroundCover;
   /** Overall strength of district glow; faded out by Masterplan when the camera is close. */
   readonly intensity = { value: 1.3 };
   readonly uniforms: DistrictUniforms = {
@@ -101,8 +89,9 @@ export class MasterplanGround implements Disposable {
     lineB: { value: new Vector3() },
   };
 
-  constructor(atmosphere: Atmosphere) {
-    const { ground, plazas, promenade } = MASTERPLAN;
+  constructor(atmosphere: Atmosphere, openSpace: OpenSpace) {
+    const { ground, promenade } = MASTERPLAN;
+    this.cover = new GroundCover(openSpace);
     const columns = columnPositions();
     const rows: number[] = [];
     for (let z: number = ground.minZ; z <= ground.maxZ; z += ground.cell) rows.push(z);
@@ -137,19 +126,8 @@ export class MasterplanGround implements Disposable {
         } else if (!isInsideMasterplan(x, z)) {
           color.copy(palette.context);
         } else {
-          color.copy(
-            beach > 0.5 ? palette.urban : distance < promenade ? palette.promenade : palette.urban,
-          );
-          const green = parkWeight(x, z);
-          if (green > 0) {
-            color.lerp(palette.grass, green);
-            color.lerp(palette.grassLight, green * noise2(x, z) * 0.6);
-          }
-          for (const plaza of plazas) {
-            const paved =
-              1 - smooth(plaza.radius - 4, plaza.radius, Math.hypot(x - plaza.x, z - plaza.z));
-            if (paved > 0) color.lerp(palette.plaza, paved);
-          }
+          const onPromenade = beach <= 0.5 && distance < promenade;
+          color.copy(onPromenade ? palette.promenade : palette.urban);
         }
         colors[i3] = color.r;
         colors[i3 + 1] = color.g;
@@ -206,8 +184,9 @@ export class MasterplanGround implements Disposable {
       return new Vector3(c.r, c.g, c.b);
     });
     return {
-      key: 'district',
+      key: 'district-ground-cover',
       uniforms: {
+        ...this.cover.uniforms,
         uDistrictColors: { value: colors },
         uFillA: this.uniforms.fillA,
         uFillB: this.uniforms.fillB,
@@ -224,12 +203,14 @@ export class MasterplanGround implements Disposable {
       vertexMain: `vDistrictA = aDistrictA;
         vDistrictB = aDistrictB;
         vDistrictEdge = aDistrictEdge;`,
-      fragmentPars: districtGlsl,
+      fragmentPars: `${districtGlsl}\n${this.cover.fragmentPars}`,
+      afterColor: this.cover.afterColor,
       afterEmissive: 'totalEmissiveRadiance += districtGlow();',
     };
   }
 
   dispose(): void {
+    this.cover.dispose();
     this.object.geometry.dispose();
     this.object.material.dispose();
   }

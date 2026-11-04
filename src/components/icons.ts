@@ -8,6 +8,7 @@ const svg = (body: string, extraClass = ''): string =>
 export const icons = {
   arrow: svg('<path d="M4 12h15M13 6l6 6-6 6"/>', 'icon--directional'),
   menu: svg('<path d="M4 8h16M4 16h16"/>'),
+  moon: svg('<path d="M19.5 14.8A8 8 0 0 1 9.2 4.5a8 8 0 1 0 10.3 10.3Z"/>'),
   close: svg('<path d="M6 6l12 12M18 6 6 18"/>'),
   globe: svg(
     '<circle cx="12" cy="12" r="8.5"/><path d="M3.5 12h17M12 3.5c2.5 2.6 3.6 5.4 3.6 8.5s-1.1 5.9-3.6 8.5c-2.5-2.6-3.6-5.4-3.6-8.5S9.5 6.1 12 3.5Z"/>',

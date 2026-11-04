@@ -6,7 +6,7 @@ import {
   type WebGLRenderer,
 } from 'three';
 import { MASTERPLAN } from '../config/masterplan';
-import { COAST } from '../config/scene';
+import { COAST, type LightingMode } from '../config/scene';
 import type { Disposable } from '../types';
 import { Atmosphere } from './Atmosphere';
 import { ContextCity } from './ContextCity';
@@ -38,8 +38,9 @@ export class World implements Disposable {
   constructor(
     private readonly scene: Scene,
     renderer: WebGLRenderer,
+    lighting: LightingMode,
   ) {
-    this.environment = new Environment(scene, renderer, this.atmosphere);
+    this.environment = new Environment(scene, renderer, this.atmosphere, lighting);
     const half = COAST.fieldSize / 2;
     const { field } = MASTERPLAN;
     this.shore = {
@@ -68,6 +69,13 @@ export class World implements Disposable {
     this.environment.bake(renderer);
   }
 
+  /** Resolves when every asynchronously loaded model (landmarks, vegetation) is in the scene. */
+  ready(): Promise<void> {
+    return Promise.all([this.landmarks.ready(), this.masterplan.landscape.loaded]).then(
+      () => undefined,
+    );
+  }
+
   update(delta: number, elapsed: number, camera: PerspectiveCamera): void {
     this.stadiumFill.intensity = MathUtils.lerp(
       this.stadiumFill.intensity,
@@ -75,6 +83,7 @@ export class World implements Disposable {
       1 - Math.exp(-STADIUM_FILL.damping * delta),
     );
     this.environment.update(delta, elapsed);
+    this.masterplan.landscape.updateView(camera);
     this.sea.follow(camera);
     this.sea.update(delta, elapsed);
     this.landmarks.update(delta, elapsed, camera);

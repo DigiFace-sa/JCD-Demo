@@ -1,143 +1,129 @@
-import {
-  BoxGeometry,
-  BufferAttribute,
-  BufferGeometry,
-  CylinderGeometry,
-  Mesh,
-  MeshStandardMaterial,
-  SphereGeometry,
-} from 'three';
-import { mergeGeometries } from 'three/addons/utils/BufferGeometryUtils.js';
+import { Color, MeshStandardMaterial } from 'three';
 import { disposeObject } from '../../utils/dispose';
-import { facadeExtension } from '../Facade';
+import type { Atmosphere } from '../Atmosphere';
+import { boxMappedMaterial, textureSet } from './boxMapped';
 import { createPickProxy, landmarkRoot, type LandmarkFactory } from './LandmarkModel';
+import { loadShell } from './shell';
 
-const COLORS = {
-  brick: '#9a5f45',
-  roof: '#5d5853',
-  northLight: '#ffcf8f',
-  steel: '#8d9196',
-  brass: '#b58a55',
-} as const;
-const HALL = { length: 150, depth: 60, height: 18 } as const;
-const SAWTOOTH = { count: 10, rise: 7 } as const;
-const CHIMNEY = { radiusTop: 3.2, radiusBottom: 4.6, height: 78, x: 62, z: -42 } as const;
-const TANK = { radius: 17, height: 24, x: -70, z: -50 } as const;
+/** Exported by scripts/blender/museum.py (illustrative placeholder after the official render). */
+const MODEL_URL = 'models/museum.glb';
+const ROTATION = 0.08;
+/** Picking reaches the taller stack's crown. */
+const PICK_HEIGHT = 78;
+const GLOW = '#ffb36b';
+/** Night uplight on the metal shells: warm, strongest at the base, fading over this height (m). */
+const SHELL_UPLIGHT = { color: '#ffc58a', night: 0.12, falloff: 7 } as const;
 
-/** One sawtooth roof bay: a triangular prism spanning the hall depth (glazed face to the north). */
-function sawtoothBay(width: number, rise: number, depth: number): BufferGeometry {
-  const h = depth / 2;
-  // Triangle in the x/y plane, extruded along z: steep glazed face at x=0, slope down to x=width.
-  const v = [
-    [0, 0, -h],
-    [0, rise, -h],
-    [width, 0, -h],
-    [0, 0, h],
-    [width, 0, h],
-    [0, rise, h],
-    [0, 0, -h],
-    [0, 0, h],
-    [0, rise, h],
-    [0, 0, -h],
-    [0, rise, h],
-    [0, rise, -h],
-    [0, rise, -h],
-    [0, rise, h],
-    [width, 0, h],
-    [0, rise, -h],
-    [width, 0, h],
-    [width, 0, -h],
-  ].flat();
-  const geometry = new BufferGeometry();
-  geometry.setAttribute('position', new BufferAttribute(new Float32Array(v), 3));
-  geometry.computeVertexNormals();
-  return geometry;
+async function loadMuseumShell(atmosphere: Atmosphere) {
+  const [plaster, paving] = await Promise.all([textureSet('plaster'), textureSet('paving')]);
+  const { night } = atmosphere;
+  const material = (
+    params: ConstructorParameters<typeof MeshStandardMaterial>[0],
+  ): MeshStandardMaterial =>
+    atmosphere.patch(new MeshStandardMaterial({ vertexColors: true, ...params }));
+
+  // Faceted, mirror-bright cladding: its flat-shaded facets catch the sky and sun like foil.
+  // After dark, ground uplights graze the shells (a mirror alone would just reflect night sky).
+  const uplight = { value: 0 };
+  night.uniform(uplight, 0, SHELL_UPLIGHT.night);
+  const shell = atmosphere.patch(
+    new MeshStandardMaterial({
+      color: '#e4e2dd',
+      metalness: 0.8,
+      roughness: 0.42,
+      vertexColors: true,
+    }),
+    {
+      key: 'museum-shell-uplight',
+      uniforms: {
+        uShellUplight: uplight,
+        uShellUplightColor: { value: new Color(SHELL_UPLIGHT.color) },
+      },
+      fragmentPars: 'uniform float uShellUplight;\nuniform vec3 uShellUplightColor;',
+      afterEmissive: `totalEmissiveRadiance += uShellUplightColor * uShellUplight
+        * exp(-max(vAtmoWorldPos.y - 2.0, 0.0) / ${SHELL_UPLIGHT.falloff.toFixed(1)});`,
+    },
+  );
+
+  const glass = night.material(
+    material({
+      color: '#1d2a30',
+      roughness: 0.08,
+      metalness: 0.7,
+      emissive: GLOW,
+    }),
+    0.2,
+    1.3,
+  );
+  // The stacks' perforated crowns glow like lanterns at night.
+  const crown = night.material(
+    material({ color: '#efeee8', roughness: 0.55, emissive: '#ffe2bd' }),
+    0,
+    0.7,
+  );
+
+  return loadShell(MODEL_URL, 'museum', {
+    shell,
+    steel: material({ color: '#2b2d30', roughness: 0.45, metalness: 0.8 }),
+    glass,
+    base: boxMappedMaterial(atmosphere, {
+      maps: plaster,
+      tile: 5,
+      tint: '#7f6453',
+      roughness: 1,
+      normalStrength: 0.5,
+      detail: 0.6,
+      night: { walls: 0.5, falloff: 6, spacing: 6 },
+    }),
+    stack: boxMappedMaterial(atmosphere, {
+      maps: plaster,
+      tile: 5,
+      tint: '#cdb79a',
+      roughness: 1,
+      normalStrength: 0.5,
+      detail: 0.5,
+      night: { walls: 0.6, falloff: 22 },
+    }),
+    crown,
+    deck: boxMappedMaterial(atmosphere, {
+      maps: paving,
+      tile: 4,
+      tint: '#b9ab98',
+      roughness: 1,
+      normalStrength: 0.5,
+      night: { tops: 0.15 },
+    }),
+    bronze: material({ color: '#a77549', roughness: 0.38, metalness: 0.85 }),
+  });
 }
 
 /**
- * Museum (stylised industrial heritage): brick hall with a sawtooth north-light roof, a tall
- * chimney stack with a brass crown and a steel tank. [TBC: details and design]
+ * Museum after the official concept render (illustrative): faceted metal petal shells over the
+ * converted plant, glazed slots between them, two crowned stacks and an elevated walkway.
  */
 export const createMuseum: LandmarkFactory = ({ atmosphere }) => {
   const id = 'museum';
   const root = landmarkRoot(id);
-  const material = (
-    params: ConstructorParameters<typeof MeshStandardMaterial>[0],
-  ): MeshStandardMaterial => atmosphere.patch(new MeshStandardMaterial(params));
+  const pickProxy = createPickProxy(id, PICK_HEIGHT);
+  root.add(pickProxy);
+  root.rotation.y = ROTATION;
+  let disposed = false;
 
-  const hall = new Mesh(
-    new BoxGeometry(HALL.length, HALL.height, HALL.depth).translate(0, HALL.height / 2, 0),
-    atmosphere.patch(
-      new MeshStandardMaterial({ color: COLORS.brick, roughness: 0.88 }),
-      facadeExtension(),
-    ),
-  );
-
-  const bayWidth = HALL.length / SAWTOOTH.count;
-  const bays = mergeGeometries(
-    Array.from({ length: SAWTOOTH.count }, (_, i) =>
-      sawtoothBay(bayWidth, SAWTOOTH.rise, HALL.depth).translate(
-        -HALL.length / 2 + i * bayWidth,
-        HALL.height,
-        0,
-      ),
-    ),
-  );
-  const roof = new Mesh(
-    bays,
-    material({
-      color: COLORS.roof,
-      roughness: 0.55,
-      metalness: 0.4,
-      emissive: COLORS.northLight,
-      emissiveIntensity: 0.12,
-    }),
-  );
-
-  const chimney = new Mesh(
-    new CylinderGeometry(CHIMNEY.radiusTop, CHIMNEY.radiusBottom, CHIMNEY.height, 28).translate(
-      0,
-      CHIMNEY.height / 2,
-      0,
-    ),
-    material({ color: COLORS.brick, roughness: 0.9 }),
-  );
-  chimney.position.set(CHIMNEY.x, 0, CHIMNEY.z);
-  const crown = new Mesh(
-    new CylinderGeometry(CHIMNEY.radiusTop + 0.8, CHIMNEY.radiusTop + 0.6, 3, 28),
-    material({ color: COLORS.brass, roughness: 0.35, metalness: 0.9 }),
-  );
-  crown.position.set(CHIMNEY.x, CHIMNEY.height - 1.5, CHIMNEY.z);
-
-  const steel = material({ color: COLORS.steel, roughness: 0.45, metalness: 0.75 });
-  const tank = new Mesh(
-    new CylinderGeometry(TANK.radius, TANK.radius, TANK.height, 48).translate(
-      0,
-      TANK.height / 2,
-      0,
-    ),
-    steel,
-  );
-  tank.position.set(TANK.x, 0, TANK.z);
-  const dome = new Mesh(
-    new SphereGeometry(TANK.radius, 48, 12, 0, Math.PI * 2, 0, Math.PI / 2).scale(1, 0.3, 1),
-    steel,
-  );
-  dome.position.set(TANK.x, TANK.height, TANK.z);
-
-  root.rotation.y = 0.08;
-  const pickProxy = createPickProxy(id, CHIMNEY.height);
-  root.add(hall, roof, chimney, crown, tank, dome, pickProxy);
-  root.traverse((child) => {
-    child.castShadow = true;
-    child.receiveShadow = true;
+  const loaded = loadMuseumShell(atmosphere).then((shell) => {
+    if (disposed) {
+      disposeObject(shell);
+      return;
+    }
+    root.add(shell);
   });
 
   return {
     id,
     object: root,
     pickProxy,
+    loaded,
     dispose: () => {
+      disposed = true;
       disposeObject(root);
     },
   };

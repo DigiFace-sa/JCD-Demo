@@ -46,7 +46,7 @@ export class ContextCity implements Disposable {
     const geometry = new BoxGeometry(1, 1, 1).translate(0, 0.5, 0);
     const material = atmosphere.patch(
       new MeshStandardMaterial({ color: CONTEXT_CITY.color, roughness: 0.82, metalness: 0 }),
-      facadeExtension(),
+      facadeExtension(atmosphere.night),
     );
     this.object = new InstancedMesh(geometry, material, plots.length);
     this.object.name = 'context-city';

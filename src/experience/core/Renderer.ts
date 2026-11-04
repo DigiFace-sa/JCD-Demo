@@ -1,5 +1,4 @@
 import { ACESFilmicToneMapping, PCFShadowMap, SRGBColorSpace, WebGLRenderer } from 'three';
-import { RENDER } from '../config/scene';
 
 /** True if the browser can create a WebGL2 context (required by the Experience). */
 export function isWebGL2Available(): boolean {
@@ -23,7 +22,6 @@ export function createRenderer(canvas: HTMLCanvasElement): WebGLRenderer {
   });
   renderer.outputColorSpace = SRGBColorSpace;
   renderer.toneMapping = ACESFilmicToneMapping;
-  renderer.toneMappingExposure = RENDER.exposure;
   renderer.shadowMap.enabled = true;
   renderer.shadowMap.type = PCFShadowMap;
   return renderer;

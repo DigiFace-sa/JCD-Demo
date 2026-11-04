@@ -90,11 +90,17 @@
     "experience": {
       "title": "3D Experience",
       "heading": "3D Experience",
+      "illustrative": "Illustrative 3D based on official concept renders",
       "lead": "Explore the masterplan of Jeddah Central in three dimensions.",
       "loading": "Preparing the experience",
       "fallbackHeading": "3D isn't available on this device",
       "fallbackBody": "This browser or device can't display the 3D experience. Please try the latest Chrome, Edge or Safari on a desktop or laptop.",
-      "canvasLabel": "Interactive 3D view of Jeddah Central. Drag to look around, scroll to zoom, or use the arrow keys and plus and minus."
+      "canvasLabel": "Interactive 3D view of Jeddah Central. Drag to look around, scroll to zoom, or use the arrow keys and plus and minus.",
+      "lighting": "Lighting",
+      "day": "Day",
+      "night": "Night",
+      "switchToNight": "Switch to the night view",
+      "switchToDay": "Switch to the day view"
     },
     "legal": {
       "lead": "[TBC: legal copy to be supplied by JCDC]"

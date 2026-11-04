@@ -23,6 +23,9 @@ export class Sea implements Updatable, Disposable {
     sunLight: Vector3,
   ) {
     this.waveNormals = createWaveNormalMap();
+    // A bright day sky floods the water body with blue; scale it so the Red Sea stays deep teal.
+    const bodyGain = { value: 1 };
+    atmosphere.night.uniform(bodyGain, SEA.dayBodyGain, 1);
     const material = new ShaderMaterial({
       name: 'SeaMaterial',
       vertexShader,
@@ -45,6 +48,7 @@ export class Sea implements Updatable, Disposable {
         uSunSheen: { value: SEA.sunSheen },
         uNormalStrength: { value: SEA.normalStrength },
         uMaxRadiance: { value: SEA.maxRadiance },
+        uBodyGain: bodyGain,
         uReflection: { value: null },
         uReflectionMatrix: { value: new Matrix4() },
         uReflectionStrength: { value: 0 },

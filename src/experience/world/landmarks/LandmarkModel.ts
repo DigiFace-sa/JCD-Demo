@@ -23,6 +23,8 @@ export interface LandmarkModel extends Disposable, Partial<Updatable> {
   /** Pin close detail during an entry flight so the one-time shadow fit uses the real interior. */
   setDetailPinned?: (pinned: boolean) => void;
   readonly id: LandmarkId;
+  /** Resolves once asynchronously loaded parts (models, textures) are in the scene. */
+  readonly loaded?: Promise<void>;
   /** Positioned at the landmark's site (data/landmarks.ts). */
   readonly object: Object3D;
   /** Invisible, simple shape used for pointer picking (cheaper than the real geometry). */

@@ -2,7 +2,7 @@ import { MathUtils, PerspectiveCamera, Scene, type WebGLRenderer } from 'three';
 import type { QualityTier } from '../config';
 import { STADIUM_HOTSPOT_IDS } from '../data/stadium';
 import { prefersReducedMotion } from '../utils/motion';
-import { RENDER } from './config/scene';
+import { RENDER, type LightingMode } from './config/scene';
 import { MAP_LIMITS, VIEWS, type ViewName } from './config/views';
 import { Composer } from './core/Composer';
 import { Debug } from './core/Debug';
@@ -16,6 +16,7 @@ import { World } from './world/World';
 
 export { isWebGL2Available } from './core/Renderer';
 export type { Focus, FocusKind } from './types';
+export type { LightingMode } from './config/scene';
 
 /** `full` = interactive Experience page; `hero` = non-interactive backdrop (Home hero). */
 export type ExperienceVariant = 'full' | 'hero';
@@ -24,6 +25,8 @@ export interface ExperienceOptions {
   readonly variant: ExperienceVariant;
   readonly debug: boolean;
   readonly quality: QualityTier | null;
+  /** Initial lighting (Day by default). */
+  readonly lighting?: LightingMode;
 }
 
 /** Longest simulated step (s): a stalled frame never teleports the camera or the waves. */
@@ -79,7 +82,7 @@ export class Experience implements Disposable {
     const gpu = gpuName(this.renderer);
     this.quality = new Quality(options.quality, gpu);
 
-    this.world = new World(this.scene, this.renderer);
+    this.world = new World(this.scene, this.renderer, options.lighting ?? 'day');
     this.composer = new Composer(this.renderer, this.scene, this.camera);
 
     this.controls = new Controls(this.camera, this.canvas, MAP_LIMITS);
@@ -115,11 +118,26 @@ export class Experience implements Disposable {
     document.addEventListener('visibilitychange', this.onVisibilityChange);
   }
 
+  get lighting(): LightingMode {
+    return this.world.environment.mode;
+  }
+
+  /** Switch Day/Night lighting (rebakes sky, reflections and shadows; ~one frame). */
+  setLighting(mode: LightingMode): void {
+    this.world.environment.setMode(mode);
+    if (!this.running) this.renderFrame(0);
+  }
+
   /** Compile every shader up front so the first visible frames don't hitch. */
   async ready(): Promise<void> {
     // Disposal can happen from a route change while any warm-up promise is pending.
     const isDisposed = (): boolean => this.disposed;
     this.controls.update(0);
+    // Landmark models and their textures must be in the scene before shaders compile and the
+    // one-time sun shadow is fitted; otherwise they would pop in unshadowed.
+    await this.world.ready();
+    if (isDisposed()) return;
+    this.world.environment.refreshShadows();
     await this.renderer.compileAsync(this.scene, this.camera);
     if (isDisposed()) return;
     this.renderFrame(0);

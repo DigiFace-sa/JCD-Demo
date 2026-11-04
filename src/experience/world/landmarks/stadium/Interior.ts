@@ -9,7 +9,6 @@ import {
   Mesh,
   MeshStandardMaterial,
   PlaneGeometry,
-  Quaternion,
   Vector3,
 } from 'three';
 import { STADIUM, STADIUM_POSITION } from '../../../config/stadium';
@@ -25,7 +24,6 @@ const PALETTE = {
   glow: '#ffba72',
 } as const;
 const AISLE_SEGMENTS = 16;
-const RIB_COUNT = 48;
 const VIP_BAYS = 72;
 /** One rounded, two-triangle back per illustrative seat; colour and edge detail stay in the shader. */
 const SEATS_PER_ROW = 464;
@@ -89,7 +87,11 @@ export function createInterior(atmosphere: Atmosphere): Group {
   ): MeshStandardMaterial => atmosphere.patch(new MeshStandardMaterial(params));
   const stone = material({ color: PALETTE.concrete, roughness: 0.84, side: DoubleSide });
   const steel = material({ color: PALETTE.steel, roughness: 0.4, metalness: 0.65 });
-  const glow = material({ color: '#000000', emissive: PALETTE.glow, emissiveIntensity: 1.2 });
+  const glow = atmosphere.night.material(
+    material({ color: '#000000', emissive: PALETTE.glow, emissiveIntensity: 1.2 }),
+    1.2,
+    3.2,
+  );
   const seats = atmosphere.patch(
     new MeshStandardMaterial({
       color: PALETTE.seat,
@@ -288,29 +290,7 @@ export function createInterior(atmosphere: Atmosphere): Group {
   }
   root.add(goals);
 
-  // Three members per truss, drawn as a single instanced mesh.
-  const ribs = new InstancedMesh(new BoxGeometry(1, 1, 1), steel, RIB_COUNT * 3);
-  const rotation = new Quaternion();
-  const beam = (index: number, a: Vector3, b: Vector3, width: number): void => {
-    const direction = b.clone().sub(a);
-    rotation.setFromUnitVectors(Y_AXIS, direction.clone().normalize());
-    transform.compose(
-      a.clone().add(b).multiplyScalar(0.5),
-      rotation,
-      new Vector3(width, direction.length(), width),
-    );
-    ribs.setMatrixAt(index, transform);
-  };
-  for (let i = 0; i < RIB_COUNT; i++) {
-    const angle = (i / RIB_COUNT) * Math.PI * 2;
-    const inner = point(0.6, 38.5, angle);
-    const outer = point(1.04, 45.5, angle);
-    const low = point(0.9, 40.8, angle);
-    beam(i * 3, inner, outer, 0.45);
-    beam(i * 3 + 1, inner, low, 0.24);
-    beam(i * 3 + 2, low, outer, 0.24);
-  }
-  root.add(ribs);
+  // Roof structure is part of the exterior model (stadium.glb), aligned with its louvre roof.
 
   const { tunnel } = STADIUM;
   const length = tunnel.outerX - tunnel.innerX;

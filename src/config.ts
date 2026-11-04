@@ -23,6 +23,8 @@ export interface RuntimeFlags {
   readonly tour: boolean;
   /** `?lang=en|ar` — force the initial language (validated by i18n). */
   readonly lang: string | null;
+  /** `?mode=day|night` — initial 3D lighting. */
+  readonly mode: 'day' | 'night' | null;
 }
 
 function readParams(): URLSearchParams {
@@ -49,5 +51,6 @@ export function readRuntimeFlags(): RuntimeFlags {
     quality: isQualityTier(quality) ? quality : null,
     tour: tour !== null && tour !== '0' && tour !== 'false',
     lang: params.get('lang'),
+    mode: params.get('mode') === 'night' ? 'night' : params.get('mode') === 'day' ? 'day' : null,
   };
 }

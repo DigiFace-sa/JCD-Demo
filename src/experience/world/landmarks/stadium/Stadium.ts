@@ -1,9 +1,7 @@
-import { Color, DoubleSide, Mesh, MeshStandardMaterial, PlaneGeometry, Vector3 } from 'three';
-import { LANDMARKS } from '../../../../data/landmarks';
+import { DoubleSide, Mesh, MeshStandardMaterial, PlaneGeometry, Vector3 } from 'three';
 import type { Disposable } from '../../../types';
 import { disposeObject } from '../../../utils/dispose';
-import { ellipticBand, ellipticDisc, ellipticRing } from '../geometry';
-import { latticeExtension } from '../lattice';
+import { ellipticDisc, ellipticRing } from '../geometry';
 import {
   createPickProxy,
   landmarkRoot,
@@ -12,87 +10,74 @@ import {
 } from '../LandmarkModel';
 import { createPitchTexture, PITCH } from './pitchTexture';
 import { createInterior, entranceFacade } from './Interior';
-import { STADIUM } from '../../../config/stadium';
+import { loadStadiumShell } from './StadiumShell';
+import { STADIUM, STADIUM_POSITION } from '../../../config/stadium';
 
 /** Outer ellipse half-axes (m): long axis north–south, like the pitch. */
-const { rx: RX, rz: RZ, roof: ROOF } = STADIUM;
+const { rx: RX, rz: RZ } = STADIUM;
+/** Rows and aisles painted on the distant bowl stand-in. */
+const DISTANT_ROWS = 80;
+const DISTANT_AISLES = 32;
+/** Picking reaches the wind-tower crowns on the roof. */
+const PICK_HEIGHT = 62;
 /** Beyond this distance the detailed terraces resolve to less than a few pixels per row. */
-const INTERIOR_DETAIL_DISTANCE = 1100;
+const INTERIOR_DETAIL_DISTANCE = 450;
 const COLORS = {
-  plinth: '#d9cdb9',
-  brass: '#b58a55',
-  interior: '#2a1d14',
-  glow: '#ffae62',
-  roof: '#f4efe7',
+  backWall: '#8f8474',
   apron: '#2f5a2a',
-  floodlight: '#fff1d2',
 } as const;
 
 /**
- * Original roshan exterior surrounding an explorable stepped bowl and east-side entry tunnel.
+ * Stadium after the official concept renders (illustrative): Blender-built exterior around the
+ * explorable stepped bowl and its elevated east-side entry tunnel.
  */
 export const createStadium: LandmarkFactory = ({ atmosphere }): LandmarkModel => {
   const id = 'stadium';
   const root = landmarkRoot(id);
   let detailPinned = false;
-  const { position } = LANDMARKS[id];
+  let disposed = false;
   const disposables: Disposable[] = [];
   const material = (
     params: ConstructorParameters<typeof MeshStandardMaterial>[0],
   ): MeshStandardMaterial => atmosphere.patch(new MeshStandardMaterial(params));
 
-  const plinth = new Mesh(
-    ellipticBand(RX * 1.06, RZ * 1.06, 0, 4, 1.02, 1),
-    material({ color: COLORS.plinth, roughness: 0.8 }),
-  );
-  const plinthTop = new Mesh(
-    // The podium is an annulus: a full disc here concealed the lower pitch completely.
-    ellipticRing(RX, RZ, 0.5, 1.06, 4, 4),
-    material({ color: COLORS.plinth, roughness: 0.8, side: DoubleSide }),
-  );
-
-  const facadeMaterial = atmosphere.patch(
-    new MeshStandardMaterial({
-      color: COLORS.brass,
-      roughness: 0.38,
-      metalness: 0.85,
-      side: DoubleSide,
-    }),
-    latticeExtension({
-      center: new Vector3(position.x, 0, position.z),
-      cell: 4.2,
-      width: 0.16,
-      glow: new Color(COLORS.glow).multiplyScalar(0.9),
-      interior: new Color(COLORS.interior),
-    }),
-  );
-  // Slight outward lean toward the top, like a woven basket.
+  // The bowl's back wall, now enclosed by the hall: plain stone behind the upper tier.
+  const facadeMaterial = material({ color: COLORS.backWall, roughness: 0.9, side: DoubleSide });
   const facade = new Mesh(entranceFacade(), facadeMaterial);
 
-  const roofMaterial = material({ color: COLORS.roof, roughness: 0.45, side: DoubleSide });
-  const roof = new Mesh(
-    ellipticRing(RX, RZ, ROOF.inner, ROOF.outer, ROOF.yInner, ROOF.yOuter),
-    roofMaterial,
-  );
-  const fascia = new Mesh(
-    ellipticBand(RX * ROOF.outer, RZ * ROOF.outer, ROOF.yOuter - 3, ROOF.yOuter),
-    roofMaterial,
-  );
-  const floodlights = new Mesh(
-    ellipticBand(RX * ROOF.inner, RZ * ROOF.inner, ROOF.yInner - 1.2, ROOF.yInner),
-    material({
-      color: '#000000',
-      emissive: COLORS.floodlight,
-      emissiveIntensity: 3,
-      side: DoubleSide,
-    }),
-  );
-
   const interior = createInterior(atmosphere);
+  // Seen through the roof opening from afar: one sloped ring, striped like stepped rows of
+  // seats with darker aisles, instead of the detailed interior (which fills in up close).
   const distantBowl = new Mesh(
     ellipticRing(RX, RZ, 0.5, 1, 4, 39),
-    material({ color: '#426b70', roughness: 0.85, side: DoubleSide }),
+    atmosphere.patch(
+      new MeshStandardMaterial({
+        color: '#4d7378',
+        emissive: '#ffffff',
+        roughness: 0.85,
+        side: DoubleSide,
+      }),
+      {
+        key: 'stadium-distant-bowl',
+        // Floodlighting must stay visible from outside, including the painted rows and aisles.
+        afterEmissive: 'totalEmissiveRadiance *= diffuseColor.rgb;',
+        uniforms: {
+          uBowlCentre: { value: new Vector3(STADIUM_POSITION.x, 0, STADIUM_POSITION.z) },
+        },
+        fragmentPars: 'uniform vec3 uBowlCentre;',
+        afterDiffuse: `{
+        vec2 q = (vAtmoWorldPos.xz - uBowlCentre.xz) / vec2(${RX.toFixed(1)}, ${RZ.toFixed(1)});
+        float r = length(q);
+        float rows = fract(r * ${DISTANT_ROWS.toFixed(1)});
+        float aisle = step(0.94, fract(atan(q.y, q.x) * ${DISTANT_AISLES.toFixed(1)} / 6.2831853));
+        float edge = fwidth(r * ${DISTANT_ROWS.toFixed(1)});
+        float riser = mix(smoothstep(0.7, 0.85, rows), 0.5, clamp(edge * 2.0, 0.0, 1.0));
+        diffuseColor.rgb *= mix(1.0, 0.62, riser) * mix(1.0, 0.55, aisle);
+      }`,
+      },
+    ),
   );
+  atmosphere.night.material(distantBowl.material, 0, 0.7);
   distantBowl.name = 'stadium-distant-bowl';
   distantBowl.castShadow = true;
   distantBowl.receiveShadow = true;
@@ -105,38 +90,45 @@ export const createStadium: LandmarkFactory = ({ atmosphere }): LandmarkModel =>
   disposables.push(pitchTexture);
   const pitch = new Mesh(
     new PlaneGeometry(PITCH.width, PITCH.length).rotateX(-Math.PI / 2),
-    material({ map: pitchTexture, roughness: 0.9 }),
+    // At night the pitch is floodlit: its own markings glow (seen from the air, like the renders).
+    atmosphere.night.material(
+      material({
+        map: pitchTexture,
+        emissiveMap: pitchTexture,
+        emissive: '#ffffff',
+        roughness: 0.9,
+      }),
+      0,
+      0.55,
+    ),
   );
   pitch.position.y = 3;
   // Texture is drawn length-wise along x; the pitch's long axis runs along z.
   pitchTexture.center.set(0.5, 0.5);
   pitchTexture.rotation = Math.PI / 2;
 
-  for (const mesh of [plinth, plinthTop, facade, roof, fascia, apron, pitch]) {
+  for (const mesh of [facade, apron, pitch]) {
     mesh.castShadow = true;
     mesh.receiveShadow = true;
   }
-  floodlights.castShadow = false;
 
-  const pickProxy = createPickProxy(id, ROOF.yOuter);
-  root.add(
-    plinth,
-    plinthTop,
-    facade,
-    roof,
-    fascia,
-    floodlights,
-    interior,
-    distantBowl,
-    apron,
-    pitch,
-    pickProxy,
-  );
+  const pickProxy = createPickProxy(id, PICK_HEIGHT);
+  // The exterior (hall, louvre roof, towers, terraces, stair) is a Blender model; it joins the
+  // scene before the Experience compiles shaders and fits shadows (see `loaded`).
+  const loaded = loadStadiumShell(atmosphere).then((shell) => {
+    if (disposed) {
+      disposeObject(shell);
+      return;
+    }
+    root.add(shell);
+  });
+  root.add(facade, interior, distantBowl, apron, pitch, pickProxy);
 
   return {
     id,
     object: root,
     pickProxy,
+    loaded,
     setDetailPinned(pinned) {
       detailPinned = pinned;
     },
@@ -148,6 +140,7 @@ export const createStadium: LandmarkFactory = ({ atmosphere }): LandmarkModel =>
       distantBowl.visible = !detailed;
     },
     dispose() {
+      disposed = true;
       disposables.forEach((item) => {
         item.dispose();
       });

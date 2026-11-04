@@ -1,6 +1,5 @@
 import type { Texture, WebGLRenderer } from 'three';
 import {
-  Color,
   CubeCamera,
   DirectionalLight,
   HalfFloatType,
@@ -18,7 +17,14 @@ import {
 } from 'three';
 import { Sky } from 'three/addons/objects/Sky.js';
 import { FullScreenQuad } from 'three/addons/postprocessing/Pass.js';
-import { LIGHT, RENDER, SKY, SUN } from '../config/scene';
+import {
+  LIGHT,
+  LIGHTING,
+  RENDER,
+  SKY,
+  type LightingMode,
+  type LightingPreset,
+} from '../config/scene';
 import type { Disposable, Updatable } from '../types';
 import type { Atmosphere } from './Atmosphere';
 
@@ -84,18 +90,21 @@ function sunDirectionFrom(bearingDeg: number, elevationDeg: number): Vector3 {
  */
 export class Environment implements Updatable, Disposable {
   readonly sky = new Sky();
-  readonly sun = new DirectionalLight(LIGHT.sunColor, LIGHT.sunIntensity);
+  /** The shadow-casting key light: the sun by day, the moon by night. */
+  readonly sun = new DirectionalLight();
   /** Static map and stadium fits keep separate baked targets, avoiding a shadow draw on return. */
   private readonly mapShadow = this.sun.shadow;
   private readonly stadiumShadow = this.sun.shadow.clone();
-  readonly hemisphere = new HemisphereLight(
-    LIGHT.hemiSkyColor,
-    LIGHT.hemiGroundColor,
-    LIGHT.hemiIntensity,
-  );
-  readonly sunDirection = sunDirectionFrom(SUN.bearingDeg, SUN.elevationDeg);
-  /** Linear sun radiance (colour × intensity) for custom shaders. */
+  readonly hemisphere = new HemisphereLight();
+  /** Unit vector toward the key light. */
+  readonly sunDirection = new Vector3();
+  /** Linear key-light radiance (colour × intensity) for custom shaders (sea glitter). */
   readonly sunLight = new Vector3();
+  private readonly skySunDirection = new Vector3();
+  private preset: LightingPreset;
+  private currentMode: LightingMode;
+  /** Last fitted shadow box, re-fitted when the key light moves. */
+  private shadowBox: { min: Vector3; max: Vector3 } | null = null;
 
   private readonly skyCube = new WebGLCubeRenderTarget(SKY_CUBE_SIZE, {
     type: HalfFloatType,
@@ -116,7 +125,10 @@ export class Environment implements Updatable, Disposable {
     private readonly scene: Scene,
     private readonly renderer: WebGLRenderer,
     private readonly atmosphere: Atmosphere,
+    mode: LightingMode = 'day',
   ) {
+    this.currentMode = mode;
+    this.preset = LIGHTING[mode];
     renderer.shadowMap.autoUpdate = false;
     renderer.shadowMap.needsUpdate = true;
     const uniforms = this.sky.material.uniforms;
@@ -124,22 +136,14 @@ export class Environment implements Updatable, Disposable {
       const uniform = uniforms[name];
       if (uniform) uniform.value = value;
     };
-    set('turbidity', SKY.turbidity);
-    set('rayleigh', SKY.rayleigh);
-    set('mieCoefficient', SKY.mieCoefficient);
-    set('mieDirectionalG', SKY.mieDirectionalG);
-    set('cloudCoverage', SKY.cloudCoverage);
     set('cloudDensity', SKY.cloudDensity);
     set('cloudScale', SKY.cloudScale);
     set('cloudSpeed', SKY.cloudSpeed);
     set('cloudElevation', SKY.cloudElevation);
     this.tameSunDisc();
-    (uniforms.sunPosition?.value as Vector3 | undefined)?.copy(this.sunDirection);
     this.sky.scale.setScalar(SKY.size);
     this.sky.name = 'sky';
-
-    const color = new Color(LIGHT.sunColor);
-    this.sunLight.set(color.r, color.g, color.b).multiplyScalar(LIGHT.sunIntensity);
+    this.applyPreset();
 
     this.sun.castShadow = true;
     this.sun.shadow.bias = -0.0003;
@@ -151,24 +155,80 @@ export class Environment implements Updatable, Disposable {
       new Vector3(region.maxX, region.maxHeight, region.maxZ),
     );
 
-    atmosphere.uniforms.uAtmoSunDir.value.copy(this.sunDirection);
     atmosphere.uniforms.uAtmoSky.value = this.skyCube.texture;
 
     scene.add(this.sky, this.sun, this.sun.target, this.hemisphere);
   }
 
+  get mode(): LightingMode {
+    return this.currentMode;
+  }
+
+  /** Sky, key light, fill, exposure and night lights from the current preset (no rebake). */
+  private applyPreset(): void {
+    const { sky, skySun, key, hemi } = this.preset;
+    const uniforms = this.sky.material.uniforms;
+    const set = (name: string, value: number): void => {
+      const uniform = uniforms[name];
+      if (uniform) uniform.value = value;
+    };
+    set('turbidity', sky.turbidity);
+    set('rayleigh', sky.rayleigh);
+    set('mieCoefficient', sky.mieCoefficient);
+    set('mieDirectionalG', sky.mieDirectionalG);
+    set('cloudCoverage', sky.clouds);
+    set('uSunDiscIntensity', sky.sunDisc);
+    (uniforms.uSkyTint?.value as Vector3 | undefined)?.set(...sky.tint);
+    (uniforms.uZenithTint?.value as Vector3 | undefined)?.set(...sky.zenithTint);
+    (uniforms.uSkyFloor?.value as Vector3 | undefined)?.set(...sky.floor);
+    this.skySunDirection.copy(sunDirectionFrom(skySun.bearingDeg, skySun.elevationDeg));
+    (uniforms.sunPosition?.value as Vector3 | undefined)?.copy(this.skySunDirection);
+
+    this.sunDirection.copy(sunDirectionFrom(key.bearingDeg, key.elevationDeg));
+    this.sun.color.set(key.color);
+    this.sun.intensity = key.intensity;
+    this.sunLight
+      .set(this.sun.color.r, this.sun.color.g, this.sun.color.b)
+      .multiplyScalar(key.intensity);
+    this.hemisphere.color.set(hemi.sky);
+    this.hemisphere.groundColor.set(hemi.ground);
+    this.hemisphere.intensity = hemi.intensity;
+    this.atmosphere.uniforms.uAtmoSunDir.value.copy(this.sunDirection);
+    this.renderer.toneMappingExposure = this.preset.exposure;
+    this.atmosphere.night.set(this.preset.lights);
+  }
+
+  /** Switch Day/Night: re-grades the sky, rebakes reflections and haze, and re-renders shadows. */
+  setMode(mode: LightingMode): void {
+    if (mode === this.currentMode) return;
+    this.currentMode = mode;
+    this.preset = LIGHTING[mode];
+    this.applyPreset();
+    this.bake(this.renderer);
+    // Both static shadow maps were rendered for the old key light.
+    for (const shadow of [this.mapShadow, this.stadiumShadow]) {
+      shadow.map?.dispose();
+      shadow.map = null;
+      shadow.mapPass = null;
+    }
+    if (this.shadowBox) this.fitShadow(this.shadowBox.min, this.shadowBox.max);
+    this.sun.shadow.updateMatrices(this.sun);
+    this.renderer.shadowMap.needsUpdate = true;
+  }
+
   /** Replace the Sky shader's fixed ×760 sun disc with a tunable one, and cap its radiance. */
   private tameSunDisc(): void {
     const material = this.sky.material;
-    material.uniforms.uSunDiscIntensity = { value: SKY.sunDiscIntensity };
+    material.uniforms.uSunDiscIntensity = { value: 0 };
     material.uniforms.uMaxRadiance = { value: SKY.maxRadiance };
-    material.uniforms.uSkyTint = { value: new Vector3(...SKY.tint) };
-    material.uniforms.uZenithTint = { value: new Vector3(...SKY.zenithTint) };
+    material.uniforms.uSkyTint = { value: new Vector3() };
+    material.uniforms.uZenithTint = { value: new Vector3() };
+    material.uniforms.uSkyFloor = { value: new Vector3() };
     material.uniforms.uGlowRolloff = { value: SKY.glowRolloff };
     material.fragmentShader = material.fragmentShader
       .replace(
         'uniform float showSunDisc;',
-        'uniform float showSunDisc;\nuniform float uSunDiscIntensity;\nuniform float uMaxRadiance;\nuniform vec3 uSkyTint;\nuniform vec3 uZenithTint;\nuniform float uGlowRolloff;',
+        'uniform float showSunDisc;\nuniform float uSunDiscIntensity;\nuniform float uMaxRadiance;\nuniform vec3 uSkyTint;\nuniform vec3 uZenithTint;\nuniform vec3 uSkyFloor;\nuniform float uGlowRolloff;',
       )
       .replace('( 760.0 * sundisc )', '( uSunDiscIntensity * sundisc )')
       // Roll off the broad Mie glow (keeps its colour instead of clipping to white), then add
@@ -182,7 +242,9 @@ export class Environment implements Updatable, Disposable {
       .replace(
         'gl_FragColor = vec4( texColor, 1.0 );',
         `vec3 skyTint = mix( uSkyTint, uZenithTint, smoothstep( 0.03, 0.4, direction.y ) );
-        gl_FragColor = vec4( min( texColor * skyTint, vec3( uMaxRadiance ) ), 1.0 );`,
+        // Night floor: airglow and the city's light dome, strongest toward the horizon.
+        vec3 skyFloor = uSkyFloor * mix( 1.0, 0.4, smoothstep( 0.0, 0.5, direction.y ) );
+        gl_FragColor = vec4( min( texColor * skyTint + skyFloor, vec3( uMaxRadiance ) ), 1.0 );`,
       );
   }
 
@@ -206,13 +268,13 @@ export class Environment implements Updatable, Disposable {
     pmrem.dispose();
 
     // Final reflection cube includes the clouds, so the sea mirrors them.
-    if (cloudCoverage) cloudCoverage.value = SKY.cloudCoverage;
+    if (cloudCoverage) cloudCoverage.value = this.preset.sky.clouds;
     cubeCamera.update(renderer, bakeScene);
 
     if (showSunDisc) showSunDisc.value = 1;
     this.scene.add(this.sky);
     this.scene.environment = this.environmentMap;
-    this.scene.environmentIntensity = LIGHT.environmentIntensity;
+    this.scene.environmentIntensity = this.preset.environmentIntensity;
     this.atmosphere.uniforms.uAtmoSky.value = this.skyCube.texture;
     this.atmosphere.uniforms.uAtmoHaze.value = this.hazeTarget.texture;
   }
@@ -235,6 +297,7 @@ export class Environment implements Updatable, Disposable {
    * camera) also puts the map's resolution where the ground actually is.
    */
   fitShadow(min: Vector3, max: Vector3): void {
+    this.shadowBox = { min: min.clone(), max: max.clone() };
     const center = new Vector3().addVectors(min, max).multiplyScalar(0.5);
     this.sun.target.position.copy(center);
     this.sun.position.copy(center).addScaledVector(this.sunDirection, SUN_DISTANCE);
@@ -263,6 +326,11 @@ export class Environment implements Updatable, Disposable {
     camera.near = Math.max(1, -lightMax.z - SHADOW_MARGIN);
     camera.far = -lightMin.z + SHADOW_MARGIN;
     camera.updateProjectionMatrix();
+    this.renderer.shadowMap.needsUpdate = true;
+  }
+
+  /** Re-render the static shadow map on the next frame (e.g. after a model finishes loading). */
+  refreshShadows(): void {
     this.renderer.shadowMap.needsUpdate = true;
   }
 

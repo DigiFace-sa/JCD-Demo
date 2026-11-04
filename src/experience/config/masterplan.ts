@@ -70,12 +70,14 @@ export const MASTERPLAN = {
     { x: 700, z: 2000, radius: 260 },
     { x: 1050, z: 2450, radius: 200 },
     { x: 940, z: 380, radius: 110 },
+    { x: -290, z: -612, radius: 150 }, // opera gardens on the peninsula
   ],
   /** Paved plazas carved out of parks around landmarks. */
   plazas: [
-    { x: 590, z: -1650, radius: 215 },
-    { x: 380, z: -560, radius: 120 },
-    { x: 30, z: 740, radius: 110 },
+    { x: 590, z: -1650, radius: 320 },
+    { x: 380, z: -560, radius: 100 },
+    { x: 30, z: 740, radius: 85 },
+    { x: -368, z: -567, radius: 36 }, // opera forecourt, before the arched entrance
   ],
 
   profiles: {
@@ -146,7 +148,7 @@ export const MASTERPLAN = {
 
   landscape: {
     palmSpacing: 26,
-    treesPerPark: 260,
+    treesPerPark: 560,
     seed: 11,
   },
 } as const;

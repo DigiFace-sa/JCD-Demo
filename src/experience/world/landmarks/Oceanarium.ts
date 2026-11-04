@@ -1,88 +1,109 @@
-import { Color, DoubleSide, Mesh, MeshStandardMaterial, SphereGeometry, Vector3 } from 'three';
-import { LANDMARKS } from '../../../data/landmarks';
+import { Color, MeshStandardMaterial } from 'three';
 import { LAYERS } from '../../config/layers';
-import { COAST } from '../../config/scene';
 import { disposeObject } from '../../utils/dispose';
-import { ellipticBand, ellipticDisc } from './geometry';
-import { latticeExtension } from './lattice';
+import type { Atmosphere } from '../Atmosphere';
+import { boxMappedMaterial, textureSet } from './boxMapped';
 import { createPickProxy, landmarkRoot, type LandmarkFactory } from './LandmarkModel';
+import { loadShell } from './shell';
 
-const COLORS = {
-  frame: '#f2f4f1',
-  interior: '#0d2a30',
-  glow: '#2fd0cb',
-  podium: '#ddd3c4',
-} as const;
+/** Exported by scripts/blender/oceanarium.py (illustrative placeholder after the official renders). */
+const MODEL_URL = 'models/oceanarium.glb';
+/** Picking reaches the tallest lattice cube. */
+const PICK_HEIGHT = 42;
+const GLOW = '#ffa95e';
+/** Night radiance of the canopy undersides (× their colour). */
+const UNDERLIGHT = 1.6;
 
-/** A cluster of lattice domes of different sizes (local metres, relative to the site). */
-const DOMES = [
-  { x: 0, z: 0, radius: 40, squash: 0.62 },
-  { x: -46, z: 30, radius: 27, squash: 0.66 },
-  { x: 34, z: 40, radius: 21, squash: 0.7 },
-] as const;
-const PODIUM = { rx: 92, rz: 74, height: 2.5 } as const;
-const LATTICE = { cell: 3.4, width: 0.2, glow: 0.85 } as const;
+async function loadOceanariumShell(atmosphere: Atmosphere) {
+  const [limestone, timber] = await Promise.all([textureSet('limestone'), textureSet('timber')]);
+  const { night } = atmosphere;
+  const material = (
+    params: ConstructorParameters<typeof MeshStandardMaterial>[0],
+  ): MeshStandardMaterial =>
+    atmosphere.patch(new MeshStandardMaterial({ vertexColors: true, ...params }));
+
+  // Copper trellis: after dark, lit from below, so undersides glow warm and tops stay dark.
+  const underLight = { value: 0 };
+  night.uniform(underLight, 0, UNDERLIGHT);
+  const copper = atmosphere.patch(
+    new MeshStandardMaterial({
+      color: '#c47b58',
+      metalness: 0.35,
+      roughness: 0.6,
+      vertexColors: true,
+    }),
+    {
+      key: 'oceanarium-underlight',
+      uniforms: { uUnderLight: underLight, uUnderColor: { value: new Color('#ff9f63') } },
+      vertexPars: 'varying vec3 vUnderNormal;',
+      vertexMain: 'vUnderNormal = normalize(mat3(modelMatrix) * objectNormal);',
+      fragmentPars:
+        'uniform float uUnderLight;\nuniform vec3 uUnderColor;\nvarying vec3 vUnderNormal;',
+      afterEmissive: `totalEmissiveRadiance += uUnderColor * diffuseColor.rgb * uUnderLight
+        * (max(-normalize(vUnderNormal).y, 0.0) + 0.12);`,
+    },
+  );
+  // The cubes' glazing: dark by day, glowing amber through the copper screens at night.
+  const glass = night.material(
+    material({ color: '#1e2a2e', roughness: 0.08, metalness: 0.7, emissive: GLOW }),
+    0.12,
+    0.65,
+  );
+
+  return loadShell(MODEL_URL, 'oceanarium', {
+    stone: boxMappedMaterial(atmosphere, {
+      maps: limestone,
+      tile: 3.2,
+      tint: '#e9e1d2',
+      roughness: 1,
+      normalStrength: 0.6,
+      detail: 0.6,
+      night: { walls: 0.75, falloff: 6, spacing: 9 },
+    }),
+    copper,
+    glass,
+    deck: boxMappedMaterial(atmosphere, {
+      maps: timber,
+      tile: 2.4,
+      tint: '#9c7350',
+      roughness: 0.9,
+      normalStrength: 0.5,
+      night: { tops: 0.18 },
+    }),
+    post: material({ color: '#6e4a36', metalness: 0.5, roughness: 0.5 }),
+  });
+}
 
 /**
- * Oceanarium & Coral Farm (stylised): a cluster of white lattice domes glowing aqua from
- * within, like a living reef seen through a shell. [TBC: official design]
+ * Oceanarium & Coral Farm after the official concept renders (illustrative): stone halls at the
+ * water's edge under overlapping copper-lattice canopies, lattice-clad glass cubes rising through
+ * them, and timber decks and a jetty over the sea.
  */
 export const createOceanarium: LandmarkFactory = ({ atmosphere }) => {
   const id = 'oceanarium';
   const root = landmarkRoot(id);
-  const { position } = LANDMARKS[id];
-
-  const podiumMaterial = atmosphere.patch(
-    new MeshStandardMaterial({ color: COLORS.podium, roughness: 0.8, side: DoubleSide }),
-  );
-  root.add(
-    new Mesh(ellipticBand(PODIUM.rx, PODIUM.rz, 0, PODIUM.height), podiumMaterial),
-    new Mesh(ellipticDisc(PODIUM.rx, PODIUM.rz, PODIUM.height), podiumMaterial),
-  );
-
-  for (const dome of DOMES) {
-    // Each dome gets its own lattice centre so the pattern wraps it correctly.
-    const center = new Vector3(
-      position.x + dome.x,
-      COAST.landHeight + PODIUM.height,
-      position.z + dome.z,
-    );
-    const material = atmosphere.patch(
-      new MeshStandardMaterial({ color: COLORS.frame, roughness: 0.35, metalness: 0.1 }),
-      latticeExtension({
-        center,
-        cell: LATTICE.cell,
-        width: LATTICE.width,
-        glow: new Color(COLORS.glow).multiplyScalar(LATTICE.glow),
-        interior: new Color(COLORS.interior),
-      }),
-    );
-    const mesh = new Mesh(
-      new SphereGeometry(dome.radius, 64, 24, 0, Math.PI * 2, 0, Math.PI / 2).scale(
-        1,
-        dome.squash,
-        1,
-      ),
-      material,
-    );
-    mesh.position.set(dome.x, PODIUM.height, dome.z);
-    root.add(mesh);
-  }
-
-  root.rotation.y = 0.2;
-  const pickProxy = createPickProxy(id, 30);
+  const pickProxy = createPickProxy(id, PICK_HEIGHT);
   root.add(pickProxy);
-  root.traverse((child) => {
-    child.castShadow = true;
-    child.receiveShadow = true;
-    child.layers.enable(LAYERS.REFLECTED);
+  let disposed = false;
+
+  const loaded = loadOceanariumShell(atmosphere).then((shell) => {
+    if (disposed) {
+      disposeObject(shell);
+      return;
+    }
+    shell.traverse((child) => {
+      child.layers.enable(LAYERS.REFLECTED);
+    });
+    root.add(shell);
   });
 
   return {
     id,
     object: root,
     pickProxy,
+    loaded,
     dispose: () => {
+      disposed = true;
       disposeObject(root);
     },
   };

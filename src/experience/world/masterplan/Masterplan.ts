@@ -8,6 +8,7 @@ import { Breakwaters } from './Breakwaters';
 import { Landscape } from './Landscape';
 import { MasterplanBuildings } from './MasterplanBuildings';
 import { MasterplanGround } from './MasterplanGround';
+import { OpenSpace } from './OpenSpace';
 import { Waterfront } from './Waterfront';
 
 /** Highlight levels per state: outline strength, fill strength, building glow. */
@@ -34,9 +35,11 @@ export class Masterplan implements Disposable {
   private selected: DistrictId | null = null;
 
   constructor(atmosphere: Atmosphere) {
-    this.ground = new MasterplanGround(atmosphere);
     this.buildings = new MasterplanBuildings(atmosphere);
-    this.landscape = new Landscape(atmosphere);
+    // Lawns and planting fill the land the buildings leave open.
+    const openSpace = new OpenSpace(this.buildings.plots);
+    this.ground = new MasterplanGround(atmosphere, openSpace);
+    this.landscape = new Landscape(atmosphere, openSpace);
     this.waterfront = new Waterfront(atmosphere);
     this.breakwaters = new Breakwaters(atmosphere);
     this.object.name = 'masterplan';

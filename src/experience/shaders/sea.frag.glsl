@@ -14,6 +14,7 @@ uniform float uSunGlitter;
 uniform float uSunSheen;
 uniform float uNormalStrength;
 uniform float uMaxRadiance;
+uniform float uBodyGain;
 uniform sampler2D uReflection;
 uniform float uReflectionStrength;
 uniform float uReflectionDistortion;
@@ -82,7 +83,7 @@ void main() {
 
   // Water body lit by the sky dome plus a little direct sun.
   vec3 skyLight = textureCube(uAtmoSky, vec3(0.0, 1.0, 0.0)).rgb;
-  vec3 bodyLight = skyLight * 4.5 + uSunLight * max(uAtmoSunDir.y, 0.0) * 0.6;
+  vec3 bodyLight = (skyLight * 4.5 + uSunLight * max(uAtmoSunDir.y, 0.0) * 0.6) * uBodyGain;
   vec3 body = mix(uDeepColor, uShallowColor, shallow * 0.85) * bodyLight;
 
   // Light through wave crests when looking toward the sun.

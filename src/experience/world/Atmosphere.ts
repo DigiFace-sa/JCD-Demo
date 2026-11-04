@@ -1,6 +1,7 @@
 import type { CubeTexture, IUniform, Material, Texture } from 'three';
 import { Vector3 } from 'three';
 import { ATMOSPHERE } from '../config/scene';
+import { NightLights } from './NightLights';
 import atmosphereGlsl from '../shaders/atmosphere.glsl?raw';
 
 export { atmosphereGlsl };
@@ -31,10 +32,14 @@ export interface MaterialExtension {
   readonly fragmentPars: string;
   /** Runs after the base colour is known; may modify `diffuseColor`. */
   readonly afterDiffuse?: string;
+  /** Runs after textures and vertex colours have both been applied. */
+  readonly afterColor?: string;
   /** Runs after roughness is known; may modify `roughnessFactor`. */
   readonly afterRoughness?: string;
   /** Runs after emissive is known; may add to `totalEmissiveRadiance`. */
   readonly afterEmissive?: string;
+  /** Runs after the view-space `normal` is final; may perturb it (e.g. projected normal maps). */
+  readonly afterNormal?: string;
 }
 
 /**
@@ -42,6 +47,8 @@ export interface MaterialExtension {
  * them here updates every patched material and the sea at once.
  */
 export class Atmosphere {
+  /** Lights that switch on at night (registered by the materials that own them). */
+  readonly night = new NightLights();
   readonly uniforms: AtmosphereUniforms = {
     uAtmoSky: { value: null },
     uAtmoHaze: { value: null },
@@ -96,12 +103,20 @@ export class Atmosphere {
             `#include <map_fragment>\n${extension.afterDiffuse ?? ''}`,
           )
           .replace(
+            '#include <color_fragment>',
+            `#include <color_fragment>\n${extension.afterColor ?? ''}`,
+          )
+          .replace(
             '#include <roughnessmap_fragment>',
             `#include <roughnessmap_fragment>\n${extension.afterRoughness ?? ''}`,
           )
           .replace(
             '#include <emissivemap_fragment>',
             `#include <emissivemap_fragment>\n${extension.afterEmissive ?? ''}`,
+          )
+          .replace(
+            '#include <normal_fragment_maps>',
+            `#include <normal_fragment_maps>\n${extension.afterNormal ?? ''}`,
           );
       }
     };

@@ -91,6 +91,7 @@ export class Waterfront implements Disposable {
         emissiveIntensity: 0.55,
       }),
     );
+    atmosphere.night.material(glass, 0.55, 4);
     const pavilion = new Mesh(
       new CylinderGeometry(PAVILION.radius, PAVILION.radius, PAVILION.height, 40),
       glass,
@@ -116,7 +117,7 @@ export class Waterfront implements Disposable {
       new BoxGeometry(TERMINAL.width, TERMINAL.height, TERMINAL.length),
       atmosphere.patch(
         new MeshStandardMaterial({ color: COLORS.terminal, roughness: 0.6 }),
-        facadeExtension(),
+        facadeExtension(atmosphere.night),
       ),
     );
     body.position.set(centerX, COAST.landHeight + TERMINAL.height / 2, position.z);

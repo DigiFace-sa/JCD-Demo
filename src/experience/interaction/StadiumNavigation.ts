@@ -165,7 +165,7 @@ export class StadiumNavigation implements Disposable {
 
   private shadow(inside: boolean): void {
     if (inside) {
-      this.world.environment.useShadowRegion('stadium', local(-150, 0, -170), local(150, 55, 170));
+      this.world.environment.useShadowRegion('stadium', local(-210, 0, -232), local(210, 64, 232));
     } else {
       const region = LIGHT.shadowRegion;
       this.world.environment.useShadowRegion(

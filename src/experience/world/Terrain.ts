@@ -12,6 +12,7 @@ import { COAST } from '../config/scene';
 import type { Disposable } from '../types';
 import { disposeObject } from '../utils/dispose';
 import type { Atmosphere } from './Atmosphere';
+import { cityStreetsExtension } from './CityStreets';
 import { groundHeightAt, landDistance, shoreX } from './masterplan/MasterplanShape';
 
 /** Offsets (m) from the waterline for each strip column: dense at the beach, sparse inland. */
@@ -114,6 +115,7 @@ export class Terrain implements Disposable {
       geometry,
       atmosphere.patch(
         new MeshStandardMaterial({ vertexColors: true, roughness: 0.96, metalness: 0 }),
+        cityStreetsExtension(atmosphere.night),
       ),
     );
     strip.receiveShadow = true;
@@ -124,6 +126,7 @@ export class Terrain implements Disposable {
       new PlaneGeometry(skirtSize, skirtSize).rotateX(-Math.PI / 2),
       atmosphere.patch(
         new MeshStandardMaterial({ color: groundColor, roughness: 1, metalness: 0 }),
+        cityStreetsExtension(atmosphere.night),
       ),
     );
     // Starts inside both the masterplan ground's east edge and the strip's second-to-last

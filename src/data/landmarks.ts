@@ -28,9 +28,11 @@ export const LANDMARKS: Readonly<Record<LandmarkId, Landmark>> = {
     // Capacity deliberately absent: [TBC] until JCDC confirms (public sources vary).
     factKeys: [],
     position: { x: 590, z: -1650 },
-    footprint: 150,
+    // Covers the rectangular hall, terraces and pergolas (half-diagonal ≈ 307 m).
+    footprint: 310,
     markerHeight: 70,
-    shot: { radius: 700, polarDeg: 68, azimuthDeg: 108 },
+    // From the west-southwest, sun behind the camera: the low sun rakes across the façades.
+    shot: { radius: 720, polarDeg: 62, azimuthDeg: -62 },
   },
   'opera-house': {
     id: 'opera-house',
@@ -40,7 +42,7 @@ export const LANDMARKS: Readonly<Record<LandmarkId, Landmark>> = {
     position: { x: -320, z: -620 },
     footprint: 125,
     markerHeight: 90,
-    shot: { radius: 620, polarDeg: 74, azimuthDeg: 128 },
+    shot: { radius: 480, polarDeg: 74, azimuthDeg: -40 },
   },
   oceanarium: {
     id: 'oceanarium',
@@ -50,7 +52,7 @@ export const LANDMARKS: Readonly<Record<LandmarkId, Landmark>> = {
     position: { x: 30, z: 740 },
     footprint: 85,
     markerHeight: 50,
-    shot: { radius: 520, polarDeg: 72, azimuthDeg: 118 },
+    shot: { radius: 420, polarDeg: 68, azimuthDeg: -50 },
   },
   museum: {
     id: 'museum',
@@ -60,7 +62,7 @@ export const LANDMARKS: Readonly<Record<LandmarkId, Landmark>> = {
     position: { x: 380, z: -560 },
     footprint: 105,
     markerHeight: 90,
-    shot: { radius: 560, polarDeg: 66, azimuthDeg: 100 },
+    shot: { radius: 420, polarDeg: 72, azimuthDeg: -35 },
   },
 };
 

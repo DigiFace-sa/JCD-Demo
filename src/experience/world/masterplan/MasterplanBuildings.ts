@@ -28,7 +28,7 @@ const TINT_VARIATION = 0.06;
 /** Keep-out (m) around attraction structures (pier root, cruise terminal). */
 const ATTRACTION_CLEARANCE = 120;
 
-interface Plot {
+export interface Plot {
   x: number;
   z: number;
   width: number;
@@ -69,6 +69,8 @@ export class MasterplanBuildings implements Disposable {
   /** Per-district highlight level (0–1), animated by Masterplan. */
   readonly highlight = new Map<DistrictId, IUniform<number>>();
   private readonly meshes: InstancedMesh<BoxGeometry, MeshStandardMaterial>[] = [];
+  /** Every building footprint, for the ground and landscape to keep their planting clear. */
+  readonly plots: Plot[] = [];
 
   constructor(atmosphere: Atmosphere) {
     const random = createRandom(MASTERPLAN.landscape.seed);
@@ -82,6 +84,7 @@ export class MasterplanBuildings implements Disposable {
     for (const id of DISTRICT_IDS) {
       const plots = this.layout(id, MASTERPLAN.profiles[id], random);
       if (plots.length === 0) continue;
+      this.plots.push(...plots);
       const level: IUniform<number> = { value: 0 };
       this.highlight.set(id, level);
       const material = atmosphere.patch(
@@ -90,7 +93,7 @@ export class MasterplanBuildings implements Disposable {
           roughness: 0.72,
           metalness: 0,
         }),
-        facadeExtension({ level, color: new Color(DISTRICTS[id].color) }),
+        facadeExtension(atmosphere.night, { level, color: new Color(DISTRICTS[id].color) }),
       );
       const mesh = new InstancedMesh(geometry, material, plots.length);
       mesh.name = `buildings-${id}`;

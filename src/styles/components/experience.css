@@ -143,3 +143,58 @@
 .debug-panel button:hover {
   background: rgb(255 255 255 / 0.12);
 }
+
+/* Day/Night ---------------------------------------------------------------- */
+.experience__tools {
+  display: flex;
+  align-items: center;
+  gap: var(--space-xs);
+}
+.experience__lighting {
+  gap: var(--space-2xs);
+}
+/* The button offers the other mode: a moon by day, a sun by night. */
+.experience__lighting-icon {
+  display: inline-flex;
+}
+.experience:not([data-lighting='night']) .experience__lighting-icon--day,
+.experience[data-lighting='night'] .experience__lighting-icon--night {
+  display: none;
+}
+.experience__curtain {
+  position: absolute;
+  inset: 0;
+  z-index: 40;
+  background: #05080c;
+  opacity: 0;
+  pointer-events: none;
+}
+
+/* Review-only model provenance; kept away from the interactive toolbar and panel. */
+.experience__illustrative {
+  position: absolute;
+  inset-inline-start: 1.5rem;
+  inset-block-end: 1rem;
+  z-index: 2;
+  max-inline-size: min(28rem, calc(100% - 3rem));
+  padding: 0.45rem 0.75rem;
+  border-radius: 0.25rem;
+  background: rgb(15 23 27 / 84%);
+  color: #eee6d8;
+  font-size: 0.75rem;
+  pointer-events: none;
+}
+
+/* Leave space for the persistent Arabic review badge beneath the model note. */
+:root[lang='ar'] .experience__illustrative {
+  inset-block-end: 3.25rem;
+}
+
+@media (max-width: 719px) {
+  .experience__illustrative,
+  :root[lang='ar'] .experience__illustrative {
+    /* The detail panel occupies the bottom of the screen on phones. */
+    inset-block-start: 5.25rem;
+    inset-block-end: auto;
+  }
+}

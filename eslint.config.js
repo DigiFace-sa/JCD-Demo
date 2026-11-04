@@ -6,7 +6,7 @@ import reactHooks from 'eslint-plugin-react-hooks';
 import tseslint from 'typescript-eslint';
 
 export default defineConfig(
-  { ignores: ['dist', 'dist-pitch', 'node_modules', 'review'] },
+  { ignores: ['dist', 'dist-pitch', 'node_modules', 'review', 'public/draco'] },
   js.configs.recommended,
   tseslint.configs.strictTypeChecked,
   {

@@ -1,0 +1,14 @@
+{
+  "$comment": "CC0 material photography from Poly Haven (polyhaven.com, public domain). `npm run textures` downloads 1K maps into public/textures/<id>/.",
+  "source": "https://polyhaven.com",
+  "license": "CC0 1.0",
+  "resolution": "1k",
+  "maps": ["Diffuse", "nor_gl", "Rough"],
+  "textures": [
+    { "id": "limestone", "asset": "large_sandstone_blocks_01", "use": "Stadium limestone walls and stone towers" },
+    { "id": "plaster", "asset": "beige_wall_001", "use": "Plastered walls" },
+    { "id": "timber", "asset": "fine_grained_wood", "use": "Timber louvres, fins and lattice" },
+    { "id": "paving", "asset": "floor_pavement", "use": "Forecourt and plaza paving" },
+    { "id": "coral-stone", "asset": "coral_stone_wall", "use": "Hijazi coral-stone heritage surfaces" }
+  ]
+}

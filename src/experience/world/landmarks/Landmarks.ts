@@ -35,6 +35,13 @@ export class Landmarks implements Disposable {
     this.object.name = 'landmarks';
   }
 
+  /** Resolves when every landmark's asynchronously loaded parts are in the scene. */
+  ready(): Promise<void> {
+    return Promise.all(
+      [...this.models.values()].map((model) => model.loaded ?? Promise.resolve()),
+    ).then(() => undefined);
+  }
+
   /** Landmark under the pointer ray, if any. */
   pick(raycaster: Raycaster): LandmarkId | null {
     const proxies = [...this.models.values()].map((model) => model.pickProxy);

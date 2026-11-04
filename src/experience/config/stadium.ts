@@ -16,6 +16,10 @@ export const STADIUM = {
   tunnel: { halfWidth: 4.5, floor: 14, ceiling: 19, innerX: 79, outerX: 126 },
   roof: { inner: 0.6, outer: 1.08, yInner: 39, yOuter: 47 },
   clearance: 2.2,
+  /** Exterior footprint half-sizes (m) of the Blender model (scripts/blender/stadium.py PERGOLA). */
+  exterior: { hx: 206, hz: 228 },
+  /** The east grand stair and approach, kept clear of planting: x beyond hx, |z| below this. */
+  approachHalfWidth: 40,
 } as const;
 
 export const STADIUM_POSITION = {
