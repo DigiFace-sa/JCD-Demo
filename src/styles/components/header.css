@@ -57,8 +57,25 @@
   opacity: 1;
   border-color: currentColor;
 }
-.site-nav__link[data-path='/experience'] {
-  display: none;
+/* JCDC brass marks the immersive destination as a distinct entry in every header treatment. */
+.site-nav .site-nav__link--experience {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding-inline: var(--space-s);
+  border: 1px solid var(--jcdc-secondary);
+  border-radius: var(--radius-pill);
+  background: var(--jcdc-secondary);
+  color: var(--jcdc-ink);
+  opacity: 1;
+  white-space: nowrap;
+  transition:
+    background-color var(--duration-base) var(--ease-out),
+    border-color var(--duration-base) var(--ease-out);
+}
+.site-nav .site-nav__link--experience:hover {
+  background: color-mix(in srgb, var(--jcdc-secondary) 80%, var(--white));
+  border-color: color-mix(in srgb, var(--jcdc-secondary) 80%, var(--white));
 }
 .site-header__actions {
   display: flex;
@@ -147,11 +164,16 @@ body[data-hero='true'] .site-header[data-scrolled='false'][data-menu-open='false
     flex-direction: column;
     gap: 0.3rem;
   }
-  .site-nav__link,
-  .site-nav__link[data-path='/experience'] {
+  .site-nav__link {
     display: block;
     font-size: var(--step-2);
     font-weight: var(--weight-light);
+  }
+  .site-nav .site-nav__link--experience {
+    display: flex;
+    margin-block-start: var(--space-s);
+    min-block-size: 3.25rem;
+    font-weight: var(--weight-medium);
   }
 }
 @media (max-width: 36rem) {

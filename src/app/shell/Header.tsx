@@ -85,7 +85,7 @@ export function Header({ path, notFound }: { path: string; notFound: boolean }):
               <li key={item.path} style={{ '--nav-order': index } as React.CSSProperties}>
                 <a
                   ref={index === 0 ? firstLink : undefined}
-                  className="site-nav__link"
+                  className={`site-nav__link${item.path === '/experience' ? ' site-nav__link--experience' : ''}`}
                   href={`#${item.path}`}
                   aria-current={!notFound && isActive(item.path, path) ? 'page' : undefined}
                 >
