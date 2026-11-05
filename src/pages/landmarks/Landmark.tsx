@@ -5,7 +5,7 @@ import { useI18n } from '../../app/i18n';
 import { Icon } from '../../app/shell/Icon';
 import { LANDMARK_IDS, LANDMARKS, isLandmarkId, type LandmarkId } from '../../data/landmarks';
 import { LANDMARK_IMAGES, type MarketingImage } from '../../data/marketing';
-import { Reveal } from '../../motion/Reveal';
+import { FlowReveal as Reveal } from '../../motion/FlowReveal';
 import type { ViewProps } from '../../router/routes';
 import { LandmarkAction, LandmarkHero, LandmarkPageShell } from './LandmarkHero';
 

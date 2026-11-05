@@ -5,9 +5,10 @@ import { useI18n } from '../../app/i18n';
 import { useLenis } from '../../app/SmoothScroll';
 import { Icon } from '../../app/shell/Icon';
 import { useReducedMotion } from '../../app/useReducedMotion';
+import { useMediaQuery } from '../../app/useMediaQuery';
 import { SECTORS, type MarketingImage } from '../../data/marketing';
 import { DESTINATION_STATS } from '../../data/site';
-import { Reveal } from '../../motion/Reveal';
+import { FlowReveal as Reveal } from '../../motion/FlowReveal';
 import { EditorialHero, EditorialPage } from '../editorial/Editorial';
 import { InterestForm, type InterestFormHandle, type Sector } from './InterestForm';
 
@@ -31,6 +32,7 @@ const REGISTRATION = { headerInset: 130, duration: 1 } as const;
 export default function Invest(): ReactNode {
   const { t } = useI18n();
   const reduced = useReducedMotion();
+  const stacked = useMediaQuery('(max-width: 65rem)');
   const lenis = useLenis();
   const registration = useRef<HTMLElement>(null);
   const interest = useRef<InterestFormHandle>(null);
@@ -49,11 +51,14 @@ export default function Invest(): ReactNode {
     // A completed demo can reopen into the taller form before its scroll limit is measured.
     scrollFrame.current = requestAnimationFrame(() => {
       scrollFrame.current = null;
-      const element = registration.current;
+      // On a phone, land on the actual form rather than its preceding image and introduction.
+      const element = stacked
+        ? registration.current?.querySelector('.invest-interest-form')
+        : registration.current;
       if (!element) return;
       const y = window.scrollY + element.getBoundingClientRect().top - REGISTRATION.headerInset;
       const focus = (): void => {
-        interest.current?.focus(sector ? 'sector' : 'name');
+        interest.current?.focus(stacked ? 'name' : sector ? 'sector' : 'name');
       };
       if (lenis && !reduced) {
         lenis.resize();

@@ -19,17 +19,25 @@ export function Header({ path, notFound }: { path: string; notFound: boolean }):
   const [scrolled, setScrolled] = useState(false);
   const menuButton = useRef<HTMLButtonElement>(null);
   const firstLink = useRef<HTMLAnchorElement>(null);
+  const progress = useRef<HTMLSpanElement>(null);
 
   useEffect(() => {
     const update = (): void => {
       setScrolled(window.scrollY > SCROLLED_THRESHOLD);
+      const travel = document.documentElement.scrollHeight - window.innerHeight;
+      progress.current?.style.setProperty(
+        '--reading-progress',
+        String(travel > 0 ? Math.min(1, Math.max(0, window.scrollY / travel)) : 0),
+      );
     };
     update();
     window.addEventListener('scroll', update, { passive: true });
+    window.addEventListener('resize', update);
     return () => {
       window.removeEventListener('scroll', update);
+      window.removeEventListener('resize', update);
     };
-  }, []);
+  }, [path]);
 
   // Navigating closes the menu. Adjusting state during render is React's pattern for this.
   const [lastPath, setLastPath] = useState(path);
@@ -74,7 +82,7 @@ export function Header({ path, notFound }: { path: string; notFound: boolean }):
         <nav className="site-nav" id="site-nav" aria-label={t('a11y.mainNav')}>
           <ul className="site-nav__list">
             {MAIN_NAV.map((item, index) => (
-              <li key={item.path}>
+              <li key={item.path} style={{ '--nav-order': index } as React.CSSProperties}>
                 <a
                   ref={index === 0 ? firstLink : undefined}
                   className="site-nav__link"
@@ -113,6 +121,7 @@ export function Header({ path, notFound }: { path: string; notFound: boolean }):
           </button>
         </div>
       </div>
+      <span className="site-header__progress" ref={progress} aria-hidden="true" />
     </header>
   );
 }

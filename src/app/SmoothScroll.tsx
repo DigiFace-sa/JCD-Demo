@@ -4,6 +4,7 @@ import Lenis from 'lenis';
 import 'lenis/dist/lenis.css';
 import { useEffect, useSyncExternalStore, type ReactNode } from 'react';
 import { useReducedMotion } from './useReducedMotion';
+import { useMediaQuery } from './useMediaQuery';
 
 gsap.registerPlugin(ScrollTrigger);
 
@@ -52,9 +53,11 @@ export function SmoothScroll({
   children: ReactNode;
 }): ReactNode {
   const reduced = useReducedMotion();
+  const touch = useMediaQuery('(hover: none) and (pointer: coarse)');
 
   useEffect(() => {
-    if (!enabled || reduced) return;
+    // Keep the browser's touch momentum and horizontal gallery gestures on phones.
+    if (!enabled || reduced || touch) return;
     const instance = new Lenis({ autoRaf: false, anchors: false, ...SCROLL });
     instance.on('scroll', () => {
       ScrollTrigger.update();
@@ -72,7 +75,7 @@ export function SmoothScroll({
       instance.destroy();
       publish(null);
     };
-  }, [enabled, reduced]);
+  }, [enabled, reduced, touch]);
 
   return children;
 }

@@ -9,7 +9,7 @@ import { LANDMARKS, type LandmarkId } from '../../data/landmarks';
 import { NEWS, NEWS_IDS, SUSTAINABILITY_ITEMS, type MarketingImage } from '../../data/marketing';
 import { DESTINATION_STATS } from '../../data/site';
 import { HOME_DISTRICT_IMAGES } from '../../data/home';
-import { Reveal } from '../../motion/Reveal';
+import { FlowReveal as Reveal } from '../../motion/FlowReveal';
 import { Scene, SceneStack, type SceneTransition } from '../../motion/SceneStack';
 import { Opening } from './Opening';
 

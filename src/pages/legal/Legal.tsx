@@ -3,6 +3,7 @@ import { Copy } from '../../app/Copy';
 import { useI18n } from '../../app/i18n';
 import { isLegalDoc, LEGAL_DOCS } from '../../data/site';
 import type { ViewProps } from '../../router/routes';
+import { FlowReveal } from '../../motion/FlowReveal';
 import { EditorialAction, EditorialPage } from '../editorial/Editorial';
 
 export default function Legal({ context }: ViewProps): ReactNode {
@@ -12,11 +13,15 @@ export default function Legal({ context }: ViewProps): ReactNode {
   return (
     <EditorialPage routeKey={`legal:${doc}`}>
       <section className="policy-page container">
-        <div className="policy-page__head">
-          <p className="editorial-eye">{t('marketing.legal.eye')}</p>
-          <h1 className="editorial-heading">{t(`legal.${doc}`)}</h1>
-          <Copy k="marketing.legal.body" className="editorial-lead" />
-        </div>
+        <FlowReveal as="div" className="policy-page__head" key={`${doc}-head`}>
+          <p className="editorial-eye" data-motion="rise">
+            {t('marketing.legal.eye')}
+          </p>
+          <h1 className="editorial-heading" data-motion="heading">
+            {t(`legal.${doc}`)}
+          </h1>
+          <Copy k="marketing.legal.body" className="editorial-lead" motion="lines" />
+        </FlowReveal>
         <div className="policy-page__layout">
           <nav aria-label={t('a11y.legalNav')}>
             {LEGAL_DOCS.map((id) => (
@@ -25,10 +30,10 @@ export default function Legal({ context }: ViewProps): ReactNode {
               </a>
             ))}
           </nav>
-          <div className="policy-page__text">
-            <Copy k={`marketing.legal.${doc}Body`} className="editorial-lead" />
+          <FlowReveal as="div" className="policy-page__text" key={`${doc}-text`}>
+            <Copy k={`marketing.legal.${doc}Body`} className="editorial-lead" motion="lines" />
             <EditorialAction href="#/">{t('marketing.actions.backHome')}</EditorialAction>
-          </div>
+          </FlowReveal>
         </div>
       </section>
     </EditorialPage>

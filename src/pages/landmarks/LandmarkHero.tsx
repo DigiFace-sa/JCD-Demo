@@ -25,6 +25,8 @@ const MOTION = {
   imageScale: 1.08,
   imageTravel: 4,
   narrow: '(max-width: 60rem)',
+  /** Reduced image travel keeps touch scrolling light and the picture inside its frame. */
+  mobile: { heroScale: 1.06, heroTravel: 3, imageScale: 1.05, imageTravel: 2 },
 } as const;
 
 /** The same calm directional action appears in the hero, stories and related destinations. */
@@ -109,14 +111,17 @@ export function LandmarkPageShell({ children }: { children: ReactNode }): ReactN
 
   useGSAP(
     () => {
-      if (reduced || narrow) return;
+      if (reduced) return;
       for (const image of root.current?.querySelectorAll('.landmarks-parallax') ?? [])
         gsap.fromTo(
           image,
-          { scale: MOTION.imageScale, yPercent: -MOTION.imageTravel },
+          {
+            scale: narrow ? MOTION.mobile.imageScale : MOTION.imageScale,
+            yPercent: narrow ? -MOTION.mobile.imageTravel : -MOTION.imageTravel,
+          },
           {
             scale: 1,
-            yPercent: MOTION.imageTravel,
+            yPercent: narrow ? MOTION.mobile.imageTravel : MOTION.imageTravel,
             ease: 'none',
             scrollTrigger: {
               trigger: image.parentElement,
@@ -164,37 +169,43 @@ export function LandmarkHero({
         const elements = taggedElements(copy);
         const stagger = cascadeStep(elements.length);
         elements.forEach(({ element, kind }, index) => {
-          addIntro(intro, element, kind, rtl, index * stagger);
+          addIntro(
+            intro,
+            element,
+            narrow && (kind === 'heading' || kind === 'lines') ? 'rise' : kind,
+            rtl,
+            index * stagger,
+          );
         });
         intro.timeScale(MOTION.introSpeed);
-        gsap.to(copy, {
-          y: MOTION.copyTravel,
-          opacity: 0,
-          ease: 'none',
-          scrollTrigger: {
-            trigger: root.current,
-            start: 'top top',
-            end: 'bottom 35%',
-            scrub: MOTION.scrub,
-          },
-        });
-      }
-      if (!narrow)
-        gsap.fromTo(
-          '.landmarks-hero__media',
-          { scale: MOTION.heroScale, yPercent: 0 },
-          {
-            scale: 1,
-            yPercent: MOTION.heroTravel,
+        if (!narrow)
+          gsap.to(copy, {
+            y: MOTION.copyTravel,
+            opacity: 0,
             ease: 'none',
             scrollTrigger: {
               trigger: root.current,
               start: 'top top',
-              end: 'bottom top',
+              end: 'bottom 35%',
               scrub: MOTION.scrub,
             },
+          });
+      }
+      gsap.fromTo(
+        '.landmarks-hero__media',
+        { scale: narrow ? MOTION.mobile.heroScale : MOTION.heroScale, yPercent: 0 },
+        {
+          scale: 1,
+          yPercent: narrow ? MOTION.mobile.heroTravel : MOTION.heroTravel,
+          ease: 'none',
+          scrollTrigger: {
+            trigger: root.current,
+            start: 'top top',
+            end: 'bottom top',
+            scrub: MOTION.scrub,
           },
-        );
+        },
+      );
     },
     { scope: root, dependencies: [lang, reduced, narrow, image], revertOnUpdate: true },
   );

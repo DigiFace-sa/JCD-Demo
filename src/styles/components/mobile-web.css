@@ -1,0 +1,306 @@
+/* Touch layouts keep native scroll. Motion is carried by pictures and short, permanent
+   entrances; document height always comes from readable content rather than a pinned film. */
+@media (max-width: 60rem) {
+  .site-header__progress {
+    position: absolute;
+    inset-inline: 0;
+    inset-block-end: -1px;
+    block-size: 2px;
+    background: var(--jcdc-secondary);
+    transform: scaleX(var(--reading-progress, 0));
+    transform-origin: left;
+    pointer-events: none;
+  }
+  [dir='rtl'] .site-header__progress {
+    transform-origin: right;
+  }
+  .site-nav {
+    max-block-size: calc(100dvh - 5rem);
+    overflow-y: auto;
+    overscroll-behavior: contain;
+  }
+  .site-nav__list > li {
+    opacity: 0;
+    transform: translateY(0.7rem);
+    transition:
+      opacity 350ms var(--ease-out),
+      transform 450ms var(--ease-out);
+  }
+  .site-header[data-menu-open='true'] .site-nav__list > li {
+    opacity: 1;
+    transform: none;
+    transition-delay: calc(var(--nav-order) * 40ms);
+  }
+  .site-nav__link {
+    min-block-size: 3rem;
+    padding-block: 0.75rem;
+  }
+
+  /* A compact chapter rail follows the reader, with actual previous/next touch targets. */
+  .scene-stack[data-motion='flow'] .scene-stack__controls {
+    position: sticky;
+    inset-block-start: 5rem;
+    z-index: 65;
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) auto;
+    align-items: center;
+    gap: 1rem;
+    padding: 0.5rem var(--container-gutter);
+    background: var(--jcdc-ink);
+    border-block-end: 1px solid var(--color-inverse-line);
+  }
+  .scene-stack[data-motion='flow'] .scene-stack__meter {
+    position: static;
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) auto;
+    gap: 0.35rem 0.75rem;
+    font-size: 0.6rem;
+    letter-spacing: 0.06em;
+  }
+  .scene-stack[data-motion='flow'] .scene-stack__chapter {
+    display: block;
+    overflow: hidden;
+    white-space: nowrap;
+    text-overflow: ellipsis;
+  }
+  .scene-stack[data-motion='flow'] .scene-stack__bar {
+    grid-column: 1 / -1;
+    grid-row: 2;
+  }
+  .scene-stack[data-motion='flow'] .scene-stack__navigation {
+    position: static;
+    display: flex;
+    gap: 0.4rem;
+  }
+  .scene-stack[data-motion='flow'] .scene-stack__navigation button {
+    inline-size: 2.75rem;
+    block-size: 2.75rem;
+    background: transparent;
+  }
+  .scene-stack[data-motion='flow'] .scene-stack__credit {
+    display: block;
+    position: static;
+    padding: 0.75rem var(--container-gutter) 1.5rem;
+    font-size: 0.6rem;
+  }
+
+  /* Architectural chapters lead with an image, then dissolve into the shared ink surface. */
+  .home .scene-stack:not([data-motion='full']) .scene,
+  .home .scene-stack:not([data-motion='full']) .scene__frame {
+    min-block-size: 0;
+  }
+  .home .scene-stack:not([data-motion='full']) .scene__media {
+    inset-block-end: auto;
+    block-size: 60svh;
+    min-block-size: 22rem;
+  }
+  .home .scene-stack:not([data-motion='full']) .scene__media img {
+    object-position: var(--focus-x) var(--focus-y);
+  }
+  .home .scene-stack:not([data-motion='full']) .scene__shade {
+    background: linear-gradient(
+      to bottom,
+      transparent 8svh,
+      rgb(17 24 28 / 0.12) 22svh,
+      var(--jcdc-ink) 59svh
+    );
+  }
+  .home .scene-stack:not([data-motion='full']) .scene__content {
+    margin-block-start: 39svh;
+    padding-block: 0 4rem;
+    gap: 1.1rem;
+    text-align: start;
+    justify-items: stretch;
+  }
+  .home .scene-stack:not([data-motion='full']) .scene__title {
+    font-size: clamp(2.25rem, 7.5vw, 4.25rem);
+    line-height: 1.1;
+    max-inline-size: 18ch;
+  }
+  .home .scene-stack:not([data-motion='full']) .scene__lead {
+    font-size: 1.05rem;
+    line-height: 1.55;
+    text-shadow: none;
+  }
+  .home .scene-stack:not([data-motion='full']) .scene[data-variant='hero'] .scene__frame {
+    min-block-size: calc(100svh - 9rem);
+  }
+  .home .scene-stack:not([data-motion='full']) .scene[data-variant='hero'] .scene__media,
+  .home .scene-stack:not([data-motion='full']) .scene[data-variant='statement'] .scene__media {
+    block-size: 100%;
+  }
+  .home .scene-stack:not([data-motion='full']) .scene[data-variant='hero'] .scene__shade,
+  .home .scene-stack:not([data-motion='full']) .scene[data-variant='statement'] .scene__shade {
+    background: linear-gradient(
+      to bottom,
+      rgb(9 18 24 / 0.05),
+      rgb(9 18 24 / 0.4) 35%,
+      var(--jcdc-ink) 100%
+    );
+  }
+  .home .scene-stack:not([data-motion='full']) .scene[data-variant='hero'] .scene__content {
+    margin-block-start: 0;
+    padding-block: clamp(10rem, 26svh, 20rem) 3rem;
+  }
+  .home .scene-stack:not([data-motion='full']) .scene__title--hero {
+    font-size: clamp(3.2rem, 12vw, 6rem);
+    max-inline-size: 12ch;
+    line-height: 1;
+  }
+  .home .scene-stack:not([data-motion='full']) .scene[data-variant='statement'] .scene__content {
+    margin-block-start: 0;
+    padding-block: 8rem;
+  }
+  .home .scene-stack:not([data-motion='full']) .scene__copy {
+    gap: 1.1rem;
+  }
+  .home .scene-stack:not([data-motion='full']) .scene__stats {
+    gap: 1.5rem 1rem;
+  }
+  .home .scene-stack:not([data-motion='full']) .scene__stat:first-child {
+    grid-column: 1 / -1;
+  }
+  .home .scene-stack:not([data-motion='full']) .scene__stat dd {
+    line-height: 1.15;
+  }
+
+  /* Horizontal touch galleries, with the next card peeking in as an affordance. */
+  .home .scene-stack:not([data-motion='full']) .scene__film-viewport {
+    overflow-x: auto;
+    overflow-y: hidden;
+    scroll-snap-type: x mandatory;
+    overscroll-behavior-x: contain;
+    scrollbar-width: thin;
+    scrollbar-color: var(--jcdc-secondary) transparent;
+    padding-block-end: 1rem;
+  }
+  .home .scene-stack:not([data-motion='full']) .scene__film {
+    display: flex;
+    inline-size: max-content;
+    gap: 1rem;
+  }
+  .home .scene-stack:not([data-motion='full']) .scene__film > a {
+    inline-size: min(76vw, 25rem);
+    scroll-snap-align: start;
+    font-size: var(--step-0);
+  }
+  .home .scene-stack:not([data-motion='full']) .scene__film img {
+    block-size: clamp(15rem, 36svh, 25rem);
+  }
+
+  /* Shorter heroes, comfortable reading columns and aligned touch actions across all pages. */
+  .editorial-hero,
+  .landmarks-hero,
+  .destination-hero {
+    block-size: auto;
+    min-block-size: min(48rem, 92svh);
+  }
+  .editorial-hero__copy,
+  .landmarks-hero__copy,
+  .destination-hero__copy {
+    padding-block: 9rem 5rem;
+    gap: 1.25rem;
+  }
+  .editorial-hero__title,
+  .landmarks-hero__title,
+  .destination-hero__title {
+    font-size: clamp(2.7rem, 8.5vw, 4.5rem);
+    line-height: 1.12;
+    overflow-wrap: break-word;
+  }
+  .editorial-section,
+  .invest-page .invest-sectors,
+  .invest-page .invest-why,
+  .invest-page .invest-registration {
+    padding-block: 3.5rem;
+  }
+  .editorial-section__head,
+  .invest-page .invest-section-heading {
+    margin-block-end: 2rem;
+  }
+  .landmarks-feature,
+  .landmark-story {
+    gap: 1.5rem;
+  }
+  .journal-card {
+    gap: 1rem;
+    padding-block-end: 1.5rem;
+    border-block-end: 1px solid var(--editorial-line);
+  }
+  .journal-grid {
+    gap: 2.5rem;
+  }
+  .journal-card h3 {
+    font-size: var(--step-2);
+    line-height: 1.3;
+  }
+  .destination-explorer {
+    scroll-margin-block-start: 6rem;
+  }
+  .destination-continue {
+    min-block-size: 34rem;
+  }
+  .policy-page__layout {
+    gap: 2rem;
+  }
+  .policy-page nav {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 0.5rem 1rem;
+  }
+  .policy-page nav a {
+    min-block-size: 2.75rem;
+  }
+  :is(
+    .scene-action,
+    .editorial-action,
+    .landmarks-action,
+    .destination-action,
+    .invest-button,
+    .site-header__menu
+  ):active {
+    scale: 0.98;
+  }
+}
+
+@media (max-width: 30rem) {
+  .home .scene__actions,
+  .editorial-hero__actions,
+  .landmarks-hero__copy .landmarks-actions,
+  .destination-hero__copy .destination__actions {
+    display: grid;
+    inline-size: 100%;
+    gap: 0.75rem;
+  }
+  .home .scene-action,
+  .editorial-hero__actions > *,
+  .landmarks-hero__copy .landmarks-actions > *,
+  .destination-hero__copy .destination__actions > * {
+    justify-content: space-between;
+    min-block-size: 3.25rem;
+  }
+  .scene-action--solid {
+    padding-inline: 1.25rem;
+  }
+  .scene__pillars ul {
+    gap: 1rem;
+    font-size: 0.95rem;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .site-nav__list > li {
+    opacity: 1;
+    transform: none;
+    transition: none;
+  }
+  :is(
+    .scene-action,
+    .editorial-action,
+    .landmarks-action,
+    .destination-action,
+    .invest-button,
+    .site-header__menu
+  ):active {
+    scale: 1;
+  }
+}

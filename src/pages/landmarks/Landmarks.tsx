@@ -4,7 +4,7 @@ import { OfficialPicture } from '../../app/OfficialPicture';
 import { useI18n } from '../../app/i18n';
 import { LANDMARK_IDS, LANDMARKS } from '../../data/landmarks';
 import { LANDMARK_IMAGES } from '../../data/marketing';
-import { Reveal } from '../../motion/Reveal';
+import { FlowReveal as Reveal } from '../../motion/FlowReveal';
 import { LandmarkAction, LandmarkHero, LandmarkPageShell } from './LandmarkHero';
 
 /** The collection gives each landmark its own architectural frame, with the stadium first. */

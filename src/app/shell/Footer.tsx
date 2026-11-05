@@ -1,7 +1,7 @@
 import type { ReactNode } from 'react';
 import { LEGAL_NAV, MAIN_NAV, SOCIAL_LINKS, type NavItem } from '../../data/site';
 import { useI18n } from '../i18n';
-import { Reveal } from '../../motion/Reveal';
+import { FlowReveal as Reveal } from '../../motion/FlowReveal';
 
 function NavList({ items }: { items: readonly NavItem[] }): ReactNode {
   const { t } = useI18n();
@@ -71,7 +71,7 @@ function FooterContent(): ReactNode {
   );
 }
 
-/** Home closes with the same quiet reveals as its news section. Other routes keep their shell. */
+/** Every marketing route closes with the same quiet, persistent reading entrances. */
 export function Footer({ animate = false }: { animate?: boolean }): ReactNode {
   return (
     <footer className="site-footer">

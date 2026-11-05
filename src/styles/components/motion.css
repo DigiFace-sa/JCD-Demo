@@ -1,8 +1,12 @@
 /* ── Cinematic scene stack (src/motion/SceneStack.tsx) ─────────────────────────── */
 .scene-stack {
   position: relative;
+  overflow-anchor: none;
   background: var(--jcdc-ink);
   color: var(--jcdc-sand);
+}
+.scene-stack__controls {
+  display: contents;
 }
 .scene-stack__frame {
   position: relative;

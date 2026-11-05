@@ -12,13 +12,14 @@ import {
 } from 'react';
 import { useI18n } from '../app/i18n';
 import { useLenis } from '../app/SmoothScroll';
-import { onLangChange } from '../i18n/i18n';
+import { onBeforeLangChange } from '../i18n/i18n';
 import { useReducedMotion } from '../app/useReducedMotion';
 import { useMediaQuery } from '../app/useMediaQuery';
 import { Icon } from '../app/shell/Icon';
 import { OfficialPicture } from '../app/OfficialPicture';
 import type { MarketingImage } from '../data/marketing';
 import { addIntro, addOutro, cascadeStep, CHOREOGRAPHY, taggedElements } from './choreography';
+import { flowEntrances } from './flowMotion';
 
 gsap.registerPlugin(ScrollTrigger, useGSAP);
 
@@ -58,6 +59,9 @@ const STACK = {
   dissolve: { outScale: 0.9, outShade: 0.72, inScale: 1.3, sliver: 0.004 },
   zoom: { outScale: 2.6, inScale: 1.35 },
 } as const;
+
+/** Native touch scrolling: restrained image travel, permanent copy, no full-screen pin. */
+const MOBILE = { imageScale: 1.08, imageTravel: 3, readingLine: '48%', gap: 8 } as const;
 
 export interface SceneProps {
   /** Scroll units for this chapter; galleries get more reading time than a single picture. */
@@ -158,11 +162,38 @@ export function SceneStack({
   const savedScroll = useRef<number | null>(null);
   useEffect(
     () =>
-      onLangChange(() => {
+      onBeforeLangChange(() => {
         savedScroll.current = window.scrollY;
       }),
     [],
   );
+  useEffect(() => {
+    const y = savedScroll.current;
+    if (y === null) return;
+    let cancelled = false;
+    let frame = 0;
+    // A first Arabic visit can load its font after the new flow layout was measured. Restore
+    // again once shaping and SplitText have settled, rather than relying on scroll anchoring.
+    void document.fonts.ready.then(() => {
+      if (cancelled) return;
+      frame = requestAnimationFrame(() => {
+        frame = requestAnimationFrame(() => {
+          ScrollTrigger.refresh();
+          const scroller = lenisRef.current;
+          if (scroller) {
+            scroller.resize();
+            scroller.scrollTo(y, { immediate: true, force: true });
+          } else window.scrollTo(0, y);
+          savedScroll.current = null;
+          ScrollTrigger.update();
+        });
+      });
+    });
+    return () => {
+      cancelled = true;
+      cancelAnimationFrame(frame);
+    };
+  }, [lang]);
   const scenes = Children.toArray(children).filter(
     (child): child is ReactElement<SceneProps> => isValidElement(child) && child.type === Scene,
   );
@@ -192,7 +223,14 @@ export function SceneStack({
         });
         // Horizon reveals write through quickSetter while tweening a plain object. Clear those
         // transforms explicitly: they are not owned by the timeline's normal DOM reversion.
-        gsap.set([...sections, ...frames], { clearProps: 'transform,opacity,visibility' });
+        gsap.set(
+          [
+            ...sections,
+            ...frames,
+            ...stack.querySelectorAll('.scene__media, .scene__media img, [data-depth]'),
+          ],
+          { clearProps: 'transform,opacity,visibility' },
+        );
       };
       const updateStage = (): void => {
         const bounds = stack.getBoundingClientRect();
@@ -214,7 +252,6 @@ export function SceneStack({
       const restoreScroll = (): void => {
         if (savedScroll.current === null) return;
         const y = savedScroll.current;
-        savedScroll.current = null;
         ScrollTrigger.refresh();
         const scroller = lenisRef.current;
         if (scroller) {
@@ -227,8 +264,90 @@ export function SceneStack({
       if (flow) {
         restoreScenes();
         trackStage();
+        const cleanups: (() => void)[] = [];
+        const intro = gsap.timeline({ paused: true });
+        firstIntroRef.current = intro;
+        let active = 0;
+        const setChapter = (index: number): void => {
+          active = index;
+          stack.dataset.chapter = String(index);
+          const scene = sections[index];
+          const chapter = stack.querySelector('.scene-stack__chapter');
+          const count = stack.querySelector('.scene-stack__count');
+          const bar = stack.querySelector('.scene-stack__bar > span');
+          if (chapter) chapter.textContent = scene?.dataset.chapter ?? '';
+          if (count)
+            count.textContent = t('marketing.cinema.position', {
+              current: String(index + 1).padStart(2, '0'),
+              total: String(sections.length).padStart(2, '0'),
+            });
+          if (bar) gsap.set(bar, { scaleX: (index + 1) / sections.length });
+          if (previousButton.current) previousButton.current.disabled = index === 0;
+          if (nextButton.current) nextButton.current.disabled = index === sections.length - 1;
+        };
+        setChapter(0);
+        sections.forEach((scene, index) => {
+          if (!reduced) {
+            cleanups.push(flowEntrances(scene, rtl, true, index === 0 ? intro : undefined));
+            const media = scene.querySelector('.scene__media');
+            if (media)
+              gsap.fromTo(
+                media,
+                { scale: MOBILE.imageScale, yPercent: -MOBILE.imageTravel },
+                {
+                  yPercent: MOBILE.imageTravel,
+                  ease: 'none',
+                  scrollTrigger: {
+                    trigger: scene,
+                    start: 'top bottom',
+                    end: 'bottom top',
+                    scrub: true,
+                  },
+                },
+              );
+          }
+          ScrollTrigger.create({
+            trigger: scene,
+            start: `top ${MOBILE.readingLine}`,
+            end: `bottom ${MOBILE.readingLine}`,
+            onToggle: (trigger) => {
+              if (trigger.isActive) setChapter(index);
+            },
+            onRefresh: (trigger) => {
+              if (trigger.isActive) setChapter(index);
+            },
+          });
+        });
+        navigateRef.current = (direction) => {
+          const index = Math.max(0, Math.min(sections.length - 1, active + direction));
+          const scene = sections[index];
+          if (!scene) return;
+          const headerHeight =
+            document.querySelector('.site-header')?.getBoundingClientRect().height ?? 0;
+          const controlsHeight =
+            stack.querySelector('.scene-stack__controls')?.getBoundingClientRect().height ?? 0;
+          const y =
+            window.scrollY +
+            scene.getBoundingClientRect().top -
+            headerHeight -
+            controlsHeight -
+            MOBILE.gap;
+          const scroller = lenisRef.current;
+          if (scroller && !reduced)
+            scroller.scrollTo(y, { duration: STACK.navigationDuration, force: true });
+          else window.scrollTo({ top: y, behavior: reduced ? 'instant' : 'smooth' });
+          if (status.current) status.current.textContent = scene.getAttribute('aria-label') ?? '';
+        };
+        intro.timeScale(STACK.firstIntroTimeScale);
+        if (readyRef.current) intro.play();
         restoreScroll();
         return () => {
+          firstIntroRef.current = null;
+          navigateRef.current = null;
+          cleanups.forEach((cleanup) => {
+            cleanup();
+          });
+          delete stack.dataset.chapter;
           restoreScenes();
           delete document.body.dataset.stage;
         };
@@ -548,7 +667,7 @@ export function SceneStack({
         delete document.body.dataset.stage;
       };
     },
-    { scope: root, dependencies: [lang, flow, scenes.length], revertOnUpdate: true },
+    { scope: root, dependencies: [lang, reduced, narrow, scenes.length], revertOnUpdate: true },
   );
 
   useEffect(() => {
@@ -568,6 +687,38 @@ export function SceneStack({
       {/* The pinned frame is never keyed or replaced: GSAP re-parents it into a pin spacer, and
           React must not try to remove it from its original parent. */}
       <div className="scene-stack__frame">
+        <div className="scene-stack__controls">
+          <div className="scene-stack__meter" aria-hidden="true">
+            <span className="scene-stack__chapter" />
+            <span className="scene-stack__bar">
+              <span />
+            </span>
+            <span className="scene-stack__count" />
+          </div>
+          <nav className="scene-stack__navigation" aria-label={t('marketing.cinema.navigation')}>
+            <button
+              ref={previousButton}
+              className="scene-stack__previous"
+              type="button"
+              aria-label={t('marketing.cinema.previous')}
+              onClick={() => {
+                navigateRef.current?.(-1);
+              }}
+            >
+              <Icon name="arrow" />
+            </button>
+            <button
+              ref={nextButton}
+              type="button"
+              aria-label={t('marketing.cinema.next')}
+              onClick={() => {
+                navigateRef.current?.(1);
+              }}
+            >
+              <Icon name="arrow" />
+            </button>
+          </nav>
+        </div>
         {/* Remount on language change: split text is rebuilt from fresh React-rendered copy. */}
         <div className="scene-stack__scenes" key={lang}>
           {scenes.map((scene, index) =>
@@ -576,36 +727,6 @@ export function SceneStack({
         </div>
         <span className="scene-stack__horizon" aria-hidden="true" />
         <span className="scene-stack__scan" aria-hidden="true" />
-        <div className="scene-stack__meter" aria-hidden="true">
-          <span className="scene-stack__chapter" />
-          <span className="scene-stack__bar">
-            <span />
-          </span>
-          <span className="scene-stack__count" />
-        </div>
-        <nav className="scene-stack__navigation" aria-label={t('marketing.cinema.navigation')}>
-          <button
-            ref={previousButton}
-            className="scene-stack__previous"
-            type="button"
-            aria-label={t('marketing.cinema.previous')}
-            onClick={() => {
-              navigateRef.current?.(-1);
-            }}
-          >
-            <Icon name="arrow" />
-          </button>
-          <button
-            ref={nextButton}
-            type="button"
-            aria-label={t('marketing.cinema.next')}
-            onClick={() => {
-              navigateRef.current?.(1);
-            }}
-          >
-            <Icon name="arrow" />
-          </button>
-        </nav>
         <p
           className="visually-hidden"
           role="status"

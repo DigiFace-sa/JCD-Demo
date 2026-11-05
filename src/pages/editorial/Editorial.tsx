@@ -20,6 +20,8 @@ const MOTION = {
   travel: 10,
   scrub: 0.6,
   narrow: '(max-width: 60rem)',
+  /** A small overscan covers mobile image travel without exposing an edge. */
+  mobile: { heroScale: 1.06, heroTravel: 3, cardScale: 1.08 },
 } as const;
 
 gsap.registerPlugin(useGSAP, ScrollTrigger);
@@ -32,6 +34,8 @@ export function EditorialPage({
   routeKey?: string;
 }): ReactNode {
   const { lang } = useI18n();
+  const reduced = useReducedMotion();
+  const narrow = useMediaQuery(MOTION.narrow);
   const lenis = useLenis();
   const scroller = useRef(lenis);
   const saved = useRef<number | null>(null);
@@ -88,6 +92,30 @@ export function EditorialPage({
       cancelAnimationFrame(frame);
     };
   }, [lang]);
+  useGSAP(
+    () => {
+      if (!narrow || reduced) return;
+      // The picture layer moves independently of the card's one-time text entrance.
+      for (const picture of root.current?.querySelectorAll(
+        '.journal-card__image img, .invest-sector__image picture',
+      ) ?? [])
+        gsap.fromTo(
+          picture,
+          { scale: MOTION.mobile.cardScale },
+          {
+            scale: 1,
+            ease: 'none',
+            scrollTrigger: {
+              trigger: picture.parentElement,
+              start: 'top bottom',
+              end: 'bottom top',
+              scrub: true,
+            },
+          },
+        );
+    },
+    { scope: root, dependencies: [lang, routeKey, narrow, reduced], revertOnUpdate: true },
+  );
   return (
     <div className="editorial-page" ref={root}>
       {children}
@@ -139,25 +167,30 @@ export function EditorialHero({
       const intro = gsap.timeline();
       const step = cascadeStep(elements.length);
       elements.forEach(({ element, kind }, index) => {
-        addIntro(intro, element, kind, rtl, index * step);
+        addIntro(
+          intro,
+          element,
+          narrow && (kind === 'heading' || kind === 'lines') ? 'rise' : kind,
+          rtl,
+          index * step,
+        );
       });
       intro.timeScale(MOTION.introSpeed);
-      if (!narrow)
-        gsap.fromTo(
-          '.editorial-hero__media',
-          { scale: MOTION.push, yPercent: 0 },
-          {
-            scale: 1,
-            yPercent: MOTION.travel,
-            ease: 'none',
-            scrollTrigger: {
-              trigger: root.current,
-              start: 'top top',
-              end: 'bottom top',
-              scrub: MOTION.scrub,
-            },
+      gsap.fromTo(
+        '.editorial-hero__media',
+        { scale: narrow ? MOTION.mobile.heroScale : MOTION.push, yPercent: 0 },
+        {
+          scale: 1,
+          yPercent: narrow ? MOTION.mobile.heroTravel : MOTION.travel,
+          ease: 'none',
+          scrollTrigger: {
+            trigger: root.current,
+            start: 'top top',
+            end: 'bottom top',
+            scrub: MOTION.scrub,
           },
-        );
+        },
+      );
     },
     { scope: root, dependencies: [lang, image, title, reduced, narrow], revertOnUpdate: true },
   );

@@ -55,6 +55,11 @@ allow the website and its 3D models to run under the repository subfolder. Local
 changes are not published. Public preview publishing was explicitly authorised by the user;
 future pushes still require authorisation.
 
+The [mobile website review](docs/MOBILE_WEB_REVIEW.md) records the November mobile motion pass:
+Home gets native touch scrolling, chapter controls, image depth and swipeable district cards.
+The other marketing pages use shorter phone layouts and permanent reading entrances. The separate
+3D Experience is unchanged. Review captures and limitations are listed in that report.
+
 ## Pitch day
 
 One-time preparation on the pitch machine: install [Node.js](https://nodejs.org) (LTS), copy this

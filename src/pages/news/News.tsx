@@ -3,7 +3,7 @@ import { OfficialPicture } from '../../app/OfficialPicture';
 import { useI18n } from '../../app/i18n';
 import { NEWS, NEWS_IDS, type NewsId } from '../../data/marketing';
 import { Copy } from '../../app/Copy';
-import { Reveal } from '../../motion/Reveal';
+import { FlowReveal as Reveal } from '../../motion/FlowReveal';
 import { EditorialAction, EditorialHero, EditorialPage } from '../editorial/Editorial';
 
 export function NewsCards({ exclude }: { exclude?: NewsId }): ReactNode {

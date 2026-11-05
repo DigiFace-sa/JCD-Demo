@@ -5,6 +5,7 @@ import { isNewsId, NEWS } from '../../data/marketing';
 import type { ViewProps } from '../../router/routes';
 import { EditorialAction, EditorialHero, EditorialPage } from '../editorial/Editorial';
 import { NewsCards } from './News';
+import { FlowReveal } from '../../motion/FlowReveal';
 
 export default function NewsStory({ context }: ViewProps): ReactNode {
   const { t } = useI18n();
@@ -16,9 +17,9 @@ export default function NewsStory({ context }: ViewProps): ReactNode {
       <EditorialHero image={story.image} eyebrow={story.categoryKey} title={story.titleKey}>
         <time dateTime={story.date}>{t(story.dateKey)}</time>
       </EditorialHero>
-      <article className="journal-article container">
+      <FlowReveal as="article" className="journal-article container" key={id}>
         <EditorialAction href="#/news">{t('marketing.actions.backNews')}</EditorialAction>
-        <Copy k={story.bodyKey} className="journal-article__text" />
+        <Copy k={story.bodyKey} className="journal-article__text" motion="lines" />
         <a
           className="editorial-action"
           href={story.source}
@@ -27,7 +28,7 @@ export default function NewsStory({ context }: ViewProps): ReactNode {
         >
           {t('marketing.actions.source')}
         </a>
-      </article>
+      </FlowReveal>
       <section className="editorial-section container">
         <h2 className="editorial-heading">{t('marketing.common.news')}</h2>
         <NewsCards exclude={id} />

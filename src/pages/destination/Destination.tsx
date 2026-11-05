@@ -9,6 +9,7 @@ import { useI18n } from '../../app/i18n';
 import { useLenis } from '../../app/SmoothScroll';
 import { Icon } from '../../app/shell/Icon';
 import { useReducedMotion } from '../../app/useReducedMotion';
+import { useMediaQuery } from '../../app/useMediaQuery';
 import { ATTRACTIONS } from '../../data/attractions';
 import {
   DESTINATION_ATTRACTIONS,
@@ -18,7 +19,7 @@ import {
 import { DISTRICTS, DISTRICT_IDS, isDistrictId, type DistrictId } from '../../data/districts';
 import { SUSTAINABILITY_ITEMS } from '../../data/marketing';
 import { onBeforeLangChange } from '../../i18n/i18n';
-import { Reveal } from '../../motion/Reveal';
+import { FlowReveal as Reveal } from '../../motion/FlowReveal';
 import { addIntro, cascadeStep, taggedElements } from '../../motion/choreography';
 import type { ViewProps } from '../../router/routes';
 import { ProjectorMap } from './ProjectorMap';
@@ -34,6 +35,8 @@ const MOTION = {
   section: { y: 32, duration: 1 },
   headerInset: 135,
   scrollDuration: 1.2,
+  /** Touch images drift less, while hero copy stays fully readable. */
+  mobile: { heroScale: 1.06, heroTravel: 3, imageScale: 1.05, imageTravel: 2 },
 } as const;
 
 function Action({
@@ -172,6 +175,7 @@ function SustainabilityThemes(): ReactNode {
 export default function Destination({ context }: ViewProps): ReactNode {
   const { t, lang } = useI18n();
   const reduced = useReducedMotion();
+  const narrow = useMediaQuery('(max-width: 60rem)');
   const navigate = useNavigate();
   const lenis = useLenis();
   const lenisRef = useRef(lenis);
@@ -270,27 +274,34 @@ export default function Destination({ context }: ViewProps): ReactNode {
           const elements = taggedElements(copy);
           const step = cascadeStep(elements.length);
           elements.forEach(({ element, kind }, index) => {
-            addIntro(intro, element, kind, document.documentElement.dir === 'rtl', index * step);
+            addIntro(
+              intro,
+              element,
+              narrow && (kind === 'heading' || kind === 'lines') ? 'rise' : kind,
+              document.documentElement.dir === 'rtl',
+              index * step,
+            );
           });
           intro.timeScale(MOTION.hero.introSpeed);
-          gsap.to(copy, {
-            y: MOTION.hero.outro,
-            opacity: 0,
-            ease: 'none',
-            scrollTrigger: {
-              trigger: '.destination-hero',
-              start: 'top top',
-              end: 'bottom 35%',
-              scrub: MOTION.scrub,
-            },
-          });
+          if (!narrow)
+            gsap.to(copy, {
+              y: MOTION.hero.outro,
+              opacity: 0,
+              ease: 'none',
+              scrollTrigger: {
+                trigger: '.destination-hero',
+                start: 'top top',
+                end: 'bottom 35%',
+                scrub: MOTION.scrub,
+              },
+            });
         }
         gsap.fromTo(
           '.destination-hero__media',
-          { scale: MOTION.hero.from, yPercent: 0 },
+          { scale: narrow ? MOTION.mobile.heroScale : MOTION.hero.from, yPercent: 0 },
           {
             scale: MOTION.hero.to,
-            yPercent: MOTION.hero.travel,
+            yPercent: narrow ? MOTION.mobile.heroTravel : MOTION.hero.travel,
             ease: 'none',
             scrollTrigger: {
               trigger: '.destination-hero',
@@ -303,10 +314,13 @@ export default function Destination({ context }: ViewProps): ReactNode {
         for (const image of root.current?.querySelectorAll('.destination__parallax') ?? [])
           gsap.fromTo(
             image,
-            { scale: MOTION.image.from, yPercent: -MOTION.image.travel },
+            {
+              scale: narrow ? MOTION.mobile.imageScale : MOTION.image.from,
+              yPercent: narrow ? -MOTION.mobile.imageTravel : -MOTION.image.travel,
+            },
             {
               scale: MOTION.image.to,
-              yPercent: MOTION.image.travel,
+              yPercent: narrow ? MOTION.mobile.imageTravel : MOTION.image.travel,
               ease: 'none',
               scrollTrigger: {
                 trigger: image.parentElement,
@@ -333,7 +347,7 @@ export default function Destination({ context }: ViewProps): ReactNode {
         );
       }
     },
-    { scope: root, dependencies: [lang, reduced], revertOnUpdate: true },
+    { scope: root, dependencies: [lang, reduced, narrow], revertOnUpdate: true },
   );
 
   const choose = (id: DistrictId): void => {
