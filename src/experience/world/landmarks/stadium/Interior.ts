@@ -11,9 +11,9 @@ import {
   PlaneGeometry,
   Vector3,
 } from 'three';
-import { STADIUM, STADIUM_POSITION } from '../../../config/stadium';
+import { STADIUM, STADIUM_POSITION, VIP_LOUNGE } from '../../../config/stadium';
 import type { Atmosphere } from '../../Atmosphere';
-import { ellipticBand, ellipticRing } from '../geometry';
+import { ellipticRing } from '../geometry';
 
 /** Shared masonry and structure palette, deliberately restrained under the sunset lighting. */
 const PALETTE = {
@@ -28,7 +28,6 @@ const VIP_BAYS = 72;
 /** One rounded, two-triangle back per illustrative seat; colour and edge detail stay in the shader. */
 const SEATS_PER_ROW = 464;
 const SEAT_BACK = { width: 0.64, height: 0.52, lift: 0.3 } as const;
-const GOAL = { width: 7.32, height: 2.44, depth: 1.8, halfPitch: 51.5 } as const;
 const Y_AXIS = new Vector3(0, 1, 0);
 
 /** Quad builder: winding is checked against an outward/up normal before indexing. */
@@ -73,6 +72,25 @@ export function entranceFacade(): BufferGeometry {
       point(1.03, 40, b),
       point(1.03, 40, a),
       outward,
+    );
+  }
+  return surface.geometry();
+}
+
+/** Leave an actual opening for the Blender lounge's windows and sliding entrance. */
+function hospitalityBand(): BufferGeometry {
+  const surface = new Surface();
+  for (let i = 0; i < STADIUM.segments; i++) {
+    const a = (i / STADIUM.segments) * Math.PI * 2;
+    const b = ((i + 1) / STADIUM.segments) * Math.PI * 2;
+    const middle = point(0.86, 29, (a + b) / 2);
+    if (middle.x < 0 && Math.abs(middle.z) < VIP_LOUNGE.openingHalfWidth) continue;
+    surface.quad(
+      point(0.86, 27.5, a),
+      point(0.86, 27.5, b),
+      point(0.86, 30.5, b),
+      point(0.86, 30.5, a),
+      middle.clone().setY(0).normalize(),
     );
   }
   return surface.geometry();
@@ -133,6 +151,15 @@ export function createInterior(atmosphere: Atmosphere): Group {
         const a = (i / STADIUM.segments) * Math.PI * 2;
         const b = ((i + 1) / STADIUM.segments) * Math.PI * 2;
         const aisle = i % AISLE_SEGMENTS < 2;
+        const mid = point((r0 + r1) / 2, y1, (a + b) / 2);
+        // The raised suite replaces the first upper rows locally, rather than intersecting them.
+        if (
+          tier.inner > 0.88 &&
+          row < VIP_LOUNGE.removedUpperRows &&
+          mid.x < 0 &&
+          Math.abs(mid.z) < VIP_LOUNGE.openingHalfWidth
+        )
+          continue;
         // Openings occupy the foot of the middle/upper tiers and open onto the concourse.
         if (tier.inner > 0.7 && row < 4 && aisle) continue;
         (aisle ? masonry : treads).quad(
@@ -165,7 +192,7 @@ export function createInterior(atmosphere: Atmosphere): Group {
     new Mesh(ellipticRing(STADIUM.rx, STADIUM.rz, 0.69, 1.025, 14, 14), stone),
     new Mesh(ellipticRing(STADIUM.rx, STADIUM.rz, 0.84, 1.01, 27.3, 27.3), stone),
     new Mesh(
-      ellipticBand(STADIUM.rx * 0.86, STADIUM.rz * 0.86, 27.5, 30.5),
+      hospitalityBand(),
       material({
         color: PALETTE.glass,
         roughness: 0.22,
@@ -175,17 +202,21 @@ export function createInterior(atmosphere: Atmosphere): Group {
         side: DoubleSide,
       }),
     ),
-    new Mesh(ellipticBand(STADIUM.rx * 0.865, STADIUM.rz * 0.865, 27.1, 27.5), glow),
+    new Mesh(ellipticRing(STADIUM.rx * 0.865, STADIUM.rz * 0.865, 1, 1, 27.1, 27.5), glow),
   );
 
   const frames = new InstancedMesh(new BoxGeometry(0.18, 3.4, 0.28), steel, VIP_BAYS);
   const transform = new Matrix4();
+  let frameCount = 0;
   for (let i = 0; i < VIP_BAYS; i++) {
     const angle = (i / VIP_BAYS) * Math.PI * 2;
+    const position = point(0.855, 29, angle);
+    if (position.x < 0 && Math.abs(position.z) < VIP_LOUNGE.openingHalfWidth) continue;
     transform.makeRotationY(-angle);
-    transform.setPosition(point(0.855, 29, angle));
-    frames.setMatrixAt(i, transform);
+    transform.setPosition(position);
+    frames.setMatrixAt(frameCount++, transform);
   }
+  frames.count = frameCount;
   root.add(frames);
 
   const seatBackMaterial = atmosphere.patch(
@@ -236,6 +267,13 @@ export function createInterior(atmosphere: Atmosphere): Group {
         if (segment % AISLE_SEGMENTS < 2) continue;
         const position = point(radius, height, angle);
         if (
+          tier.inner > 0.88 &&
+          row < VIP_LOUNGE.removedUpperRows &&
+          position.x < 0 &&
+          Math.abs(position.z) < VIP_LOUNGE.openingHalfWidth
+        )
+          continue;
+        if (
           position.x >= STADIUM.tunnel.innerX - SEAT_BACK.width &&
           Math.abs(position.z) < STADIUM.tunnel.halfWidth + SEAT_BACK.width &&
           position.y < STADIUM.tunnel.ceiling
@@ -250,45 +288,6 @@ export function createInterior(atmosphere: Atmosphere): Group {
   seatBacks.count = instance;
   seatBacks.name = 'stadium-seat-backs';
   root.add(seatBacks);
-
-  const goalMaterial = material({ color: '#f3f0df', roughness: 0.55 });
-  const goals = new InstancedMesh(new BoxGeometry(1, 1, 1), goalMaterial, 6);
-  for (let end = 0; end < 2; end++) {
-    const z = (end === 0 ? -1 : 1) * GOAL.halfPitch;
-    for (let post = 0; post < 2; post++) {
-      transform.makeScale(0.12, GOAL.height, 0.12);
-      transform.setPosition(((post === 0 ? -1 : 1) * GOAL.width) / 2, 3 + GOAL.height / 2, z);
-      goals.setMatrixAt(end * 3 + post, transform);
-    }
-    transform.makeScale(GOAL.width + 0.12, 0.12, 0.12);
-    transform.setPosition(0, 3 + GOAL.height, z);
-    goals.setMatrixAt(end * 3 + 2, transform);
-    const net = new Mesh(
-      new PlaneGeometry(GOAL.width, GOAL.height),
-      atmosphere.patch(
-        new MeshStandardMaterial({
-          color: '#ddd9cc',
-          roughness: 0.8,
-          side: DoubleSide,
-          alphaTest: 0.5,
-        }),
-        {
-          key: 'stadium-net',
-          uniforms: {},
-          fragmentPars: '',
-          afterDiffuse: `
-        vec2 grid = fract(vAtmoWorldPos.xy / 0.16);
-        vec2 width = max(fwidth(vAtmoWorldPos.xy / 0.16), vec2(0.02));
-        vec2 thread = 1.0 - smoothstep(vec2(0.035), vec2(0.035) + width, min(grid, 1.0 - grid));
-        diffuseColor.a = max(thread.x, thread.y);
-      `,
-        },
-      ),
-    );
-    net.position.set(0, 3 + GOAL.height / 2, z + (end === 0 ? -1 : 1) * GOAL.depth);
-    root.add(net);
-  }
-  root.add(goals);
 
   // Roof structure is part of the exterior model (stadium.glb), aligned with its louvre roof.
 

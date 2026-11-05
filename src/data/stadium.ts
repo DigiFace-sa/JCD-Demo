@@ -26,8 +26,8 @@ export const STADIUM_HOTSPOTS: Readonly<Record<StadiumHotspotId, StadiumHotspot>
     titleKey: 'stadium.hotspots.pitch.title',
     bodyKey: 'stadium.hotspots.pitch.body',
     anchor: { x: 0, y: 4, z: 0 },
-    target: { x: 0, y: 4, z: 0 },
-    shot: { radius: 67, polarDeg: 64, azimuthDeg: 110 },
+    target: { x: 0, y: 3.5, z: 0 },
+    shot: { radius: 70, polarDeg: 63, azimuthDeg: 90 },
   },
   seating: {
     titleKey: 'stadium.hotspots.seating.title',
@@ -46,9 +46,9 @@ export const STADIUM_HOTSPOTS: Readonly<Record<StadiumHotspotId, StadiumHotspot>
   vip: {
     titleKey: 'stadium.hotspots.vip.title',
     bodyKey: 'stadium.hotspots.vip.body',
-    anchor: { x: -93, y: 29, z: 8 },
-    target: { x: -94, y: 29, z: 8 },
-    shot: { radius: 48, polarDeg: 83, azimuthDeg: 90 },
+    anchor: { x: -97, y: 32, z: 11 },
+    target: { x: -105, y: 29.3, z: -12.147 },
+    shot: { radius: Math.sqrt(637.25), polarDeg: 85, azimuthDeg: 0 },
   },
   concourse: {
     titleKey: 'stadium.hotspots.concourse.title',

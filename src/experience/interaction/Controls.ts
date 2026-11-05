@@ -22,6 +22,8 @@ export interface ControlLimits {
   readonly maxAzimuth?: number;
   /** Optional world-space safety envelope for the stadium bowl (never applied to path flights). */
   readonly constrainPosition?: (position: Vector3) => void;
+  /** Stationary indoor look-around; orbit angles steer the gaze instead of moving the eye. */
+  readonly fixedEye?: { readonly x: number; readonly y: number; readonly z: number };
   readonly bounds: {
     readonly minX: number;
     readonly maxX: number;
@@ -149,7 +151,8 @@ export class Controls implements Updatable, Disposable {
     this.current.radius += (this.desired.radius - this.current.radius) * t;
     this.current.polar += (this.desired.polar - this.current.polar) * t;
     this.current.azimuth += (this.desired.azimuth - this.current.azimuth) * t;
-    if (this.enabled && this.limits.constrainPosition) this.clamp(this.current);
+    if (this.enabled && (this.limits.constrainPosition || this.limits.fixedEye))
+      this.clamp(this.current);
     this.applyToCamera();
   }
 
@@ -172,6 +175,15 @@ export class Controls implements Updatable, Disposable {
       this.limits.minAzimuth ?? -Infinity,
       this.limits.maxAzimuth ?? Infinity,
     );
+    if (this.limits.fixedEye) {
+      const eye = this.limits.fixedEye;
+      view.target.set(
+        eye.x - view.radius * Math.sin(view.polar) * Math.sin(view.azimuth),
+        eye.y - view.radius * Math.cos(view.polar),
+        eye.z - view.radius * Math.sin(view.polar) * Math.cos(view.azimuth),
+      );
+      return;
+    }
     view.target.x = MathUtils.clamp(view.target.x, bounds.minX, bounds.maxX);
     view.target.z = MathUtils.clamp(view.target.z, bounds.minZ, bounds.maxZ);
     // Keep the camera above minHeight by tilting up rather than letting it sink.

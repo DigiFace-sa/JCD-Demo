@@ -54,7 +54,12 @@ function detailFor(focus: Focus): DetailContent | null {
       nameKey: hotspot?.titleKey ?? 'stadium.insideTitle',
       summaryKey: hotspot?.bodyKey ?? 'stadium.insideBody',
       factKeys: [],
-      noteKey: null,
+      noteKey:
+        focus.id === 'vip'
+          ? 'stadium.vipControls'
+          : focus.id === 'pitch'
+            ? 'stadium.pitchControls'
+            : null,
       color: null,
     };
   }
@@ -198,9 +203,11 @@ export class SidePanel {
     const closer = requireElement(this.detail, '.map-panel__closer', HTMLAnchorElement);
     closer.hidden = !closePlace;
     if (closePlace) closer.href = `#/experience/places/${closePlace}`;
-    requireElement(this.detail, '.map-panel__enter', HTMLAnchorElement).hidden = !(
-      focus?.kind === 'landmark' && focus.id === 'stadium'
-    );
+    const enter = requireElement(this.detail, '.map-panel__enter', HTMLAnchorElement);
+    const vip = focus?.kind === 'hotspot' && focus.id === 'vip';
+    enter.hidden = !(vip || (focus?.kind === 'landmark' && focus.id === 'stadium'));
+    enter.href = vip ? '#/experience/stadium/pitch' : '#/experience/stadium/inside';
+    enter.setAttribute('data-i18n', vip ? 'stadium.viewPitch' : 'stadium.enter');
     requireElement(this.detail, '.map-panel__hotspots', HTMLDivElement).hidden =
       focus?.kind !== 'hotspot';
     requireElement(this.detail, '.map-panel__back span[data-i18n]', HTMLSpanElement).setAttribute(

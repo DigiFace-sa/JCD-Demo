@@ -10,12 +10,15 @@ import {
   STADIUM_POSITION,
   STADIUM_PORTAL,
   STADIUM_PASSAGE,
+  VIP_LOUNGE,
+  VIP_PASSAGE,
   stadiumFloor,
   stadiumPoint,
   stadiumAnchorVisible,
 } from '../config/stadium';
 import type { Disposable, Focus } from '../types';
 import type { World } from '../world/World';
+import { PITCH } from '../world/landmarks/stadium/pitchTexture';
 import type { CameraDirector, FlightPath } from './CameraDirector';
 import type { ControlLimits, Controls, OrbitView } from './Controls';
 import { Markers } from './Markers';
@@ -23,6 +26,8 @@ import { Markers } from './Markers';
 /** Passage moves stay within the architectural opening, with time to read the reveal. */
 const PORTAL_DURATION = 3.8;
 const HOTSPOT_DURATION = 1.6;
+/** Seconds to cross the suite's sliding bay and settle into the indoor look-around. */
+const VIP_FLIGHT_DURATION = 2.4;
 const PATH_SAMPLES = 32;
 /** Wider interior lens gives a spatial reading of the terraces without changing the map lens. */
 const INTERIOR_FOV = 64;
@@ -54,7 +59,7 @@ export class StadiumNavigation implements Disposable {
   private readonly markers: Markers;
   private revision = 0;
   private entered = false;
-  private zone: 'bowl' | 'concourse' | 'park' = 'bowl';
+  private zone: 'bowl' | 'concourse' | 'park' | 'vip' = 'bowl';
   private portal: FlightPath | null = null;
   private portalT = 0;
   private crossing = false;
@@ -101,6 +106,25 @@ export class StadiumNavigation implements Disposable {
     return this.entered;
   }
 
+  /** Furniture needs a closer near plane than the aerial scene. */
+  get nearPlane(): number | null {
+    return this.entered && (this.zone === 'vip' || this.inVip) ? VIP_LOUNGE.nearPlane : null;
+  }
+
+  /** Actual position also covers a new request interrupting the suite's exit flight. */
+  private get inVip(): boolean {
+    const x = this.camera.position.x - STADIUM_POSITION.x;
+    const y = this.camera.position.y - STADIUM_POSITION.y;
+    const z = this.camera.position.z - STADIUM_POSITION.z;
+    return (
+      x > VIP_LOUNGE.back &&
+      x < VIP_LOUNGE.front &&
+      y > VIP_LOUNGE.floor &&
+      y < VIP_LOUNGE.ceiling &&
+      Math.abs(z) < VIP_LOUNGE.halfWidth
+    );
+  }
+
   /** Classify the actual pose as well as the last arrival, so mid-passage cancellations stay safe. */
   private get inPassage(): boolean {
     const x = this.camera.position.x - STADIUM_POSITION.x;
@@ -118,6 +142,7 @@ export class StadiumNavigation implements Disposable {
   /** The opaque bowl encloses these views; distant world and water passes cannot contribute. */
   get occludesWorld(): boolean {
     if (!this.entered || this.zone === 'park') return false;
+    if (this.zone === 'vip' || this.inVip) return true;
     const radius = (p: Vector3): number =>
       Math.hypot((p.x - STADIUM_POSITION.x) / STADIUM.rx, (p.z - STADIUM_POSITION.z) / STADIUM.rz);
     return (
@@ -143,9 +168,14 @@ export class StadiumNavigation implements Disposable {
       this.camera.position.y - STADIUM_POSITION.y,
       this.camera.position.z - STADIUM_POSITION.z,
     );
+    const insideFov =
+      this.zone === 'vip'
+        ? VIP_LOUNGE.fov *
+          MathUtils.clamp(this.controls.radius / this.viewpoint('vip').radius, 0.55, 1)
+        : INTERIOR_FOV;
     const fov = this.entered
       ? MathUtils.lerp(
-          INTERIOR_FOV,
+          insideFov,
           RENDER.fovDeg,
           MathUtils.smoothstep(distance, LENS_DISTANCE.wide, LENS_DISTANCE.map),
         )
@@ -190,6 +220,15 @@ export class StadiumNavigation implements Disposable {
   private limits(id: StadiumViewId): ControlLimits {
     if (id === 'sports-park') return MAP_LIMITS;
     const view = this.viewpoint(id);
+    if (id === 'vip')
+      return {
+        ...STADIUM_LIMITS,
+        fixedEye: poseFor(view).position,
+        minRadius: 14,
+        maxRadius: view.radius,
+        minPolar: MathUtils.degToRad(35),
+        maxPolar: MathUtils.degToRad(145),
+      };
     if (id === 'concourse')
       return {
         ...STADIUM_LIMITS,
@@ -218,13 +257,13 @@ export class StadiumNavigation implements Disposable {
           }),
       minPolar: MathUtils.degToRad(28),
       maxPolar: MathUtils.degToRad(120),
-      minRadius: id === 'inside' ? 22 : 32,
+      minRadius: id === 'inside' ? 22 : id === 'pitch' ? 18 : 32,
       maxRadius: id === 'inside' ? 70 : 78,
       bounds: {
-        minX: view.target.x - 5,
-        maxX: view.target.x + 5,
-        minZ: view.target.z - 7,
-        maxZ: view.target.z + 7,
+        minX: view.target.x - (id === 'pitch' ? PITCH.width / 2 - 5 : 5),
+        maxX: view.target.x + (id === 'pitch' ? PITCH.width / 2 - 5 : 5),
+        minZ: view.target.z - (id === 'pitch' ? PITCH.length / 2 - 6 : 7),
+        maxZ: view.target.z + (id === 'pitch' ? PITCH.length / 2 - 6 : 7),
       },
       constrainPosition: (position) => {
         // Keep the camera below the canopy and within the opening, even while orbiting a stand.
@@ -308,6 +347,10 @@ export class StadiumNavigation implements Disposable {
     }
     this.controls.setLimits(FLIGHT_LIMITS);
     if (!immediate) {
+      if ((this.zone === 'vip' || this.inVip) && id !== 'vip') {
+        await this.leaveVip();
+        if (request !== this.revision) return;
+      }
       let arrived = false;
       if (first || this.zone === 'park') {
         this.zone = 'bowl';
@@ -341,7 +384,9 @@ export class StadiumNavigation implements Disposable {
       }
       if (request !== this.revision) return;
       this.crossing = false;
-      if (id === 'sports-park') {
+      if (id === 'vip') {
+        await this.enterVip();
+      } else if (id === 'sports-park') {
         await this.leaveBowl(this.viewpoint(id));
       } else if (id === 'concourse') {
         const end = poseFor(this.viewpoint(id));
@@ -369,14 +414,71 @@ export class StadiumNavigation implements Disposable {
     }
     this.controls.setLimits(this.limits(id));
     this.controls.setView(this.viewpoint(id), true);
-    this.zone = id === 'sports-park' ? 'park' : id === 'concourse' ? 'concourse' : 'bowl';
+    this.zone =
+      id === 'vip'
+        ? 'vip'
+        : id === 'sports-park'
+          ? 'park'
+          : id === 'concourse'
+            ? 'concourse'
+            : 'bowl';
     if (immediate) {
-      this.camera.fov = this.zone === 'park' ? RENDER.fovDeg : INTERIOR_FOV;
+      this.camera.fov =
+        this.zone === 'vip' ? VIP_LOUNGE.fov : this.zone === 'park' ? RENDER.fovDeg : INTERIOR_FOV;
       this.camera.updateProjectionMatrix();
     }
     this.crossing = false;
     this.markers.setActive({ kind: 'hotspot', id });
-    this.markers.setVisible(true);
+    this.markers.setVisible(id !== 'vip');
+  }
+
+  /** Sliding bay in the suite's glass front, above the middle terrace. */
+  private async enterVip(): Promise<void> {
+    const end = poseFor(this.viewpoint('vip'));
+    this.zone = 'vip';
+    await this.director.flyAlong(
+      {
+        positions: [
+          this.camera.position.clone(),
+          vec(VIP_PASSAGE.approach),
+          vec(VIP_PASSAGE.outside),
+          vec(VIP_PASSAGE.inside),
+          end.position,
+        ],
+        targets: [
+          this.controls.target.clone(),
+          vec(VIP_PASSAGE.inside),
+          vec(VIP_PASSAGE.lookInside),
+          end.target.clone(),
+          end.target,
+        ],
+      },
+      { duration: VIP_FLIGHT_DURATION },
+    );
+  }
+
+  private async leaveVip(): Promise<void> {
+    const arrival = poseFor(STADIUM_ARRIVAL);
+    this.zone = 'bowl';
+    await this.director.flyAlong(
+      {
+        positions: [
+          this.camera.position.clone(),
+          vec(VIP_PASSAGE.inside),
+          vec(VIP_PASSAGE.outside),
+          vec(VIP_PASSAGE.approach),
+          arrival.position,
+        ],
+        targets: [
+          this.controls.target.clone(),
+          vec(VIP_PASSAGE.lookOutside),
+          arrival.target.clone(),
+          arrival.target.clone(),
+          arrival.target,
+        ],
+      },
+      { duration: VIP_FLIGHT_DURATION },
+    );
   }
 
   private async leaveBowl(destination: OrbitView): Promise<void> {
@@ -413,6 +515,10 @@ export class StadiumNavigation implements Disposable {
     this.markers.setVisible(false);
     this.controls.setLimits(FLIGHT_LIMITS);
     if (!immediate) {
+      if (this.zone === 'vip' || this.inVip) {
+        await this.leaveVip();
+        if (request !== this.revision) return;
+      }
       if (this.crossing) {
         await this.cross(0);
         if (request !== this.revision) return;
@@ -426,6 +532,7 @@ export class StadiumNavigation implements Disposable {
     }
     this.crossing = false;
     this.entered = false;
+    this.zone = 'bowl';
     this.world.landmarks.models.get('stadium')?.setDetailPinned?.(false);
     this.portal = null;
     this.controls.setLimits(MAP_LIMITS);

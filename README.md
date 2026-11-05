@@ -313,6 +313,18 @@ the camera's clearance calculation share `src/experience/config/stadium.ts`. If 
 stadium GLB replaces the original model, align these waypoints and profiles with its actual
 openings before using the interior routes.
 
+**VIP & Hospitality** now enters a furnished Blender lounge. Drag or use the arrow keys to
+look around from a fixed indoor eye; wheel/pinch changes the lens for zoom. **View the pitch**
+returns through the open sliding bay. The Pitch view supports closer zoom and panning along
+the field. Both use the existing deep links above.
+
+Regenerate the original room and goal models with
+`Blender -b --factory-startup --python scripts/blender/stadium_lounge.py`, then rebuild Vite.
+`StadiumDetails.ts` loads `public/models/stadium-interior.glb`; `VIP_LOUNGE` / `VIP_PASSAGE` in
+the stadium config must remain aligned with the Blender dimensions and the upper-tier opening.
+The generator imports the public-space kit's helpers without regenerating that separate asset.
+The room design remains illustrative, subject to client approval.
+
 `CameraDirector.flyAlong()` follows position and look-at curves. `StadiumNavigation` owns
 entry/exit state, reversal, interior controls, lens framing and shadow fits. The wider interior
 lens and panel offset follow RTL without mirroring the scene. Enclosed views omit occluded city
@@ -517,6 +529,10 @@ Additional 3D close-view copy requiring native Arabic review: `places.*`, especi
 The spaces and furniture are illustrative; review the draft tone without implying approved
 amenities or public access. Close-view links are `#/experience/places/beach-promenade` and
 `#/experience/places/central-square`.
+
+Stadium hospitality controls also need native review: `stadium.viewPitch`,
+`stadium.vipControls` and `stadium.pitchControls`, including the Arabic phrasing of look-around,
+pinch zoom and the mixed-direction keyboard label `Shift`.
 
 Additional marketing copy requiring Arabic review:
 

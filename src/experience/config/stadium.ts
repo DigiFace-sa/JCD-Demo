@@ -28,6 +28,21 @@ export const STADIUM_POSITION = {
   z: LANDMARKS.stadium.position.z,
 };
 
+/** Illustrative west hospitality suite, stadium-local metres; mirrors stadium_lounge.py. */
+export const VIP_LOUNGE = {
+  x: -108.25,
+  floor: 29.8,
+  ceiling: 33.5,
+  front: -100.5,
+  back: -116,
+  halfWidth: 16,
+  openingHalfWidth: 20,
+  removedUpperRows: 4,
+  nearPlane: 0.08,
+  fov: 72,
+  doorwayZ: 11,
+} as const;
+
 /** Stadium-local coordinates to world metres. */
 export const stadiumPoint = (
   x: number,
@@ -76,6 +91,15 @@ export const STADIUM_PASSAGE = {
   reveal: stadiumPoint(72, 16.4, 0),
   mouth: stadiumPoint(85, 16.4, 0),
   lookIntoBowl: stadiumPoint(25, 13, 0),
+};
+
+/** Clear route through the suite's open sliding bay, above the middle terrace. */
+export const VIP_PASSAGE = {
+  approach: stadiumPoint(-90, 33.2, VIP_LOUNGE.doorwayZ),
+  outside: stadiumPoint(-99, 31.5, VIP_LOUNGE.doorwayZ),
+  inside: stadiumPoint(-103, 31.5, VIP_LOUNGE.doorwayZ),
+  lookInside: stadiumPoint(-109, 31.5, 5),
+  lookOutside: stadiumPoint(-90, 31, VIP_LOUNGE.doorwayZ),
 };
 
 /** Minimum camera altitude above the stepped bowl at a world position. */

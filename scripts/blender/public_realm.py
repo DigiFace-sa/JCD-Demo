@@ -282,10 +282,11 @@ def arcade():
     box("led", (-4.35, 6.82, 0), (.045, .04, 8.2), .005)
 
 
-def export():
+def export(filename=OUT, prefix="realm", lod=True, ao_distance=2.5):
     scene = bpy.context.scene
     objects = []
-    offsets = {name: i * BAKE_SEPARATION for i, name in enumerate(BUILDERS)}
+    names = list(dict.fromkeys(asset for asset, _ in PARTS))
+    offsets = {name: i * BAKE_SEPARATION for i, name in enumerate(names)}
     for (asset, surface), pieces in PARTS.items():
         bpy.ops.object.select_all(action="DESELECT")
         for obj in pieces:
@@ -294,7 +295,7 @@ def export():
         bpy.ops.object.join()
         obj = bpy.context.object
         bpy.ops.object.transform_apply(location=True, rotation=True, scale=True)
-        obj.name = f"realm-{asset}-{surface}"
+        obj.name = f"{prefix}-{asset}-{surface}"
         obj.location.x = offsets[asset]
         data = obj.data
         bm = bmesh.new()
@@ -321,7 +322,7 @@ def export():
         print("AO using CPU:", error)
     scene.render.bake.target = "VERTEX_COLORS"
     scene.world = scene.world or bpy.data.worlds.new("World")
-    scene.world.light_settings.distance = 2.5
+    scene.world.light_settings.distance = ao_distance
     bpy.ops.object.select_all(action="DESELECT")
     for obj, _ in objects:
         obj.select_set(True)
@@ -337,36 +338,44 @@ def export():
         obj.data.calc_loop_triangles()
         triangles += len(obj.data.loop_triangles)
         print(obj.name, len(obj.data.loop_triangles), "triangles")
-        far = obj.copy()
-        far.data = obj.data.copy()
-        far.name = obj.name + "-far"
-        scene.collection.objects.link(far)
-        bpy.context.view_layer.objects.active = far
-        modifier = far.modifiers.new("distance detail", "DECIMATE")
-        modifier.ratio = FAR_RATIO
-        bpy.ops.object.modifier_apply(modifier=modifier.name)
-        far.data.calc_loop_triangles()
-        far_triangles += len(far.data.loop_triangles)
-        far.select_set(True)
+        if lod:
+            far = obj.copy()
+            far.data = obj.data.copy()
+            far.name = obj.name + "-far"
+            scene.collection.objects.link(far)
+            bpy.context.view_layer.objects.active = far
+            modifier = far.modifiers.new("distance detail", "DECIMATE")
+            modifier.ratio = FAR_RATIO
+            bpy.ops.object.modifier_apply(modifier=modifier.name)
+            far.data.calc_loop_triangles()
+            far_triangles += len(far.data.loop_triangles)
+            far.select_set(True)
     bpy.data.objects.remove(ground, do_unlink=True)
-    OUT.parent.mkdir(parents=True, exist_ok=True)
-    bpy.ops.export_scene.gltf(filepath=str(OUT), export_format="GLB", use_selection=True,
+    out = Path(filename)
+    out.parent.mkdir(parents=True, exist_ok=True)
+    bpy.ops.export_scene.gltf(filepath=str(out), export_format="GLB", use_selection=True,
                               export_yup=True, export_normals=True, export_texcoords=False,
                               export_vertex_color="ACTIVE", export_materials="PLACEHOLDER",
                               export_draco_mesh_compression_enable=True,
                               export_draco_mesh_compression_level=6,
                               export_draco_position_quantization=14,
                               export_draco_color_quantization=8)
-    print("KIT NEAR", triangles, "FAR", far_triangles, "triangles", OUT.stat().st_size, "bytes")
+    print("KIT NEAR", triangles, "FAR", far_triangles, "triangles", out.stat().st_size, "bytes")
 
 
 BUILDERS = {"bench": bench, "lounger": lounger, "parasol": parasol, "table": table,
             "chair": chair, "planter": planter, "lamp": lamp, "pavilion": pavilion, "arcade": arcade}
 
-for obj in list(bpy.data.objects):
-    bpy.data.objects.remove(obj, do_unlink=True)
-materials = {name: bpy.data.materials.new(name) for name in
-             ["stone", "timber", "metal", "fabric", "soil", "foliage", "led", "glass"]}
-for ASSET, builder in BUILDERS.items():
-    builder()
-export()
+def initialize(surfaces):
+    global materials
+    PARTS.clear()
+    for obj in list(bpy.data.objects):
+        bpy.data.objects.remove(obj, do_unlink=True)
+    materials = {name: bpy.data.materials.new(name) for name in surfaces}
+
+
+if __name__ == "__main__":
+    initialize(["stone", "timber", "metal", "fabric", "soil", "foliage", "led", "glass"])
+    for ASSET, builder in BUILDERS.items():
+        builder()
+    export()

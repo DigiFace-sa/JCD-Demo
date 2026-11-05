@@ -443,3 +443,40 @@ report and screenshot list are in [3D_BLENDER_KIT_REVIEW.md](3D_BLENDER_KIT_REVI
 Review artifacts and runnable QA scripts live under `review/phase-3d/blender/qa/`. The four
 protected marketing diffs are outside this phase. Local commits only; never push. Client
 visual review, native Arabic, other browsers/touch hardware and Guided Tour remain separate.
+
+## 13. Stadium lounge and pitch — completed implementation, 5 November 2026
+
+Latest request: make VIP/Pitch clearer and give the VIP lounge an inside look with Blender.
+The implementation is ready for client visual review. Full results, all screenshot paths and
+open limits are in [3D_STADIUM_HOSPITALITY_REVIEW.md](3D_STADIUM_HOSPITALITY_REVIEW.md).
+
+- Model generator: `scripts/blender/stadium_lounge.py`; output `public/models/stadium-interior.glb`
+  (38,680 template triangles, 12 parts, 239,340 bytes). It uses the import-safe, configurable
+  helpers in `public_realm.py`; the public-space asset itself remains unchanged.
+- `StadiumDetails.ts` loads the furnished lounge and reusable goal pair with PBR materials and
+  baked AO. It joins the stadium ready promise and handles disposal during pending loads.
+- Room/flight alignment is in `VIP_LOUNGE` / `VIP_PASSAGE` in the stadium config. `Interior.ts`
+  opens the west hospitality strip and local upper rows where the new room replaces them.
+  Keep geometry, camera and the opening aligned if using official replacement models later.
+- `#/experience/stadium/vip` opens the furnished room. `Controls.fixedEye` supports gaze rotation
+  without eye movement; wheel/pinch changes the lens. `StadiumNavigation` owns the doorway
+  path, actual-position detection during interruptions, close near plane and state restoration.
+- **View the pitch** leaves through the open sliding bay. The exterior panel restores its
+  **Enter the stadium** link after a VIP visit. Existing hotspot ids/routes remain compatible.
+- The field has a 2048 px texture, fine normal detail, added spots/corner arcs, clearer lighting,
+  a broadside camera and wider pan bounds with closer zoom. Blender goals replace the old boxes.
+- New keys are `stadium.viewPitch`, `stadium.vipControls`, `stadium.pitchControls`; both language
+  files contain them, and README flags Arabic for native review. Narrative drafts/facts are unchanged.
+- Final lint and both builds passed; console and capture requests were clean. Four sampled
+  flights averaged 16.93 ms (17.7 ms p95, 34.4 ms worst). Sixteen enter/leave cycles, delayed
+  GLB disposal, live mode/language changes, reduced motion, quality switching, spam navigation,
+  fixed-eye zoom/look, pitch pan and exterior-link restoration passed. Details are in the report.
+- **Performance remains open:** the field measured roughly 60 fps, but the room varied below
+  the High/1080p target. Initial presentation and the connected-TV run are not solved by this phase.
+  Do not claim sustained 60 fps or photorealism. Native Arabic, other browsers and real touch
+  hardware also remain unreviewed. The next step is client visual review, followed by those
+  performance/polish checks; Guided Tour remains separate.
+
+All evidence and runnable QA scripts are archived in `review/phase-3d/stadium-hospitality/qa/`.
+The local commit includes only this stadium phase. Never push, and leave the four protected
+marketing diffs from §1 outside the commit.

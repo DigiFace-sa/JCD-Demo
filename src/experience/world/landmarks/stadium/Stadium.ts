@@ -8,9 +8,10 @@ import {
   type LandmarkFactory,
   type LandmarkModel,
 } from '../LandmarkModel';
-import { createPitchTexture, PITCH } from './pitchTexture';
+import { createPitchTexture, createGrassNormal, PITCH } from './pitchTexture';
 import { createInterior, entranceFacade } from './Interior';
 import { loadStadiumShell } from './StadiumShell';
+import { StadiumDetails } from './StadiumDetails';
 import { STADIUM, STADIUM_POSITION } from '../../../config/stadium';
 
 /** Outer ellipse half-axes (m): long axis north–south, like the pitch. */
@@ -46,6 +47,7 @@ export const createStadium: LandmarkFactory = ({ atmosphere }): LandmarkModel =>
   const facade = new Mesh(entranceFacade(), facadeMaterial);
 
   const interior = createInterior(atmosphere);
+  const details = new StadiumDetails(atmosphere);
   // Seen through the roof opening from afar: one sloped ring, striped like stepped rows of
   // seats with darker aisles, instead of the detailed interior (which fills in up close).
   const distantBowl = new Mesh(
@@ -87,21 +89,24 @@ export const createStadium: LandmarkFactory = ({ atmosphere }): LandmarkModel =>
   );
 
   const pitchTexture = createPitchTexture();
-  disposables.push(pitchTexture);
+  const grassNormal = createGrassNormal();
+  disposables.push(pitchTexture, grassNormal);
   const pitch = new Mesh(
     new PlaneGeometry(PITCH.width, PITCH.length).rotateX(-Math.PI / 2),
     // At night the pitch is floodlit: its own markings glow (seen from the air, like the renders).
     atmosphere.night.material(
       material({
         map: pitchTexture,
+        normalMap: grassNormal,
         emissiveMap: pitchTexture,
         emissive: '#ffffff',
         roughness: 0.9,
       }),
-      0,
+      0.12,
       0.55,
     ),
   );
+  pitch.material.normalScale.set(0.2, 0.2);
   pitch.position.y = 3;
   // Texture is drawn length-wise along x; the pitch's long axis runs along z.
   pitchTexture.center.set(0.5, 0.5);
@@ -115,14 +120,15 @@ export const createStadium: LandmarkFactory = ({ atmosphere }): LandmarkModel =>
   const pickProxy = createPickProxy(id, PICK_HEIGHT);
   // The exterior (hall, louvre roof, towers, terraces, stair) is a Blender model; it joins the
   // scene before the Experience compiles shaders and fits shadows (see `loaded`).
-  const loaded = loadStadiumShell(atmosphere).then((shell) => {
+  const shellLoaded = loadStadiumShell(atmosphere).then((shell) => {
     if (disposed) {
       disposeObject(shell);
       return;
     }
     root.add(shell);
   });
-  root.add(facade, interior, distantBowl, apron, pitch, pickProxy);
+  const loaded = Promise.all([shellLoaded, details.loaded]).then(() => undefined);
+  root.add(facade, interior, details.object, distantBowl, apron, pitch, pickProxy);
 
   return {
     id,
@@ -137,10 +143,13 @@ export const createStadium: LandmarkFactory = ({ atmosphere }): LandmarkModel =>
         detailPinned ||
         camera.position.distanceToSquared(root.position) < INTERIOR_DETAIL_DISTANCE ** 2;
       interior.visible = detailed;
+      details.object.visible = detailed;
       distantBowl.visible = !detailed;
     },
     dispose() {
       disposed = true;
+      root.remove(details.object);
+      details.dispose();
       disposables.forEach((item) => {
         item.dispose();
       });

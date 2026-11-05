@@ -286,7 +286,9 @@ export class Experience implements Disposable {
   }
 
   private updateNearPlane(): void {
-    const near = MathUtils.clamp(this.camera.position.y * NEAR_PER_HEIGHT, NEAR_MIN, NEAR_MAX);
+    const near =
+      this.map?.nearPlane ??
+      MathUtils.clamp(this.camera.position.y * NEAR_PER_HEIGHT, NEAR_MIN, NEAR_MAX);
     if (Math.abs(near - this.camera.near) / this.camera.near > 0.05) {
       this.camera.near = near;
       this.camera.updateProjectionMatrix();

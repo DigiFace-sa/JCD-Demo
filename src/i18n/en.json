@@ -252,7 +252,10 @@
         "title": "Sports Park",
         "body": "Gardens and green open spaces extend the experience beyond the stadium, inviting time outdoors. [DRAFT — client to approve]"
       }
-    }
+    },
+    "viewPitch": "View the pitch",
+    "vipControls": "Drag or use the arrow keys to look around the lounge. Scroll or pinch to zoom.",
+    "pitchControls": "Drag to orbit · Shift-drag or use two fingers to pan · Scroll to move closer"
   },
   "marketing": {
     "actions": {

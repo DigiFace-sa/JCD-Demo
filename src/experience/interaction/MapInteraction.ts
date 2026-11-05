@@ -191,6 +191,10 @@ export class MapInteraction implements Disposable {
     return this.stadium.occludesWorld;
   }
 
+  get nearPlane(): number | null {
+    return this.stadium.nearPlane;
+  }
+
   /** Frame `focus` (or the whole map for null): highlight, then fly. */
   async focus(focus: Focus | null, immediate = false): Promise<void> {
     const request = ++this.request;
