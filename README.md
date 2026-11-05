@@ -276,6 +276,23 @@ Facts flagged in code rather than on screen:
    is used. Materials get the shared haze automatically, and the picking proxy resizes to the
    model.
 
+### Blender furniture and shade structures
+
+`scripts/blender/public_realm.py` generates the original Beach/Central kit into
+`public/models/public-realm.glb`. Regenerate with:
+
+```sh
+/Applications/Blender.app/Contents/MacOS/Blender -b --factory-startup --python scripts/blender/public_realm.py
+npm run build
+```
+
+The nine reusable models have ground-level origins in metres. Each part is named
+`realm-<asset>-<surface>`, with a `-far` suffix for its distance variant. Ambient occlusion is
+baked into linear vertex colours. The web app assigns materials and instances the parts through
+`PublicRealmKit.ts` and `PublicRealm.ts`; update the loader's part table when adding a surface.
+Full detail appears within `PUBLIC_REALM.fineDetailRange`. Both variants are warmed behind the
+loader. The layouts remain illustrative, and existing pedestrians are simplified figures.
+
 ### Stadium interior (Phase 5)
 
 The exterior lives at `#/experience/stadium`. Its **Enter the stadium** button follows the

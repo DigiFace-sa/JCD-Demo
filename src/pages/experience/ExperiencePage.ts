@@ -51,12 +51,16 @@ const createExperiencePage: PageFactory = (initialContext) => {
     if (root) root.dataset.state = state;
   };
 
-  const applyFocus = (focus: Focus | null, immediate = false): void => {
+  const showFocus = (focus: Focus | null): void => {
     focused = focus;
     panel?.show(focus);
     const mapBack = root?.querySelector<HTMLElement>('.experience__map-back');
     if (mapBack) mapBack.hidden = focus?.kind !== 'hotspot' && focus?.kind !== 'place';
     if (root) root.dataset.focus = focus ? `${focus.kind}:${focus.id}` : 'map';
+  };
+
+  const applyFocus = (focus: Focus | null, immediate = false): void => {
+    showFocus(focus);
     void experience?.focus(focus, immediate);
   };
 
@@ -160,12 +164,15 @@ const createExperiencePage: PageFactory = (initialContext) => {
       });
       syncPanelInset();
 
-      instance.start();
-      setState('ready');
       const deepLink = landmarkFromContext(context);
       if (deepLink) {
-        applyFocus(deepLink, true);
-      } else {
+        showFocus(deepLink);
+        await instance.prepareFocus(deepLink);
+        if (isUnmounted()) return;
+      }
+      instance.start();
+      setState('ready');
+      if (!deepLink) {
         await instance.intro();
         if (!isUnmounted()) showHint();
       }

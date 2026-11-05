@@ -6,8 +6,6 @@ import {
   BoxGeometry,
   CapsuleGeometry,
   Color,
-  ConeGeometry,
-  CylinderGeometry,
   DoubleSide,
   Group,
   Float32BufferAttribute,
@@ -28,6 +26,7 @@ import type { Disposable } from '../../types';
 import type { Atmosphere } from '../Atmosphere';
 import { boxMappedMaterial, textureSet } from '../landmarks/boxMapped';
 import { groundHeightAt, landDistance } from './MasterplanShape';
+import { loadPublicRealmKit, type RealmProp } from './PublicRealmKit';
 
 /** Human scale in metres, and restrained walking speed (m/s). */
 const CROWD = { height: 1.75, speed: 0.65, stride: 3.7, centralCount: 28, beachCount: 36 } as const;
@@ -40,7 +39,6 @@ const COLORS = {
   glass: '#3b5357',
   light: '#ffd9a8',
   water: '#4b8686',
-  planter: '#bbaa8c',
   clothing: ['#dfd8c9', '#c2b59a', '#637d82', '#343d43', '#a58c70'],
   skin: ['#ac8062', '#c69f7e', '#936a51', '#d6b28e'],
 } as const;
@@ -78,7 +76,12 @@ export class PublicRealm implements Disposable {
   readonly object = new Group();
   readonly loaded: Promise<void>;
   private disposed = false;
-  private readonly areas: { readonly root: Group; readonly centre: Vector3 }[] = [];
+  private readonly areas: {
+    readonly root: Group;
+    readonly near: Group;
+    readonly far: Group;
+    readonly centre: Vector3;
+  }[] = [];
   private readonly crowds: Crowd[] = [];
   private readonly reducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)');
   private walkTime = 0;
@@ -92,35 +95,45 @@ export class PublicRealm implements Disposable {
     this.loaded = this.build();
   }
 
+  private isDisposed(): boolean {
+    return this.disposed;
+  }
+
   private async build(): Promise<void> {
     const [paving, timber] = await Promise.all([textureSet('paving'), textureSet('timber')]);
     if (this.disposed) return;
     const stone = boxMappedMaterial(this.atmosphere, {
       maps: paving,
-      tile: 3,
+      tile: 1.25,
       tint: COLORS.stone,
-      normalStrength: 0.35,
-      detail: 0.3,
+      normalStrength: 0.55,
+      detail: 0.65,
       roughness: 0.9,
     });
     const wood = boxMappedMaterial(this.atmosphere, {
       maps: timber,
-      tile: 2,
+      tile: 0.8,
       tint: COLORS.wood,
-      normalStrength: 0.35,
-      detail: 0.45,
+      normalStrength: 0.4,
+      detail: 0.6,
       roughness: 0.85,
     });
     const standard = (color: string, metalness = 0): MeshStandardMaterial =>
-      this.atmosphere.patch(new MeshStandardMaterial({ color, roughness: 0.75, metalness }));
+      this.atmosphere.patch(
+        new MeshStandardMaterial({ color, roughness: 0.65, metalness, vertexColors: true }),
+      );
     const fabric = standard(COLORS.fabric);
     fabric.side = DoubleSide;
+    fabric.roughness = 0.95;
     const metal = standard(COLORS.metal, 0.55);
-    const planter = standard(COLORS.planter);
+    const soil = standard('#716652');
+    const foliage = standard('#677750');
+    foliage.side = DoubleSide;
     const glass = this.atmosphere.night.material(
       this.atmosphere.patch(
         new MeshStandardMaterial({
           color: COLORS.glass,
+          vertexColors: true,
           metalness: 0.6,
           roughness: 0.18,
           emissive: COLORS.light,
@@ -131,11 +144,31 @@ export class PublicRealm implements Disposable {
     );
     const light = this.atmosphere.night.material(
       this.atmosphere.patch(
-        new MeshStandardMaterial({ color: '#c9b99d', emissive: COLORS.light, roughness: 0.5 }),
+        new MeshStandardMaterial({
+          color: '#c9b99d',
+          emissive: COLORS.light,
+          roughness: 0.5,
+          vertexColors: true,
+        }),
       ),
       0,
       1.1,
     );
+    const kit = await loadPublicRealmKit({
+      stone,
+      timber: wood,
+      metal,
+      fabric,
+      soil,
+      foliage,
+      glass,
+      led: light,
+    });
+    if (this.isDisposed()) {
+      for (const level of Object.values(kit))
+        for (const meshes of level.values()) for (const mesh of meshes) disposeObject(mesh);
+      return;
+    }
     const water = this.atmosphere.patch(
       new MeshStandardMaterial({ color: COLORS.water, metalness: 0.45, roughness: 0.2 }),
     );
@@ -163,14 +196,18 @@ export class PublicRealm implements Disposable {
       pool.opacity = lights * 0.12;
       pool.visible = lights > 0;
     });
-    const leaves = standard('#435538');
     for (const kind of ['beach', 'central'] as const) {
       const root = new Group();
       root.name = `public-realm-${kind}`;
       const area = PUBLIC_REALM[kind];
-      this.areas.push({ root, centre: new Vector3(area.x, 0, area.z) });
+      const near = new Group(),
+        far = new Group();
+      root.add(near, far);
+      this.areas.push({ root, near, far, centre: new Vector3(area.x, 0, area.z) });
       this.object.add(root);
       const batches = new Map<string, Batch>();
+      const nearBatches = new Map<string, Batch>(),
+        farBatches = new Map<string, Batch>();
       const poolGeometry = new PlaneGeometry(1, 1).rotateX(-Math.PI / 2);
       const box = new BoxGeometry(1, 1, 1);
       // Architectural materials expect Blender's vertex colours; these original templates use white.
@@ -181,8 +218,6 @@ export class PublicRealm implements Disposable {
           3,
         ),
       );
-      const pole = new CylinderGeometry(1, 1, 1, 8);
-      const umbrella = new ConeGeometry(PUBLIC_REALM.beach.shadeRadius, 0.9, 16, 1, true);
       const add = (
         geometry: BufferGeometry,
         material: Material,
@@ -193,12 +228,13 @@ export class PublicRealm implements Disposable {
         sy = 1,
         sz = 1,
         rotation = 0,
+        collection = batches,
       ): void => {
         const key = `${geometry.uuid}:${material.uuid}`;
-        let batch = batches.get(key);
+        let batch = collection.get(key);
         if (!batch) {
           batch = { geometry, material, matrices: [] };
-          batches.set(key, batch);
+          collection.set(key, batch);
         }
         const matrix = new Matrix4().makeRotationY(rotation);
         matrix.scale(new Vector3(sx, sy, sz));
@@ -217,38 +253,39 @@ export class PublicRealm implements Disposable {
       ): void => {
         add(box, material, x, y, z, w, h, d, angle);
       };
-      const post = (x: number, y: number, z: number, h: number, radius = 0.065): void => {
-        add(pole, metal, x, y + h / 2, z, radius, h, radius);
+      const prop = (
+        asset: RealmProp,
+        x: number,
+        y: number,
+        z: number,
+        angle = 0,
+        sx = 1,
+        sy = 1,
+        sz = 1,
+      ): void => {
+        for (const level of ['near', 'far'] as const)
+          for (const mesh of kit[level].get(asset) ?? [])
+            add(
+              mesh.geometry,
+              mesh.material as Material,
+              x,
+              y,
+              z,
+              sx,
+              sy,
+              sz,
+              angle,
+              level === 'near' ? nearBatches : farBatches,
+            );
       };
       const bench = (x: number, y: number, z: number, angle = 0): void => {
-        for (let slat = 0; slat < 5; slat++) {
-          const across = (slat - 2) * 0.115;
-          block(
-            wood,
-            x + Math.sin(angle) * across,
-            y + 0.48,
-            z + Math.cos(angle) * across,
-            2.5,
-            0.08,
-            0.09,
-            angle,
-          );
-        }
-        for (const side of [-1, 1])
-          block(
-            metal,
-            x + Math.cos(angle) * side,
-            y + 0.23,
-            z - Math.sin(angle) * side,
-            0.08,
-            0.45,
-            0.5,
-            angle,
-          );
+        prop('bench', x, y, z, angle);
       };
       const bed = (x: number, y: number, z: number, w: number, d: number): void => {
-        block(planter, x, y + 0.34, z, w, 0.68, d);
-        block(leaves, x, y + 0.69, z, w - 0.3, 0.12, d - 0.3);
+        prop('planter', x, y, z, 0, w / 4.5, 1, d / 7);
+      };
+      const lamp = (x: number, y: number, z: number, height: number): void => {
+        prop('lamp', x, y, z, 0, 1, height / 4.8, 1);
       };
       if (kind === 'beach') {
         const b = PUBLIC_REALM.beach;
@@ -257,34 +294,19 @@ export class PublicRealm implements Disposable {
         for (let z = b.z - b.halfLength; z < b.z + b.halfLength; z += b.shadeSpacing) {
           const sandX = b.x - 39;
           const sandY = groundHeightAt(landDistance(sandX, z), z);
-          post(sandX, sandY, z, 2.8);
-          add(umbrella, fabric, sandX, sandY + 2.9, z);
-          for (const side of [-1, 1]) {
-            block(wood, sandX + side * 1.2, sandY + 0.34, z, 0.7, 0.13, 2.1);
-            block(fabric, sandX + side * 1.2, sandY + 0.45, z - 0.6, 0.65, 0.18, 0.8);
-          }
+          prop('parasol', sandX, sandY, z);
+          for (const side of [-1, 1])
+            prop('lounger', sandX + side * 1.2, sandY, z + 0.6, side * 0.06);
           bench(b.x + b.walkWidth / 2 + 1.8, COAST.landHeight, z, Math.PI / 2);
           bed(b.x + b.walkWidth / 2 + 7, COAST.landHeight, z + 6, 4.5, 7);
-          post(b.x - b.walkWidth / 2 - 1.5, COAST.landHeight, z + 8, 3.2);
-          block(
-            light,
-            b.x - b.walkWidth / 2 - 1.5,
-            COAST.landHeight + 3.15,
-            z + 8,
-            0.28,
-            0.12,
-            0.7,
-          );
+          lamp(b.x - b.walkWidth / 2 - 1.5, COAST.landHeight, z + 8, 3.2);
         }
         // Low, open shade pavilions: columns, timber slats, benches and a warm soffit strip.
         for (const offset of [-110, 88]) {
           const x = b.x + 35,
             z = b.z + offset,
             y = COAST.landHeight;
-          block(stone, x, y + 0.12, z, 18, 0.25, 22);
-          for (const dx of [-7, 7]) for (const dz of [-9, 9]) post(x + dx, y, z + dz, 4, 0.11);
-          for (let i = -8; i <= 8; i++) block(wood, x + i, y + 4.15, z, 0.22, 0.3, 22);
-          block(light, x, y + 3.96, z - 9, 12, 0.07, 0.12);
+          prop('pavilion', x, y, z);
           bench(x, y + 0.25, z - 6);
           bench(x, y + 0.25, z + 6);
         }
@@ -306,17 +328,12 @@ export class PublicRealm implements Disposable {
           for (const offset of [-12, 12]) {
             const x = c.x + side * 34,
               z = c.z + offset;
-            add(pole, wood, x, y + 0.76, z, 0.8, 0.09, 0.8);
-            post(x, y, z, 0.72, 0.08);
-            post(x, y, z + 2.8, 2.8, 0.06);
-            add(umbrella, fabric, x, y + 2.95, z + 2.8);
-            for (const dx of [-1.2, 1.2])
-              for (const dz of [-0.8, 0.8]) {
-                block(wood, x + dx, y + 0.47, z + dz, 0.48, 0.08, 0.5);
-                block(wood, x + dx, y + 0.8, z + dz + 0.22, 0.48, 0.58, 0.06);
-                for (const a of [-0.18, 0.18])
-                  for (const b of [-0.18, 0.18]) post(x + dx + a, y, z + dz + b, 0.43, 0.025);
-              }
+            prop('table', x, y, z);
+            prop('parasol', x, y, z + 3.8);
+            for (const side of [-1, 1]) {
+              prop('chair', x + side * 1.1, y, z, (-side * Math.PI) / 2);
+              prop('chair', x, y, z + side * 1.1, side === 1 ? Math.PI : 0);
+            }
           }
         for (let offset = -56; offset <= 56; offset += 14) {
           block(metal, c.x + offset, y + 0.1, c.z, 0.07, 0.01, 130);
@@ -324,39 +341,37 @@ export class PublicRealm implements Disposable {
         }
         for (const side of [-1, 1]) {
           const x = c.x + side * c.arcadeOffset;
-          block(stone, x, y + c.arcadeHeight, c.z, c.arcadeWidth, 0.65, c.arcadeLength);
-          block(stone, x + side * 6, y + 3.4, c.z, 0.9, 6.8, c.arcadeLength);
           for (let z = c.z - 50; z <= c.z + 50; z += 10) {
-            block(stone, x - side * 5, y + 3.5, z, 0.6, 7, 0.6);
-            block(glass, x + side * 5.3, y + 2.8, z, 0.13, 4.4, 8.4);
-            block(wood, x - side * 2, y + 5.6, z, 7, 0.18, 8);
-            block(light, x + side * 4.6, y + 5, z, 0.12, 0.1, 7);
+            prop('arcade', x, y, z, side === 1 ? 0 : Math.PI);
             add(poolGeometry, pool, x - side * 2, y + 0.14, z, 13, 1, 13);
-            bench(x, y, z);
+            bench(x - side * 2, y, z);
           }
-          for (let z = c.z - 54; z <= c.z + 54; z += 1.5)
-            block(wood, x, y + 8.2, z, c.arcadeWidth + 1, 0.18, 0.16);
         }
         for (const dx of [-20, 20])
           for (const dz of [-18, 18]) {
             add(poolGeometry, pool, c.x + dx, y + 0.14, c.z + dz, 26, 1, 26);
-            post(c.x + dx, y, c.z + dz, 4.8, 0.08);
-            block(light, c.x + dx, y + 4.7, c.z + dz, 1.2, 0.12, 0.4);
+            lamp(c.x + dx, y, c.z + dz, 4.8);
           }
       }
-      for (const batch of batches.values()) {
-        const mesh = new InstancedMesh(batch.geometry, batch.material, batch.matrices.length);
-        batch.matrices.forEach((m, i) => {
-          mesh.setMatrixAt(i, m);
-        });
-        mesh.instanceMatrix.needsUpdate = true;
-        mesh.computeBoundingSphere();
-        mesh.castShadow = batch.material !== pool;
-        mesh.receiveShadow = true;
-        root.add(mesh);
+      for (const [collection, parent] of [
+        [batches, root],
+        [nearBatches, near],
+        [farBatches, far],
+      ] as const) {
+        for (const batch of collection.values()) {
+          const mesh = new InstancedMesh(batch.geometry, batch.material, batch.matrices.length);
+          batch.matrices.forEach((m, i) => {
+            mesh.setMatrixAt(i, m);
+          });
+          mesh.instanceMatrix.needsUpdate = true;
+          mesh.computeBoundingSphere();
+          mesh.castShadow = batch.material !== pool;
+          mesh.receiveShadow = true;
+          parent.add(mesh);
+        }
       }
       // Every template not used in this area stays CPU-only; release it explicitly.
-      for (const geometry of [box, pole, umbrella, poolGeometry])
+      for (const geometry of [box, poolGeometry])
         if (![...batches.values()].some((b) => b.geometry === geometry)) geometry.dispose();
       this.addCrowd(kind, root);
     }
@@ -465,8 +480,12 @@ export class PublicRealm implements Disposable {
 
   update(delta: number, camera: PerspectiveCamera): void {
     if (!this.reducedMotion.matches) this.walkTime += delta;
-    for (const area of this.areas)
-      area.root.visible = camera.position.distanceTo(area.centre) < PUBLIC_REALM.detailRange;
+    for (const area of this.areas) {
+      const distance = camera.position.distanceTo(area.centre);
+      area.root.visible = distance < PUBLIC_REALM.detailRange;
+      area.near.visible = distance < PUBLIC_REALM.fineDetailRange;
+      area.far.visible = !area.near.visible;
+    }
     for (const crowd of this.crowds) {
       crowd.root.visible = camera.position.distanceTo(crowd.centre) < PUBLIC_REALM.peopleRange;
       if (crowd.root.visible && !this.reducedMotion.matches) this.poseCrowd(crowd);

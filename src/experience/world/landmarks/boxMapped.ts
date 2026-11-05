@@ -147,7 +147,8 @@ export function boxMappedMaterial(
       uNightSpacing: { value: options.night?.spacing ?? 0 },
     },
     vertexPars: 'varying vec3 vBoxNormal;',
-    vertexMain: 'vBoxNormal = normalize(mat3(modelMatrix) * objectNormal);',
+    // Three has already applied the instance normal matrix, including non-uniform scale.
+    vertexMain: 'vBoxNormal = inverseTransformDirection(transformedNormal, viewMatrix);',
     fragmentPars: `
       uniform sampler2D uBoxColor;
       uniform sampler2D uBoxNormal;
@@ -198,9 +199,11 @@ export function boxMappedMaterial(
       t.xy *= uBoxNormalStrength;
       vec3 w = normalize(vBoxNormal);
       float s = sign(dot(w, boxAxis));
-      vec3 world = boxAxis.x > 0.5 ? vec3(t.z * s, t.y, t.x * s)
-                 : boxAxis.y > 0.5 ? vec3(t.x, t.z * s, t.y)
-                 : vec3(t.x * s, t.y, t.z * s);
+      // Preserve curved/bevelled normals; a flat sampled normal must leave the mesh unchanged.
+      vec3 detail = boxAxis.x > 0.5 ? vec3(0.0, t.y, t.x * s)
+                  : boxAxis.y > 0.5 ? vec3(t.x, 0.0, t.y)
+                  : vec3(t.x * s, t.y, 0.0);
+      vec3 world = w * t.z + detail - w * dot(detail, w);
       normal = normalize((viewMatrix * vec4(normalize(world), 0.0)).xyz);
     }`,
   });

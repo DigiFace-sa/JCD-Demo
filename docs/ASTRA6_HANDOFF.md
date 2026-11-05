@@ -412,3 +412,34 @@ review items and every screenshot path are in [3D_PUBLIC_REALM_REVIEW.md](3D_PUB
 The phase is ready for client visual review. Native Arabic, Safari/Edge, physical touch devices
 and the connected TV remain open checks. Guided Tour remains a separate phase. Never push;
 the four protected marketing diffs named in §1 remain outside this phase's local commit.
+
+## 12. Blender public-space models — 5 November 2026
+
+The client then requested more realistic objects made in Blender. Nine original reusable
+models now furnish the existing Beach/Central pockets: bench, lounger, parasol, café table,
+chair, planter with low planting, lamp, pavilion and arched arcade bay. The complete phase
+report and screenshot list are in [3D_BLENDER_KIT_REVIEW.md](3D_BLENDER_KIT_REVIEW.md).
+
+- Generator: `scripts/blender/public_realm.py`. Output: `public/models/public-realm.glb`.
+  Blender bakes AO into linear vertex colours before generating simplified distance variants.
+  All models have ground-level origins in metres; there are no new third-party model assets.
+- Loader: `world/masterplan/PublicRealmKit.ts`. It validates `realm-<asset>-<surface>` names
+  and their `-far` variants. Add a matching entry when changing the Blender part list.
+- Placement/instancing: `PublicRealm.ts`. Ground surfaces are separate; the furniture switches
+  between near/far groups using `PUBLIC_REALM.fineDetailRange`. The full kit has 43,536 template
+  triangles; the distance kit has 15,208. Scene totals multiply these by the placed instances.
+- `Experience.ready()` warms both variants behind the loader. Keep the pending-request
+  disposal guards: users can leave while the GLB or shader preparation is still running.
+  Cold links also call `prepareFocus()` before `start()` and before revealing the canvas.
+  The measured first-presentation delay remains roughly half a second; do not claim it is fixed.
+- `boxMapped.ts` now respects instance normals and preserves curved/bevelled normals when
+  adding texture detail. Check other landmarks if modifying this shared material again.
+- Camera limits now allow a 28 m minimum orbit radius and a 10 m height floor. The existing
+  place routes, safe camera envelopes, UI translations and draft narratives are retained.
+- Current limits: people and surrounding buildings remain simplified; these are illustrative
+  designs, not approved amenities or a photorealistic reconstruction. Sustained 60 fps on the
+  connected TV remains an open check; retain the full measured ranges in the report.
+
+Review artifacts and runnable QA scripts live under `review/phase-3d/blender/qa/`. The four
+protected marketing diffs are outside this phase. Local commits only; never push. Client
+visual review, native Arabic, other browsers/touch hardware and Guided Tour remain separate.

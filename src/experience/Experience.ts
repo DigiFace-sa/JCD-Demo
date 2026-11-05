@@ -1,9 +1,11 @@
 import { MathUtils, PerspectiveCamera, Scene, type WebGLRenderer } from 'three';
 import type { QualityTier } from '../config';
 import { STADIUM_HOTSPOT_IDS } from '../data/stadium';
+import { PLACE_IDS } from '../data/places';
 import { prefersReducedMotion } from '../utils/motion';
 import { RENDER, type LightingMode } from './config/scene';
 import { MAP_LIMITS, VIEWS, type ViewName } from './config/views';
+import { PUBLIC_REALM } from './config/publicRealm';
 import { Composer } from './core/Composer';
 import { Debug } from './core/Debug';
 import { pixelRatioFor, Quality } from './core/Quality';
@@ -155,6 +157,18 @@ export class Experience implements Disposable {
         if (isDisposed()) return;
         this.renderFrame(0);
       }
+      // Exercise the furniture's instanced/depth pipelines behind the loader as well.
+      // compileAsync alone cannot warm a draw that distance culling has hidden on the map.
+      for (const id of PLACE_IDS) {
+        await this.map.focus({ kind: 'place', id }, true);
+        if (isDisposed()) return;
+        this.renderFrame(0);
+        this.controls.setView(
+          { ...this.controls.getView(), radius: PUBLIC_REALM.fineDetailRange / 2 },
+          true,
+        );
+        this.renderFrame(0);
+      }
       await this.map.focus(null, true);
       if (isDisposed()) return;
     }
@@ -190,6 +204,14 @@ export class Experience implements Disposable {
   /** Frame a landmark, district or attraction, or the whole map (null). */
   focus(focus: Focus | null, immediate = false): Promise<void> {
     return this.map?.focus(focus, immediate) ?? Promise.resolve();
+  }
+
+  /** Draw a cold deep link, including its static shadows, before the loader reveals it. */
+  async prepareFocus(focus: Focus): Promise<void> {
+    await this.focus(focus, true);
+    if (this.disposed) return;
+    this.renderFrame(0);
+    this.renderer.getContext().finish();
   }
 
   /** Preview-highlight a district from outside the canvas (null clears). */
