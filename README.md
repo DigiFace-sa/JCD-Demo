@@ -45,6 +45,16 @@ so any static server works with no rewrite rules. Opening `index.html` straight 
 (`file://`) is not supported: browsers block ES modules there. Use the pitch launcher below,
 `npm run preview:pitch`, or any static server.
 
+## Public demo
+
+The shareable preview is hosted at <https://digiface-sa.github.io/JCD-Demo/>.
+`.github/workflows/pages.yml` checks and publishes the committed `main` branch through GitHub
+Pages after each push. It runs `npm ci`, lint and `build:pitch`, then deploys only `dist-pitch/`;
+draft markers, debug controls and source maps are excluded. Hash routes and relative asset paths
+allow the website and its 3D models to run under the repository subfolder. Local uncommitted
+changes are not published. Public preview publishing was explicitly authorised by the user;
+future pushes still require authorisation.
+
 ## Pitch day
 
 One-time preparation on the pitch machine: install [Node.js](https://nodejs.org) (LTS), copy this
